@@ -469,18 +469,12 @@ footer#contact .founder-role{
           <select id="tgMode">
             <option value="simple">1. Simple Thread — 1 start</option>
             <option value="multi">2. Multi-Start Thread</option>
-            <option value="angular">3. Half-Diameter → Angular (Custom)</option>
+            <option value="half">3. Half-Diameter Thread (Q Phase)</option>
           </select>
-          <div class="thread-help">Simple = one start. Multi-start uses lead = pitch × number of starts and phase-shifted Q values.</div>
+          <div class="thread-help">Simple = one start. Multi-start uses lead = pitch × number of starts. Half-Diameter Thread uses the same straight X pass schedule with the Q phase supplied by the user (e.g. 180°).</div>
         </div>
         <div class="thread-field tg-multi thread-extra full"><label>Number of starts</label><input id="tgStarts" type="number" min="2" max="20" step="1" value="2"><div class="thread-help">2–20 is the generator's practical UI range; there is no universal FANUC “maximum number of starts” independent of thread geometry and control limits.</div></div>
         <div class="thread-field full"><label>Base thread start angle Q (°)</label><input id="tgAngle" type="number" min="0" max="360" step="0.001" value="0"><div class="thread-help">FANUC Q is an angular shift. Non-zero Q is encoded in 0.001° units, e.g. 120° → Q120000. Q0 remains Q0.</div></div>
-        <div class="thread-field tg-angular thread-extra full">
-          <label>Angular custom start X (mm)</label><input id="tgAngularStartX" type="number" step="0.001" placeholder="Required for custom angular mode">
-          <div class="thread-help">For this custom mode, the exact angular geometry must be supplied rather than guessed. The generator will not invent an unverified angular path.</div>
-        </div>
-        <div class="thread-field tg-angular thread-extra"><label>Angular end X (mm)</label><input id="tgAngularEndX" type="number" step="0.001" placeholder="End X"></div>
-        <div class="thread-field tg-angular thread-extra"><label>Angular end Z (mm)</label><input id="tgAngularEndZ" type="number" step="0.001" placeholder="End Z"></div>
       </div>
       <div class="thread-actions">
         <button class="thread-btn primary" id="tgGenerate" type="button">GENERATE PROGRAM</button>
@@ -681,7 +675,7 @@ M30
         <div class="turn-sim-actions"><button class="cnc-btn" id="manualPlay" type="button">▶ PLAY</button><button class="cnc-btn" id="manualStep" type="button">STEP</button><button class="cnc-btn" id="manualReset" type="button">RESET</button></div>
       </div>
       <div class="turn-canvas-wrap"><canvas id="manualTurnCanvas" width="1100" height="620"></canvas></div>
-      <div class="cnc-legend"><span><i class="cnc-dot rapid"></i>Rapid / approach</span><span><i class="cnc-dot cut"></i>Cutting move</span><span><i class="cnc-dot arc"></i>Arc / profile</span><span><i class="cnc-dot tool"></i>Current tool</span></div>
+      <div class="cnc-legend"><span><i class="cnc-dot rapid"></i>Rapid / approach</span><span><i class="cnc-dot cut"></i>Cutting move</span><span><i class="cnc-dot arc"></i>Arc / profile</span><span><i class="cnc-dot" style="background:#22d3ee"></i>G32 / G33 threading</span><span><i class="cnc-dot tool"></i>Current tool</span></div>
       <div id="manualPosition" class="cnc-mini">Position: X0.000 Z0.000 • Line: —</div>
       <div class="simulation-note">This simulation is generated from the manual CNC code after basic parsing. It is for learning and verification support only; it is not a guarantee of machine safety.</div>
     </div>
@@ -1200,51 +1194,107 @@ M30
     const lines=editor.value.split(/\r?\n/);
     const threadProgram=lines.some(x=>/\bG(?:32|33)\b/i.test(x));
     const state={x:0,y:0,z:0,mode:"G90",units:"G21",motion:"G00",feed:null,spindle:null,tool:null};
-    const ps=[], issues=[], bounds={minX:0,maxX:0,minY:0,maxY:0};
-    let lastX=0,lastY=0,lastZ=0;
+    const paths=[], issues=[], bounds={minX:0,maxX:0,minY:0,maxY:0};
+
+    function addBounds(x,y){
+      bounds.minX=Math.min(bounds.minX,x); bounds.maxX=Math.max(bounds.maxX,x);
+      bounds.minY=Math.min(bounds.minY,y); bounds.maxY=Math.max(bounds.maxY,y);
+    }
+
     lines.forEach((raw,i)=>{
       const lineNo=i+1, line=cleanLine(raw);
       if(!line || line==="%") return;
+
       const w=words(line), gc=codes(line,"G"), mc=codes(line,"M");
+
       gc.forEach(g=>{
-        if([0,1,2,3,17,32,33,40,41,42,54,55,56,57,58,59,90,91,20,21].includes(g)) {
-          if(g===0)state.motion="G00"; else if(g===1)state.motion="G01"; else if(g===2)state.motion="G02"; else if(g===3)state.motion="G03"; else if(g===32)state.motion="G32"; else if(g===33)state.motion="G33";
-          else if(g===90)state.mode="G90"; else if(g===91)state.mode="G91"; else if(g===20)state.units="G20"; else if(g===21)state.units="G21";
-        } else issues.push({type:"warn",line:lineNo,title:"Unknown/unsupported G-code",msg:`G${g} is not implemented by this learning simulator. Hint: check the controller manual/postprocessor before using a command.`});
+        if([0,1,2,3,17,32,33,40,41,42,54,55,56,57,58,59,90,91,20,21,28,97].includes(g)){
+          if(g===0)state.motion="G00";
+          else if(g===1)state.motion="G01";
+          else if(g===2)state.motion="G02";
+          else if(g===3)state.motion="G03";
+          else if(g===32)state.motion="G32";
+          else if(g===33)state.motion="G33";
+          else if(g===90)state.mode="G90";
+          else if(g===91)state.mode="G91";
+          else if(g===20)state.units="G20";
+          else if(g===21)state.units="G21";
+        } else {
+          issues.push({type:"warn",line:lineNo,title:"Unknown/unsupported G-code",
+            msg:`G${g} is not implemented by this learning simulator. Hint: check the controller manual/postprocessor before using a command.`});
+        }
       });
-      mc.forEach(m=>{ if(![0,1,2,3,5,6,8,9,30].includes(m)) issues.push({type:"warn",line:lineNo,title:"Unknown/unsupported M-code",msg:`M${m} is not implemented here. Hint: controller-specific M-codes can differ.`}); });
+
+      mc.forEach(m=>{
+        if(![0,1,2,3,5,6,8,9,30].includes(m))
+          issues.push({type:"warn",line:lineNo,title:"Unknown/unsupported M-code",
+            msg:`M${m} is not implemented here. Hint: controller-specific M-codes can differ.`});
+      });
+
       if(w.T!=null) state.tool=w.T;
       if(w.S!=null) state.spindle=w.S;
-      if(w.F!=null){ if(w.F<=0) issues.push({type:"error",line:lineNo,title:"Invalid feed",msg:"Feed must be greater than zero. Hint: check the F value and active feed mode."}); else state.feed=w.F; }
-      if(mc.includes(3) && w.S==null && state.spindle==null) issues.push({type:"warn",line:lineNo,title:"Spindle speed not established",msg:"M03 starts the spindle but no S value has been seen. Hint: set/check spindle speed before machining."});
-      if((state.motion==="G01"||state.motion==="G02"||state.motion==="G03"||state.motion==="G32"||state.motion==="G33") && state.feed==null) issues.push({type:"warn",line:lineNo,title:"Cutting feed not established",msg:`${state.motion} is a cutting move but no feed has been established yet. Hint: add/check an F value.`});
+      if(w.F!=null){
+        if(w.F<=0) issues.push({type:"error",line:lineNo,title:"Invalid feed",
+          msg:"Feed must be greater than zero. Hint: check the F value and active feed mode."});
+        else state.feed=w.F;
+      }
 
-      let nx=state.x,ny=state.y,nz=state.z;
-      if(w.X!=null) nx=state.mode==="G90"?w.X:state.x+w.X;
-      if(w.Y!=null) ny=state.mode==="G90"?w.Y:state.y+w.Y;
-      if(w.Z!=null) nz=state.mode==="G90"?w.Z:state.z+w.Z;
-      const plotY=threadProgram ? nz : ny;
-      const prevPlotY=threadProgram ? state.z : state.y;
-      const moved=(nx!==state.x||plotY!==prevPlotY);
+      if((state.motion==="G01"||state.motion==="G02"||state.motion==="G03"||
+          state.motion==="G32"||state.motion==="G33") && feedMissingForMove(w,state.feed)){
+        issues.push({type:"warn",line:lineNo,title:"Cutting feed not established",
+          msg:`${state.motion} is a cutting move but no feed has been established yet. Hint: add/check an F value.`});
+      }
+
+      // Keep real X/Y/Z state separate from the plotted coordinate.
+      // For turning/threading, Z is the plotted vertical/axis coordinate.
+      const nx = w.X!=null ? (state.mode==="G90" ? w.X : state.x+w.X) : state.x;
+      const ny = w.Y!=null ? (state.mode==="G90" ? w.Y : state.y+w.Y) : state.y;
+      const nz = w.Z!=null ? (state.mode==="G90" ? w.Z : state.z+w.Z) : state.z;
+
+      const fromPlot = threadProgram ? {x:state.x,y:state.z} : {x:state.x,y:state.y};
+      const toPlot   = threadProgram ? {x:nx,y:nz} : {x:nx,y:ny};
+      const moved = nx!==state.x || ny!==state.y || nz!==state.z;
+
       if(moved){
         if(!threadProgram && (state.motion==="G02"||state.motion==="G03")){
           const pts=arcPoints(state.x,state.y,nx,ny,w.I,w.J,w.R,state.motion==="G02");
-          if(!pts.length) issues.push({type:"error",line:lineNo,title:"Arc needs valid geometry",msg:"G02/G03 needs a usable I/J center offset or R radius for this simulator. Hint: check X/Y plus I/J or R."});
-          else { paths.push({type:"arc",line:lineNo,from:{x:state.x,y:state.y,z:state.z},to:{x:nx,y:ny,z:nz},pts}); pts.forEach(p=>{bounds.minX=Math.min(bounds.minX,p.x);bounds.maxX=Math.max(bounds.maxX,p.x);bounds.minY=Math.min(bounds.minY,p.y);bounds.maxY=Math.max(bounds.maxY,p.y);}); }
+          if(!pts.length){
+            issues.push({type:"error",line:lineNo,title:"Arc needs valid geometry",
+              msg:"G02/G03 needs a usable I/J center offset or R radius for this simulator. Hint: check X/Y plus I/J or R."});
+          }else{
+            paths.push({type:"arc",line:lineNo,from:{x:state.x,y:state.y,z:state.z},
+              to:{x:nx,y:ny,z:nz},pts});
+            addBounds(state.x,state.y); addBounds(nx,ny);
+            pts.forEach(pt=>addBounds(pt.x,pt.y));
+          }
         }else{
-          paths.push({type:state.motion==="G00"?"rapid":"cut",line:lineNo,from:{x:state.x,y:prevPlotY,z:state.z},to:{x:nx,y:plotY,z:nz},pts:[{x:nx,y:plotY}]});
+          paths.push({
+            type:state.motion==="G00"?"rapid":(state.motion==="G32"||state.motion==="G33")?"thread":"cut",
+            line:lineNo,
+            from:{x:fromPlot.x,y:fromPlot.y,z:state.z},
+            to:{x:toPlot.x,y:toPlot.y,z:nz},
+            pts:[{x:toPlot.x,y:toPlot.y}]
+          });
+          addBounds(fromPlot.x,fromPlot.y);
+          addBounds(toPlot.x,toPlot.y);
         }
-        [nx,plotY].forEach((v,k)=>{if(k===0){bounds.minX=Math.min(bounds.minX,v);bounds.maxX=Math.max(bounds.maxX,v)}else{bounds.minY=Math.min(bounds.minY,v);bounds.maxY=Math.max(bounds.maxY,v)}});
-        state.x=nx;state.y=plotY;state.z=nz;
       }
-      if(w.X==null&&w.Y==null&&w.Z==null && (state.motion==="G00"||state.motion==="G01"||state.motion==="G02"||state.motion==="G03"||state.motion==="G32"||state.motion==="G33") && /^(G0*0|G0*1|G0*2|G0*3|G32|G33)/i.test(line)){
-        // Modal command with no axis is valid; no warning needed.
-      }
-      lastX=state.x;lastY=state.y;lastZ=state.z;
+
+      state.x=nx; state.y=ny; state.z=nz;
     });
-    if(!lines.some(x=>/\bM30\b|\bM2\b/i.test(x))) issues.push({type:"warn",line:lines.length,title:"Program end not found",msg:"No M30/M2 was detected. Hint: a complete CNC program commonly includes an explicit program-end command."});
-    if(!lines.some(x=>/\bG5[4-9]\b/i.test(x))) issues.push({type:"warn",line:1,title:"Work offset not found",msg:"No G54–G59 was detected. Hint: confirm the work coordinate system for the intended setup."});
-    return {paths,issues,bounds,state:{x:lastX,y:lastY,z:lastZ}};
+
+    if(!lines.some(x=>/\bM30\b|\bM2\b/i.test(x)))
+      issues.push({type:"warn",line:lines.length,title:"Program end not found",
+        msg:"No M30/M2 was detected. Hint: a complete CNC program commonly includes an explicit program-end command."});
+    if(!threadProgram && !lines.some(x=>/\bG5[4-9]\b/i.test(x)))
+      issues.push({type:"warn",line:1,title:"Work offset not found",
+        msg:"No G54–G59 was detected. Hint: confirm the work coordinate system for the intended setup."});
+
+    return {paths,issues,bounds,state:{x:state.x,y:state.y,z:state.z}};
+  }
+
+  function feedMissingForMove(w,feed){
+    return feed==null && w.F==null;
   }
 
   function fit(bounds){
@@ -1268,7 +1318,7 @@ M30
   function drawPaths(activeCount){
     drawGrid();
     paths.slice(0,activeCount).forEach((p)=>{
-      const a=P(p.from), color=p.type==="rapid"?"#64748b":p.type==="cut"?"#f59e0b":"#a78bfa";
+      const a=P(p.from), color=p.type==="rapid"?"#64748b":p.type==="thread"?"#22d3ee":p.type==="cut"?"#f59e0b":"#a78bfa";
       ctx.strokeStyle=color;ctx.lineWidth=3;ctx.setLineDash(p.type==="rapid"?[7,7]:[]);
       ctx.beginPath();ctx.moveTo(a.x,a.y);
       if(p.type==="arc"){p.pts.forEach(q=>{const z=P(q);ctx.lineTo(z.x,z.y)});}
@@ -1505,13 +1555,13 @@ M30
       const line=raw.replace(/\([^)]*\)/g,'').replace(/;.*$/,'').trim(), no=i+1;if(!line||line==='%')return;
       const gs=[...line.matchAll(/G\s*([0-9]+(?:\.[0-9]+)?)/gi)].map(m=>Number(m[1])), ws={};
       for(const m of line.matchAll(/([A-Z])\s*([+-]?(?:\d+(?:\.\d*)?|\.\d+))/gi))ws[m[1].toUpperCase()]=Number(m[2]);
-      gs.forEach(g=>{if(g===0)motion='G00';else if(g===1)motion='G01';else if(g===2)motion='G02';else if(g===3)motion='G03';else if(g===20||g===21)units='G'+g;else if(g===90||g===91)modeC='G'+g;else if(g>=54&&g<=59)hasOffset=true;else if(![40,96,97].includes(g))issues.push({type:'warn',line:no,title:'Unsupported/unknown G-code',msg:`G${g} is not implemented by this basic turning verifier. Check the actual controller manual.`});});
+      gs.forEach(g=>{if(g===0)motion='G00';else if(g===1)motion='G01';else if(g===2)motion='G02';else if(g===3)motion='G03';else if(g===32)motion='G32';else if(g===33)motion='G33';else if(g===20||g===21)units='G'+g;else if(g===90||g===91)modeC='G'+g;else if(g>=54&&g<=59)hasOffset=true;else if(![40,96,97].includes(g))issues.push({type:'warn',line:no,title:'Unsupported/unknown G-code',msg:`G${g} is not implemented by this basic turning verifier. Check the actual controller manual.`});});
       if(ws.Y!=null)issues.push({type:'error',line:no,title:'Y axis used in turning code',msg:'This CNC Turning Lab uses X and Z only. Remove Y moves and verify the controller/setup.'});
       if(ws.F!=null){if(ws.F<=0)issues.push({type:'error',line:no,title:'Invalid feed',msg:'Feed must be greater than zero. Check the F value.'});else feed=ws.F;}
       if(ws.S!=null&&ws.S<=0)issues.push({type:'error',line:no,title:'Invalid spindle speed',msg:'Spindle speed must be greater than zero.'});
       if(motion==='G01'&&(ws.X!=null||ws.Z!=null)&&feed==null)issues.push({type:'warn',line:no,title:'Cutting feed not established',msg:'A cutting move appears before a feed value. Check feed mode and controller requirements.'});
       let nx=x,nz=z;if(ws.X!=null)nx=modeC==='G90'?ws.X:x+ws.X;if(ws.Z!=null)nz=modeC==='G90'?ws.Z:z+ws.Z;
-      if(nx!==x||nz!==z)paths.push({type:motion==='G00'?'rapid':motion==='G02'||motion==='G03'?'arc':'cut',line:no,from:{x,z},to:{x:nx,z:nz}});
+      if(nx!==x||nz!==z)paths.push({type:motion==='G00'?'rapid':motion==='G02'||motion==='G03'?'arc':motion==='G32'||motion==='G33'?'thread':'cut',line:no,from:{x,z},to:{x:nx,z:nz}});
       x=nx;z=nz;
       if(ws.I!=null||ws.J!=null||ws.R!=null)issues.push({type:'info',line:no,title:'Arc parameters detected',msg:'Arc geometry is displayed as a programmed move; confirm controller arc convention before use.'});
     });
@@ -1571,7 +1621,7 @@ M30
     manualCtx.beginPath();manualCtx.moveTo(px(0),0);manualCtx.lineTo(px(0),manualCanvas.height);manualCtx.stroke();
     manualCtx.beginPath();manualCtx.moveTo(0,py(0));manualCtx.lineTo(manualCanvas.width,py(0));manualCtx.stroke();
     manualCtx.fillStyle='#8fe4ff';manualCtx.font='bold 13px monospace';manualCtx.fillText('Z AXIS',manualCanvas.width-110,manualCanvas.height-18);manualCtx.fillText('X AXIS',16,28);
-    manualPaths.slice(0,manualIndex).forEach(p=>{manualCtx.strokeStyle=p.type==='rapid'?'#64748b':p.type==='arc'?'#a78bfa':'#f59e0b';manualCtx.lineWidth=3;manualCtx.setLineDash(p.type==='rapid'?[7,7]:[]);manualCtx.beginPath();manualCtx.moveTo(px(p.from.z),py(p.from.x));manualCtx.lineTo(px(p.to.z),py(p.to.x));manualCtx.stroke();manualCtx.setLineDash([]);});
+    manualPaths.slice(0,manualIndex).forEach(p=>{manualCtx.strokeStyle=p.type==='rapid'?'#64748b':p.type==='arc'?'#a78bfa':p.type==='thread'?'#22d3ee':'#f59e0b';manualCtx.lineWidth=p.type==='thread'?3.5:3;manualCtx.setLineDash(p.type==='rapid'?[7,7]:p.type==='thread'?[3,5]:[]);manualCtx.beginPath();manualCtx.moveTo(px(p.from.z),py(p.from.x));manualCtx.lineTo(px(p.to.z),py(p.to.x));manualCtx.stroke();manualCtx.setLineDash([]);});
     if(manualIndex){const p=manualPaths[Math.min(manualIndex-1,manualPaths.length-1)],q=p.to;manualCtx.fillStyle='#f43f5e';manualCtx.beginPath();manualCtx.arc(px(q.z),py(q.x),7,0,Math.PI*2);manualCtx.fill();$('manualPosition').textContent=`Position: X${q.x.toFixed(3)} Z${q.z.toFixed(3)} • Line: ${p.line}`;} else $('manualPosition').textContent='Position: X0.000 Z0.000 • Line: —';
   }
   function loadManualSimulation(){
@@ -1641,20 +1691,25 @@ M30
   const out=$("tgOutput");
   if(!out)return;
 
-  function n(id){return Number($(id).value);}
-  function fmt(v){return Number(v).toFixed(3).replace(/\.?0+$/,"");}
-  function qfmt(deg){
+  const n=id=>Number($(id).value);
+  const fmt=v=>Number(v).toFixed(3).replace(/\.?0+$/,"");
+  const qfmt=deg=>{
     const q=Math.round(Number(deg)*1000);
     return q===0 ? "Q0" : "Q"+q;
-  }
+  };
+
   function setStatus(msg,good=false){
-    const el=$("tgStatus"); el.className="thread-status "+(good?"good":"bad"); el.textContent=msg;
+    const el=$("tgStatus");
+    el.className="thread-status "+(good?"good":"bad");
+    el.textContent=msg;
   }
+
   function toggleMode(){
     const mode=$("tgMode").value;
     document.querySelectorAll(".tg-multi").forEach(e=>e.classList.toggle("show",mode==="multi"));
-    document.querySelectorAll(".tg-angular").forEach(e=>e.classList.toggle("show",mode==="angular"));
+
   }
+
   $("tgMode").addEventListener("change",toggleMode);
   toggleMode();
 
@@ -1663,110 +1718,108 @@ M30
     const z1=n("tgStartZ"), z2=n("tgEndZ"), dep=n("tgDepth");
     const tool=n("tgTool"), off=n("tgOffset"), angle=n("tgAngle");
     const type=$("tgType").value, mode=$("tgMode").value;
-    if(![major,minor,pitch,z1,z2,dep,tool,off,angle].every(Number.isFinite))throw Error("Please enter valid numeric values.");
-    if(major<=0||minor<=0||pitch<=0||dep<=0)throw Error("Diameter, pitch and cutting depth must be greater than zero.");
-    if(type==="OD" && major<=minor)throw Error("For OD thread, Major Diameter must be greater than Minor Diameter.");
-    if(type==="ID" && major<=minor)throw Error("For ID thread, Major Diameter must be greater than Minor Diameter.");
-    if(z1===z2)throw Error("Start Z and End Z cannot be the same.");
-    if(angle<0||angle>360)throw Error("Q start angle must be between 0° and 360°.");
-    if(tool<1||tool>99||off<1||off>99)throw Error("Tool and offset must be 1–99.");
+
+    if(![major,minor,pitch,z1,z2,dep,tool,off,angle].every(Number.isFinite))
+      throw Error("Please enter valid numeric values.");
+    if(major<=0||minor<=0||pitch<=0||dep<=0)
+      throw Error("Diameter, pitch and cutting depth must be greater than zero.");
+    if(major<=minor)
+      throw Error("Major Diameter must be greater than Minor Diameter.");
+    if(z1===z2) throw Error("Start Z and End Z cannot be the same.");
+    if(angle<0||angle>360) throw Error("Q start angle must be between 0° and 360°.");
+    if(tool<1||tool>99||off<1||off>99) throw Error("Tool and offset must be 1–99.");
+
     let starts=1;
     if(mode==="multi"){
       starts=Math.round(n("tgStarts"));
-      if(starts<2||starts>20)throw Error("Multi-start generator accepts 2–20 starts.");
+      if(starts<2||starts>20) throw Error("Multi-start generator accepts 2–20 starts.");
     }
-    if(mode==="angular"){
-      const ax=n("tgAngularStartX"), ex=n("tgAngularEndX"), ez=n("tgAngularEndZ");
-      if(![ax,ex,ez].every(Number.isFinite))throw Error("Custom angular mode requires Start X, End X and End Z.");
-      if(ez===z1)throw Error("Angular End Z must differ from Thread Start Z.");
-    }
+
+    // Normal 0° single-start is the primary/reference mode.
     return {major,minor,pitch,z1,z2,dep,tool,off,angle,type,mode,starts};
   }
 
+  // X pass schedule: total diameter change / cutting depth per pass.
+  // Example: Ø24.8 -> Ø23.3 = 1.5 mm total; at 0.15 mm/pass = exactly 10 passes.
+  // The final pass is always forced to the exact target diameter.
   function passDiameters(major,minor,dep,type){
     const arr=[];
-    const start=type==="OD" ? major : minor;
-    const target=type==="OD" ? minor : major;
-    let x=start;
-    const direction=type==="OD"?-1:1;
-    // The entered depth is treated as X-diameter depth per pass to match the
-    // user's machine-tested program pattern (e.g. 24.65 -> 24.50).
-    const maxPass=dep;
-    while(true){
-      let next=x+direction*maxPass;
-      if((direction<0 && next<=target) || (direction>0 && next>=target)){
-        arr.push(Number(target.toFixed(3))); break;
-      }
-      arr.push(Number(next.toFixed(3)));
-      x=next;
-      if(arr.length>500)throw Error("Too many passes. Increase cutting depth per pass.");
+    const start=type==="OD"?major:minor;
+    const target=type==="OD"?minor:major;
+    const dir=type==="OD"?-1:1;
+    const total=Math.abs(start-target);
+    const count=Math.ceil((total-1e-9)/dep);
+    for(let i=1;i<=count;i++){
+      const next=Math.min(total,i*dep);
+      const x=Number((start+dir*next).toFixed(3));
+      arr.push(i===count ? Number(target.toFixed(3)) : x);
     }
     return arr;
-  }
-
-  function makeThreadLines(d,zStart,zEnd,lead,q,code,type){
-    const lines=[];
-    lines.push(`${code} X${fmt(d)} Z${fmt(zEnd)} F${fmt(lead)} ${q}`);
-    // Preserve the tested retract pattern; X position is dynamically calculated.
-    return lines;
   }
 
   function generate(){
     try{
       const v=validate();
       const clearance=1.2;
+
+      // Reference baseline: with major Ø24.8 this produces X26.0.
       const approachX=v.type==="OD" ? v.major+clearance : Math.max(0.5,v.minor-clearance);
-      const finalRetractX=v.type==="OD" ? v.major+5 : Math.max(0.5,v.minor-5);
+
+      // Reference baseline final retract: Ø24.8 + 5.2 = X30.0.
+      const finalRetractX=v.type==="OD" ? v.major+5.2 : Math.max(0.5,v.minor-5.2);
       const finalRetractZ=v.z1+7.5;
-      const tool=String(v.tool).padStart(2,"0");
-      const off=String(v.off).padStart(2,"0");
-      const T="T"+tool+off;
+
+      const T="T"+String(v.tool).padStart(2,"0")+String(v.off).padStart(2,"0");
       const lead=v.pitch*v.starts;
       const passes=passDiameters(v.major,v.minor,v.dep,v.type);
-      let lines=[];
-      // Fixed machine-tested top portion: do not change this wrapper.
-      lines.push("%","N3;","G0 G40 G28 U0.0 W0.0;","G0 "+T,"M8",`G97 S300 ${$("tgSpindle").value}`);
-      lines.push(`G00 X${fmt(approachX)} Z${fmt(v.z1)}`);
 
-      if(v.mode==="angular"){
-        // Custom angular mode is deliberately explicit: no guessed geometry.
-        const ax=n("tgAngularStartX"), ex=n("tgAngularEndX"), ez=n("tgAngularEndZ");
-        const dx=ex-ax, dz=ez-v.z1;
-        const angleDeg=Math.atan2(Math.abs(dx/2),Math.abs(dz))*180/Math.PI;
-        const q=qfmt(v.angle);
-        lines.push(`(CUSTOM HALF-DIA -> ANGULAR PROFILE)`);
-        lines.push(`(START X${fmt(ax)} Z${fmt(v.z1)} / END X${fmt(ex)} Z${fmt(ez)} / ANGLE ${angleDeg.toFixed(3)} DEG)`);
-        lines.push(`${$("tgCode").value} X${fmt(ex)} Z${fmt(ez)} F${fmt(lead)} ${q}`);
-        lines.push(`G00 X${fmt(finalRetractX)}`,`G00 Z${fmt(finalRetractZ)}`);
-      }else{
-        // Each pass is separated by the same machine-tested X then Z retract.
-        for(let st=0;st<v.starts;st++){
-          const phase=v.angle + (360/v.starts)*st;
-          const q=qfmt(phase>=360 ? phase-360 : phase);
-          if(v.starts>1)lines.push(`(START ${st+1}/${v.starts} - PHASE ${(((phase%360)+360)%360).toFixed(3)} DEG)`);
+      const lines=[
+        "%",
+        "N3;",
+        "G0 G40 G28 U0.0 W0.0;",
+        "G0 "+T,
+        "M8",
+        `G97 S300 ${$("tgSpindle").value}`,
+        `G00 X${fmt(approachX)} Z${fmt(v.z1)}`
+      ];
+
+      // All thread modes use the same straight X pass schedule.
+      // Half-Diameter Thread only changes the spindle start phase through Q;
+      // no custom X/Z geometry is required.
+      for(let st=0;st<v.starts;st++){
+          const phase=((v.angle+(360/v.starts)*st)%360+360)%360;
+          const q=qfmt(phase);
+
+          if(v.starts>1)
+            lines.push(`(START ${st+1}/${v.starts} - PHASE ${phase.toFixed(3)} DEG)`);
+
           for(let i=0;i<passes.length;i++){
             lines.push(`${$("tgCode").value} X${fmt(passes[i])} Z${fmt(v.z2)} F${fmt(lead)} ${q}`);
+
             if(i<passes.length-1){
               lines.push(`G00 X${fmt(approachX)}`);
               lines.push(`G00 Z${fmt(v.z1)}`);
             }
           }
+
           if(st<v.starts-1){
             lines.push(`G00 X${fmt(approachX)}`);
             lines.push(`G00 Z${fmt(v.z1)}`);
           }
-        }
-        lines.push(`G00 X${fmt(finalRetractX)}`,`G00 Z${fmt(finalRetractZ)}`);
       }
 
-      // Fixed machine-tested bottom portion starts at M09.
+      lines.push(`G00 X${fmt(finalRetractX)}`);
+      lines.push(`G00 Z${fmt(finalRetractZ)}`);
+
+      // Fixed reference bottom.
       lines.push("M09","G28 U0. W0. M05","M30","%");
+
       out.value=lines.join("\n");
       $("tgLead").textContent=fmt(lead)+" mm";
       $("tgSummaryStarts").textContent=v.starts;
-      $("tgPasses").textContent=v.mode==="angular"?"1":passes.length;
+      $("tgPasses").textContent=passes.length;
       $("tgPhase").textContent=v.starts>1 ? "Q"+fmt(360/v.starts)+"°" : qfmt(v.angle);
-      setStatus("Program generated. Verify the displayed code against your machine setup before use.",true);
+      setStatus("Program generated in FANUC G33 reference format. Check the line-by-line X/Z simulation.",true);
     }catch(e){
       out.value="%\n";
       setStatus("ERROR: "+e.message,false);
@@ -1774,48 +1827,92 @@ M30
   }
 
   function reset(){
-    $("tgMajor").value="24.8"; $("tgMinor").value="23.3"; $("tgPitch").value="3.0";
-    $("tgStartZ").value="-27.5"; $("tgEndZ").value="-36.5"; $("tgDepth").value="0.15";
-    $("tgType").value="OD"; $("tgSpindle").value="M04"; $("tgCode").value="G33";
-    $("tgTool").value="1"; $("tgOffset").value="1"; $("tgMode").value="simple";
-    $("tgStarts").value="2"; $("tgAngle").value="0";
-    $("tgAngularStartX").value=""; $("tgAngularEndX").value=""; $("tgAngularEndZ").value="";
-    $("tgFileName").value="CNCVEYRA"; out.value="%";
-    $("tgLead").textContent="3.000 mm"; $("tgSummaryStarts").textContent="1"; $("tgPasses").textContent="—"; $("tgPhase").textContent="Q0";
-    toggleMode(); $("tgStatus").className="thread-status"; $("tgStatus").textContent="Reset complete. Ready for new program.";
+    $("tgMajor").value="24.8";
+    $("tgMinor").value="23.3";
+    $("tgPitch").value="3.0";
+    $("tgStartZ").value="-27.5";
+    $("tgEndZ").value="-36.5";
+    $("tgDepth").value="0.15";
+    $("tgType").value="OD";
+    $("tgSpindle").value="M04";
+    $("tgCode").value="G33";
+    $("tgTool").value="1";
+    $("tgOffset").value="1";
+    $("tgMode").value="simple";
+    $("tgStarts").value="2";
+    $("tgAngle").value="0";
+    $("tgFileName").value="CNCVEYRA";
+    out.value="%";
+    $("tgLead").textContent="3.000 mm";
+    $("tgSummaryStarts").textContent="1";
+    $("tgPasses").textContent="—";
+    $("tgPhase").textContent="Q0";
+    toggleMode();
+    $("tgStatus").className="thread-status";
+    $("tgStatus").textContent="Reset complete. Ready for new program.";
   }
 
   function download(ext){
-    const raw=$("tgFileName").value.trim();
-    const base=raw||"CNCVEYRA";
+    const raw=$("tgFileName").value.trim(), base=raw||"CNCVEYRA";
     if(!/^[A-Za-z0-9]+$/.test(base)){
       setStatus("ERROR: File name must contain letters and numbers only. Example: ODTHREAD01.",false);
       return;
     }
     const blob=new Blob([out.value],{type:"text/plain;charset=utf-8"});
-    const url=URL.createObjectURL(blob), a=document.createElement("a");
-    a.href=url; a.download=base+"."+ext; document.body.appendChild(a); a.click(); a.remove();
+    const url=URL.createObjectURL(blob),a=document.createElement("a");
+    a.href=url;a.download=base+"."+ext;document.body.appendChild(a);a.click();a.remove();
     setTimeout(()=>URL.revokeObjectURL(url),500);
   }
 
   $("tgGenerate").onclick=generate;
   $("tgCheck").onclick=()=>{
     const code=out.value.trim();
-    const required=[[/^%$/m,"Program start/end %"],[/^N3;$/m,"N3;"],[/G0 G40 G28 U0\.0 W0\.0;/,"G28 safe return"],[/G97 S300 M0[34]/,"G97 spindle line"],[/^M09$/m,"M09"],[/G28 U0\. W0\. M05/,"G28/M05 ending"],[/^M30$/m,"M30"]];
+    const required=[
+      [/^%$/m,"Program start/end %"],
+      [/^N3;$/m,"N3;"],
+      [/G0 G40 G28 U0\.0 W0\.0;/,"G28 safe return"],
+      [/^G0 T\d{4}$/m,"Tool call"],
+      [/G97 S300 M0[34]/,"G97 spindle line"],
+      [/^M09$/m,"M09"],
+      [/G28 U0\. W0\. M05/,"G28/M05 ending"],
+      [/^M30$/m,"M30"]
+    ];
     const missing=required.filter(([re])=>!re.test(code)).map(([,name])=>name);
     if(missing.length)setStatus("CHECK FAILED: missing "+missing.join(", "),false);
-    else setStatus("PROGRAM CHECK PASSED: fixed CNCVEYRA start/end structure is present. Use TRACK / SIMULATE for the CNC Code Lab verification.",true);
+    else setStatus("PROGRAM CHECK PASSED: FANUC G33 reference start/end structure is present.",true);
   };
+
   $("tgSimulate").onclick=()=>{
-    if(!out.value.trim() || out.value.trim()==="%") generate();
-    const editor=$("cncEditor");
-    if(!editor){ setStatus("CNC Code Lab editor was not found.",false); return; }
-    editor.value=out.value;
-    if(typeof window.__cncVerify==="function") window.__cncVerify();
-    const nav=document.querySelector('[data-nav="cnc-simulator"]');
-    if(nav) nav.click();
-    setTimeout(()=>$("cnc-simulator")?.scrollIntoView({behavior:"smooth",block:"start"}),100);
+    try{
+      if(!out.value.trim()||out.value.trim()==="%") generate();
+
+      // The CNC Code Lab in this page is the TURNING X/Z lab.
+      // Its actual editor is #turnEditor (there is no #cncEditor).
+      const editor=$("turnEditor");
+      if(!editor){setStatus("CNC Code Lab turning editor was not found.",false);return;}
+
+      editor.value=out.value;
+      if(typeof window.showPage==="function") window.showPage("cnc-simulator");
+
+      // Run the same verification + manual X/Z simulation used by the Code Lab.
+      const simBtn=$("turnManualSim");
+      if(simBtn){
+        simBtn.click();
+      }else{
+        setStatus("CNC Code Lab simulation control was not found.",false);
+        return;
+      }
+
+      setStatus("THREAD PROGRAM LOADED: CNC Code Lab simulation is ready. Use PLAY / STEP to track it line by line.",true);
+      setTimeout(()=>{
+        const box=$("manualSimulationBox")||$("cnc-simulator");
+        if(box) box.scrollIntoView({behavior:"smooth",block:"start"});
+      },180);
+    }catch(e){
+      setStatus("SIMULATION ERROR: "+e.message,false);
+    }
   };
+
   $("tgReset").onclick=reset;
   $("tgExportNC").onclick=()=>download("NC");
   $("tgExportTXT").onclick=()=>download("TXT");
