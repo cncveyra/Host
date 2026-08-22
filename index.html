@@ -1809,7 +1809,7 @@ M30
 <script id="cnc-thread-generator-js">
 (function(){
   const $=id=>document.getElementById(id); const out=$("tgOutput"); if(!out)return;
-  const n=id=>Number($(id).value); const fmt=v=>Number(v).toFixed(3).replace(/\.?(0+)$/,'').replace(/\.$/,''); const feedFmt=v=>Number(v).toFixed(2);
+  const n=id=>Number($(id).value); const fmt=v=>Number(v).toFixed(3).replace(/\.?(0+)$/,'').replace(/\.$/,''); const feedFmt=v=>fmt(v);
   function setStatus(msg,good=false){const el=$("tgStatus");el.className="thread-status "+(good?"good":"bad");el.textContent=msg;}
   function toggleMode(){const mode=$("tgMode").value;document.querySelectorAll(".tg-multi").forEach(e=>e.classList.toggle("show",mode==="multi"));}
   $("tgMode").addEventListener("change",toggleMode); toggleMode();
@@ -1832,15 +1832,21 @@ M30
     const startZ=v.z1,endZ=v.z2,approachZ=v.z1+0.5,retractZ=v.z2-0.5;
     const T="T"+String(v.tool).padStart(2,"0")+String(v.off).padStart(2,"0");
     const feed=feedFmt(v.pitch);
-    let lines=["%","N2","","G0G28U0.0W0.0","",T,"","G97S80"+$("tgSpindle").value,"","G0X"+fmt(clearX)+"Z"+fmt(approachZ)+"M08",""];
+    // Exact reference-program motion: G0 approach -> G33 entry -> G33 thread -> G33 retract -> G0 return.
+    // Start/end Z are taken directly from the user's inputs; only the 0.5 mm approach/retract clearance is derived.
+    let lines=["%","N2","","G0G28U0.0W0.0","",T,"","G97S80"+$("tgSpindle").value,"","G0X"+fmt(clearX)+"Z"+fmt(approachZ)+"M08"];
     for(const x of passes){
+      lines.push("");
       lines.push("G33X"+fmt(x)+"Z"+fmt(startZ)+"F"+feed);
       lines.push("G33Z"+fmt(endZ)+"F"+feed);
       lines.push("G33X"+fmt(clearX)+"Z"+fmt(retractZ)+"F"+feed);
-      lines.push("");
-      lines.push("G0X"+fmt(clearX)+"Z"+fmt(approachZ));
-      lines.push("");
+      // Exact reference pattern: no G0 return after the final pass.
+      if(x!==passes[passes.length-1]){
+        lines.push("");
+        lines.push("G0X"+fmt(clearX)+"Z"+fmt(approachZ));
+      }
     }
+    lines.push("");
     lines.push("G0G40X100.0Z50.0","G0G28U0.0W0.0M09","M05","M1","M30","%");
     out.value=lines.join("\n");
     $("tgLead").textContent=feed+" mm";
