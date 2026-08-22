@@ -484,9 +484,9 @@ footer#contact .founder-role{
           <select id="tgMode">
             <option value="simple">1. Simple Thread — 1 start</option>
             <option value="multi">2. Multi-Start Thread</option>
-            <option value="half">3. Half-Diameter Thread</option>
+            <option value="half">3. Half-Diameter Thread — Special G33</option>
           </select>
-          <div class="thread-help">Option 1 keeps the existing CNCVEYRA simple-thread formula. Options 2 and 3 use the clearance-based G33 threading format.</div>
+          <div class="thread-help">Option 1 keeps the existing CNCVEYRA formula. Option 2 uses the multi-start logic. Option 3 uses the special reference G33 format with no Q output and F formatted to two decimals.</div>
         </div>
         <div class="thread-field tg-multi thread-extra full"><label>Number of starts</label><input id="tgStarts" type="number" min="2" max="20" step="1" value="2"><div class="thread-help">Used only for Multi-Start Thread.</div></div>
       </div>
@@ -1831,20 +1831,18 @@ M30
     const clearX=v.type==="OD"?v.major+v.clear:Math.max(.5,v.minor-v.clear);
     const startZ=v.z1,endZ=v.z2,approachZ=v.z1+0.5,retractZ=v.z2-0.5;
     const T="T"+String(v.tool).padStart(2,"0")+String(v.off).padStart(2,"0");
-    const feed=feedFmt(v.pitch);
-    // Exact reference-program motion: G0 approach -> G33 entry -> G33 thread -> G33 retract -> G0 return.
-    // Start/end Z are taken directly from the user's inputs; only the 0.5 mm approach/retract clearance is derived.
+    const feed=Number(v.pitch).toFixed(2);
+    // Option 3 is intentionally locked to the user's exact reference G33 movement pattern.
+    // No Q/Q0 is generated. Feed is always displayed with two decimals (e.g. F3.00).
     let lines=["%","N2","","G0G28U0.0W0.0","",T,"","G97S80"+$("tgSpindle").value,"","G0X"+fmt(clearX)+"Z"+fmt(approachZ)+"M08"];
-    for(const x of passes){
+    for(let i=0;i<passes.length;i++){
+      const x=passes[i];
       lines.push("");
       lines.push("G33X"+fmt(x)+"Z"+fmt(startZ)+"F"+feed);
       lines.push("G33Z"+fmt(endZ)+"F"+feed);
       lines.push("G33X"+fmt(clearX)+"Z"+fmt(retractZ)+"F"+feed);
-      // Exact reference pattern: no G0 return after the final pass.
-      if(x!==passes[passes.length-1]){
-        lines.push("");
-        lines.push("G0X"+fmt(clearX)+"Z"+fmt(approachZ));
-      }
+      // Reference format: G0 return after every pass except the final pass.
+      if(i<passes.length-1) lines.push("","G0X"+fmt(clearX)+"Z"+fmt(approachZ));
     }
     lines.push("");
     lines.push("G0G40X100.0Z50.0","G0G28U0.0W0.0M09","M05","M1","M30","%");
