@@ -306,12 +306,12 @@ footer#contact .founder-role{
 </style>
 
 <!-- CNC Code Lab SEO enhancements -->
-<meta name="description" content="CNC Code Lab for CNC G-code writing, verification and toolpath simulation. Generate CNC turning code from 2D DXF profiles with X diameter or radius programming, X/Z simulation and learning-focused verification.">
-<meta name="keywords" content="CNC code, CNC turning code, CNC simulator, CNC G-code verification, DXF to CNC turning, CNC turning simulator, CNC G-code generator, CNC code checker, X diameter programming, CNC lathe G-code">
+<meta name="description" content="CNC Code Lab for CNC drawing analysis, PDF JPG DXF DWG upload, CNC turning G-code generation, verification and X/Z toolpath simulation. Scan technical drawings, review detected dimensions and generate machine-format CNC programs.">
+<meta name="keywords" content="CNC drawing to G-code, PDF to CNC, JPG to CNC, DXF to CNC, DWG to CNC, CNC drawing scanner, CNC dimension detection, CNC turning code, CNC simulator, CNC G-code verification, CNC turning simulator, CNC G-code generator, CNC code checker">
 <meta property="og:title" content="CNC Code Lab | CNC Turning Code, DXF to G-code & Simulator">
-<meta property="og:description" content="Write, generate, verify and simulate CNC turning G-code. Upload DXF profiles, choose X diameter/radius programming and inspect X/Z toolpaths.">
+<meta property="og:description" content="Upload PDF, JPG, DXF or DWG technical drawings, scan detected dimensions and geometry, verify the result, generate CNC turning G-code and inspect the X/Z toolpath.">
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"SoftwareApplication","name":"CNC Code Lab","applicationCategory":"EducationalApplication","operatingSystem":"Web Browser","url":"https://cncveyra.in/#cnc-simulator","description":"Browser-based CNC turning G-code writing, generation, basic verification and X/Z toolpath simulation with DXF profile detection.","isAccessibleForFree":true}
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":"CNC Code Lab","applicationCategory":"EducationalApplication","operatingSystem":"Web Browser","url":"https://cncveyra.in/#cnc-simulator","description":"Browser-based CNC drawing analysis, dimension review, turning G-code generation, basic verification and X/Z toolpath simulation with PDF/JPG/DXF/DWG drawing upload support.","isAccessibleForFree":true}
 </script>
 
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4399948678622543"
@@ -343,6 +343,7 @@ footer#contact .founder-role{
 {"@context":"https://schema.org","@type":"Organization","name":"CNCVEYRA","url":"https://cncveyra.in/","founder":{"@type":"Person","name":"Manmohan Yadav"},"email":"mk096063@gmail.com","telephone":"+919592813879","description":"CNC programming, CAD/CAM and CNC engineering support."}
 </script>
 
+<style id="cnc-drawing-scan-css">.drawing-confidence{margin-top:10px;font:11px monospace;color:#8fa7b1}.drawing-confidence.good{color:#7ee787}.drawing-confidence.warn{color:#f0c674}.drawing-confidence.bad{color:#ff8f8f}.drawing-preview{margin-top:12px;border:1px solid #203a46;background:#02080d;padding:10px}.drawing-preview-head{display:flex;justify-content:space-between;color:#9db4bd;font:10px monospace;margin-bottom:8px}.drawing-preview img{display:block;max-width:100%;max-height:420px;margin:auto;object-fit:contain;background:#fff}.detected-panel{margin-top:12px;border:1px solid #203a46;background:#061018;padding:12px}.detected-dimensions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.detected-item{border:1px solid #294752;border-radius:8px;padding:8px}.detected-item label{display:block;color:#708992;font:9px monospace;text-transform:uppercase}.detected-item input{width:100%;margin-top:5px;padding:8px;background:#02080d;color:#d8edf4;border:1px solid #27424e;border-radius:6px}.drawing-gate{font:9px monospace;color:#d5a94a;border:1px solid #594a27;border-radius:999px;padding:6px 9px}.drawing-gate.ready{color:#7ee787;border-color:#285a35}.export-name-row{display:grid;grid-template-columns:1fr auto;align-items:end;gap:10px;margin-top:12px}.export-exts{display:flex;gap:6px;padding-bottom:1px}.export-exts span{font:10px monospace;color:#8fe4ff;border:1px solid #295262;border-radius:999px;padding:8px 10px}@media(max-width:560px){.detected-dimensions{grid-template-columns:1fr 1fr}.export-name-row{grid-template-columns:1fr}}</style>
 <style id="cnc-thread-generator-css">
 /* CNCVEYRA Thread Generator - additive styles only */
 .thread-page{max-width:1220px;margin:auto;padding:95px 5% 80px;background:linear-gradient(180deg,#07131b,#061018)}
@@ -515,11 +516,11 @@ footer#contact .founder-role{
     </div>
 
     <div class="cnc-stepbar">
-      <span class="cnc-chip">01 DXF / GEOMETRY</span>
-      <span class="cnc-chip">02 X DIAMETER / RADIUS</span>
-      <span class="cnc-chip">03 OPERATION + PARAMETERS</span>
-      <span class="cnc-chip">04 GENERATE</span>
-      <span class="cnc-chip">05 VERIFY</span>
+      <span class="cnc-chip">01 DRAWING UPLOAD</span>
+      <span class="cnc-chip">02 SCAN / VERIFY</span>
+      <span class="cnc-chip">03 X DIAMETER / RADIUS</span>
+      <span class="cnc-chip">04 OPERATION + PARAMETERS</span>
+      <span class="cnc-chip">05 GENERATE / VERIFY</span>
       <span class="cnc-chip">06 SIMULATE / EXPORT</span>
     </div>
 
@@ -552,17 +553,17 @@ footer#contact .founder-role{
           </label>
         </div>
 
-        <div class="dxf-box">
-          <div class="dxf-title"><b>Upload DXF</b><span>ASCII DXF • LINE / ARC / CIRCLE detection</span></div>
-          <input id="turnDxf" type="file" accept=".dxf,application/dxf,text/plain">
-          <div id="turnDxfStatus" class="dxf-status">No DXF loaded. You can also enter a manual turning profile below.</div>
+        <div class="dxf-box drawing-upload-box">
+          <div class="dxf-title"><b>UPLOAD DRAWING</b><span>DXF • DWG • PDF • JPG / JPEG</span></div>
+          <input id="turnDxf" type="file" accept=".dxf,.dwg,.pdf,.jpg,.jpeg,.png,application/dxf,application/acad,application/pdf,image/jpeg,image/png,text/plain">
+          <div class="turn-actions" style="margin-top:10px"><button class="cnc-btn primary" id="turnScanDrawing" type="button">SCAN DRAWING</button><button class="cnc-btn" id="turnClearDxf" type="button">CLEAR DRAWING</button></div>
+          <div id="turnDxfStatus" class="dxf-status">Upload a technical drawing, then scan it. Random or unclear images are blocked from program generation.</div>
+          <div id="turnDrawingConfidence" class="drawing-confidence"></div>
+          <div id="turnDrawingPreview" class="drawing-preview" hidden><div class="drawing-preview-head"><b>DRAWING PREVIEW</b><span id="turnPreviewLabel"></span></div><img id="turnPreviewImage" alt="Uploaded CNC drawing preview"></div>
+          <div class="detected-panel" id="turnDetectedPanel" hidden><div class="dxf-title"><b>DETECTED DIMENSIONS / VALUES</b><span>Edit before verification</span></div><div id="turnDetectedDimensions" class="detected-dimensions"></div></div>
           <div id="turnGeometry" class="geometry-list"></div>
         </div>
-
-        <div class="turn-confirm">
-          <label><input id="turnConfirmGeometry" type="checkbox"> I have reviewed the detected 2D turning geometry/profile.</label>
-          <button class="cnc-btn" id="turnClearDxf" type="button">CLEAR DXF</button>
-        </div>
+        <div class="turn-confirm"><label><input id="turnConfirmGeometry" type="checkbox"> I have reviewed and verified the detected drawing, dimensions and profile.</label><span id="turnDrawingGate" class="drawing-gate">SCAN REQUIRED FOR UPLOADED DRAWINGS</span></div>
 
         <div class="manual-profile">
           <label class="turn-field">Manual profile (X,Z) — one point per line
@@ -681,17 +682,19 @@ M30
     </div>
 
     <div class="cnc-panel export-panel">
-      <span class="cnc-kicker">EXPORT</span>
-      <h3>Export only after verification + simulation review</h3>
-      <div class="export-warning">⚠️ <b>WARNING:</b> This file is for learning/simulation and must be independently verified before use on any CNC machine. Check controller, X diameter/radius mode, work offset, tooling, workholding, feeds, speeds, clearances and complete toolpath before machining.</div>
-      <div class="cnc-actions">
-        <button class="cnc-btn primary" id="turnExportNC" type="button">EXPORT .NC</button>
-        <button class="cnc-btn" id="turnExportTXT" type="button">EXPORT .TXT</button>
-      </div>
+      <span class="cnc-kicker">MANUAL PROGRAM EXPORT</span><h3>Export NC / TXT</h3>
+      <div class="export-name-row"><label class="turn-field">File name (letters + numbers only)<input id="manualExportName" type="text" value="CNCVEYRA" maxlength="40" inputmode="text" autocomplete="off"></label><div class="export-exts"><span>NC</span><span>TXT</span></div></div>
+      <div class="turn-actions"><button class="cnc-btn primary" id="manualExportNC" type="button">EXPORT .NC</button><button class="cnc-btn" id="manualExportTXT" type="button">EXPORT .TXT</button></div>
     </div>
 
-    <div class="cnc-learn">
-      <div class="cnc-card"><h4>DXF → CNC Turning workflow</h4><p>DXF → Geometry Detection → X Diameter/Radius → Operation → Parameters → Generate → Verify → Simulation → Export.</p></div>
+    <div class="cnc-panel export-panel">
+      <span class="cnc-kicker">EXPORT CNC PROGRAM</span><h3>Export after verification + simulation review</h3>
+      <div class="export-warning">⚠️ <b>Machine-ready template:</b> generated programs use the configured CNCVEYRA header/footer. Independently verify controller, tooling, offsets, workholding, feeds, speeds and complete toolpath before machining.</div>
+      <div class="export-name-row"><label class="turn-field">File name (letters + numbers only)<input id="turnExportName" type="text" value="CNCVEYRA" maxlength="40" inputmode="text" autocomplete="off"></label><div class="export-exts"><span>NC</span><span>TXT</span></div></div>
+      <div class="turn-actions"><button class="cnc-btn primary" id="turnExportNC" type="button">EXPORT .NC</button><button class="cnc-btn" id="turnExportTXT" type="button">EXPORT .TXT</button></div>
+    </div>
+
+    <div class="cnc-card"><h4>DXF → CNC Turning workflow</h4><p>DXF → Geometry Detection → X Diameter/Radius → Operation → Parameters → Generate → Verify → Simulation → Export.</p></div>
       <div class="cnc-card"><h4>Safety by design</h4><p>The lab never claims that generated code is machine-ready or guaranteed safe. Real controller, tooling, offsets, workholding, machine limits and setup must be independently verified.</p></div>
     </div>
   </div>
@@ -1466,20 +1469,25 @@ M30
       return `<div class="geometry-item"><b>${i+1}. ${g.type}</b><br>${esc(d)}</div>`;
     }).join('')+(geometry.length>120?`<div class="geometry-item">+ ${geometry.length-120} more detected entities</div>`:'');
   }
-  $('turnDxf').addEventListener('change',e=>{
-    const f=e.target.files?.[0]; if(!f)return;
-    const reader=new FileReader();
-    reader.onload=()=>{
-      try{
-        geometry=parseDXF(String(reader.result));
-        renderGeometry();
-        $('turnConfirmGeometry').checked=false;
-        $('turnDxfStatus').innerHTML=geometry.length?`Detected <b>${geometry.length}</b> geometry entities. LINE / ARC / CIRCLE are shown below. Review and confirm before generation.`:'No supported LINE/ARC/CIRCLE entities were detected. Try an ASCII DXF.';
-      }catch(err){geometry=[];renderGeometry();$('turnDxfStatus').textContent='DXF could not be parsed by this basic browser reader.';}
-    };
-    reader.readAsText(f);
-  });
-  $('turnClearDxf').onclick=()=>{geometry=[];$('turnDxf').value='';$('turnGeometry').innerHTML='';$('turnDxfStatus').textContent='DXF cleared. Manual profile is available.';$('turnConfirmGeometry').checked=false;};
+  let drawingScanState={file:null,kind:null,scanned:false,valid:false,confidence:0,dimensions:[],previewUrl:null};
+  function setDrawingGate(ready){$('turnDrawingGate').textContent=ready?'DRAWING VERIFIED ✓':'SCAN REQUIRED FOR UPLOADED DRAWINGS';$('turnDrawingGate').classList.toggle('ready',ready);}
+  function showConfidence(text,kind){const el=$('turnDrawingConfidence');el.textContent=text;el.className='drawing-confidence '+(kind||'');}
+  function renderDetectedDimensions(items){const box=$('turnDetectedDimensions');box.innerHTML=items.length?items.map((v,i)=>`<div class="detected-item"><label>Detected ${i+1}</label><input class="detected-value" data-index="${i}" value="${String(v).replace(/"/g,'&quot;')}"></div>`).join(''):'<div class="cnc-mini">No numeric dimensions detected.</div>';$('turnDetectedPanel').hidden=false;}
+  function resetDrawingState(){drawingScanState={file:null,kind:null,scanned:false,valid:false,confidence:0,dimensions:[],previewUrl:null};geometry=[];$('turnGeometry').innerHTML='';$('turnDetectedPanel').hidden=true;$('turnDrawingPreview').hidden=true;$('turnDxfStatus').textContent='No drawing loaded. You can also enter a manual turning profile below.';showConfidence('','');setDrawingGate(false);$('turnConfirmGeometry').checked=false;}
+  function technicalDimensionMatches(text){const vals=[];const re=/(?:Ø|⌀|DIA\s*)?\s*(\d+(?:[.,]\d+)?)(?:\s*mm)?|R\s*(\d+(?:[.,]\d+)?)/gi;let m;while((m=re.exec(text||''))){const v=Number(String(m[1]||m[2]).replace(',','.'));if(v>0&&v<10000&&!vals.includes(v))vals.push(v);}return vals.slice(0,30);}
+  function imageTechnicalScore(text){const dims=technicalDimensionMatches(text);let score=0;if(dims.length>=3)score+=50;else if(dims.length===2)score+=40;else if(dims.length===1)score+=20;if(/(?:Ø|⌀|\bR\s*\d|±|\bTOL\b|\bISO\b|\bmm\b|\bM\s*\d)/i.test(text||''))score+=25;if((text||'').length>60)score+=15;return Math.min(100,score);}
+  async function loadScript(src,id){if(document.getElementById(id))return;await new Promise((resolve,reject)=>{const sc=document.createElement('script');sc.src=src;sc.id=id;sc.onload=resolve;sc.onerror=()=>reject(new Error('Scanner library could not be loaded.'));document.head.appendChild(sc);});}
+  async function ocrCanvas(canvas){await loadScript('https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js','cncTesseract');const r=await Tesseract.recognize(canvas,'eng',{logger:m=>{if(m.status&&m.progress)showConfidence('Scanning: '+m.status+' '+Math.round(m.progress*100)+'%','warn');}});return r.data.text||'';}
+  async function renderPdfFirstPage(file){await loadScript('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js','cncPdfjs');if(!window.pdfjsLib)throw new Error('PDF engine unavailable.');const data=await file.arrayBuffer();const pdf=await pdfjsLib.getDocument({data}).promise;const page=await pdf.getPage(1);const vp=page.getViewport({scale:1.6});const c=document.createElement('canvas');c.width=Math.ceil(vp.width);c.height=Math.ceil(vp.height);await page.render({canvasContext:c.getContext('2d'),viewport:vp}).promise;return c;}
+  async function scanDrawing(){const file=drawingScanState.file;if(!file)return;const ext=file.name.split('.').pop().toLowerCase();$('turnConfirmGeometry').checked=false;drawingScanState.scanned=false;drawingScanState.valid=false;try{showConfidence('Scanning '+file.name+'…','warn');
+    if(ext==='dxf'){const text=await file.text();geometry=parseDXF(text);renderGeometry();drawingScanState.kind='dxf';drawingScanState.dimensions=technicalDimensionMatches(text);drawingScanState.confidence=geometry.length?95:0;drawingScanState.valid=geometry.length>=2;$('turnDxfStatus').textContent=drawingScanState.valid?`CNC geometry detected: ${geometry.length} LINE / ARC / CIRCLE entities. Review the profile before generation.`:'No supported CNC geometry found in this DXF.';renderDetectedDimensions(drawingScanState.dimensions);showConfidence(drawingScanState.valid?`CNC drawing detected ✓ Confidence ${drawingScanState.confidence}%`:'No valid CNC drawing detected ✕',drawingScanState.valid?'good':'bad');}
+    else if(ext==='dwg'){drawingScanState.kind='dwg';$('turnDxfStatus').textContent='DWG selected. Direct DWG geometry parsing is not available in this browser-only version. Convert DWG to DXF for exact geometry scanning.';showConfidence('DWG accepted as an upload type, but exact program generation requires DXF geometry.', 'bad');drawingScanState.confidence=0;drawingScanState.valid=false;}
+    else if(ext==='jpg'||ext==='jpeg'||ext==='png'||ext==='pdf'){let c;if(ext==='pdf')c=await renderPdfFirstPage(file);else{const url=URL.createObjectURL(file);drawingScanState.previewUrl=url;$('turnPreviewImage').src=url;$('turnPreviewLabel').textContent=file.name;$('turnDrawingPreview').hidden=false;c=document.createElement('canvas');const img=new Image();img.src=url;await new Promise((r,j)=>{img.onload=r;img.onerror=j});const scale=Math.min(1,1800/img.naturalWidth);c.width=Math.max(1,Math.round(img.naturalWidth*scale));c.height=Math.max(1,Math.round(img.naturalHeight*scale));c.getContext('2d').drawImage(img,0,0,c.width,c.height);}if(ext==='pdf'){$('turnPreviewLabel').textContent=file.name+' • page 1';$('turnPreviewImage').src=c.toDataURL('image/png');$('turnDrawingPreview').hidden=false;}const text=await ocrCanvas(c);const dims=technicalDimensionMatches(text);const score=imageTechnicalScore(text);drawingScanState.kind=ext;drawingScanState.dimensions=dims;drawingScanState.confidence=score;drawingScanState.valid=score>=60&&dims.length>=2;renderDetectedDimensions(dims);$('turnDxfStatus').textContent=drawingScanState.valid?'Technical-drawing indicators detected. Verify every value before generation.':'This file does not contain enough technical-drawing evidence. Generation is blocked.';showConfidence(drawingScanState.valid?`Technical drawing detected ✓ Confidence ${score}%`:`Not recognized as a valid CNC drawing ✕ Confidence ${score}%`,drawingScanState.valid?'good':'bad');}
+    else throw new Error('Use DXF, DWG, PDF, JPG or JPEG.');drawingScanState.scanned=true;setDrawingGate(drawingScanState.valid);
+  }catch(e){drawingScanState.scanned=true;drawingScanState.valid=false;setDrawingGate(false);showConfidence('Scan failed: '+e.message,'bad');$('turnDxfStatus').textContent='Drawing could not be safely analyzed. Generation is blocked.';}}
+  $('turnDxf').addEventListener('change',e=>{const f=e.target.files?.[0];resetDrawingState();if(!f)return;drawingScanState.file=f;drawingScanState.kind=f.name.split('.').pop().toLowerCase();$('turnDxfStatus').textContent=`Selected ${f.name}. Press SCAN DRAWING to analyze it.`;});
+  $('turnScanDrawing').onclick=scanDrawing;
+  $('turnClearDxf').onclick=()=>{$('turnDxf').value='';resetDrawingState();};
 
   function profileFromGeometry(){
     const lines=geometry.filter(g=>g.type==='LINE');
@@ -1515,7 +1523,9 @@ M30
     const stock=n('turnStockX',52), opn=op(), m=mode();
     const maxX=Math.max(...p.map(q=>q.x)), minX=Math.min(...p.map(q=>q.x));
     const approach=maxX+C, safeZ=C;
-    let lines=[`%`,`O5100 (CNC CODE LAB - TURNING LEARNING OUTPUT)`,`(X PROGRAMMING: ${m.toUpperCase()})`,`(X=DIAMETER/WIDTH, Z=AXIS; Y NOT USED)`,`G21 G90 G40`,`G54`,`T${String(tool).padStart(2,'0')}01`,`G97 S${Math.round(S)} M03`];
+    const machineHeader=[`%`,`N3;`,`G0 G40 G28 U0.0 W0.0;`,`G0 T0101`,`M8`,`G97 S300 M03`];
+    const machineFooter=[`M09`,`G28 U0. W0. M05`,`M30`,`%`];
+    let lines=[...machineHeader];
     if(opn==='facing'){
       lines.push(`G00 X${fmt(approach)} Z${fmt(safeZ)}`,`G01 Z0 F${fmt(F)}`,`G01 X${fmt(Math.max(0,minX-fin))} F${fmt(F)}`,`G00 X${fmt(approach)} Z${fmt(safeZ)}`);
     }else if(opn==='groove'){
@@ -1544,7 +1554,7 @@ M30
         lines.push(`G00 X${fmt(maxX+C)} Z${fmt(safeZ)}`);
       }
     }
-    lines.push(`M05`,`M30`,`%`);
+    lines.push(...machineFooter);
     generatedCode=lines.join('\n');$('turnEditor').value=generatedCode;$('turnManualStatus').textContent='Generated turning code loaded into the manual editor.';
     lastVerified=false; verifyManual(true); return generatedCode;
   }
@@ -1603,7 +1613,7 @@ M30
     if(!simPaths.length)verifyManual();
     $('turnPlay').textContent='⏸ PAUSE';timer=setInterval(()=>{if(simIndex>=simPaths.length){clearInterval(timer);timer=null;$('turnPlay').textContent='▶ PLAY';return;}simIndex++;fitAndDraw();},180);
   }
-  $('turnGenerate').onclick=()=>{try{if(geometry.length&&!$('turnConfirmGeometry').checked){setStatus($('turnStatus'),'⚠️ <b>Confirm the detected DXF geometry</b> before generating code.','bad');return;}buildCode();}catch(e){setStatus($('turnStatus'),'❌ '+esc(e.message),'bad');}};
+  $('turnGenerate').onclick=()=>{try{if(drawingScanState.file){if(!drawingScanState.scanned||!drawingScanState.valid){setStatus($('turnStatus'),'⚠️ <b>Scan and validate the uploaded drawing first.</b> Random/unclear drawings cannot be used for program generation.','bad');return;}if(drawingScanState.kind!=='dxf'&&!geometry.length){setStatus($('turnStatus'),'⚠️ <b>Verified drawing has no machine geometry.</b> Use DXF geometry or enter/verify a manual X,Z profile before generation.','bad');return;}if(!$('turnConfirmGeometry').checked){setStatus($('turnStatus'),'⚠️ <b>Verify the detected drawing and dimensions</b> before generating code.','bad');return;}}else if(geometry.length&&!$('turnConfirmGeometry').checked){setStatus($('turnStatus'),'⚠️ <b>Confirm the detected geometry</b> before generating code.','bad');return;}buildCode();}catch(e){setStatus($('turnStatus'),'❌ '+esc(e.message),'bad');}};
   $('turnVerify').onclick=()=>verifyManual(true);
   $('turnManualVerify').onclick=()=>verifyManual(false);
   const manualCanvas=$('manualTurnCanvas'), manualCtx=manualCanvas.getContext('2d');
@@ -1655,14 +1665,10 @@ M30
   $('turnPlay').onclick=play;
   $('turnStep').onclick=()=>{if(!simPaths.length)verifyManual();if(simIndex<simPaths.length)simIndex++;fitAndDraw();};
   $('turnReset').onclick=()=>{if(timer){clearInterval(timer);timer=null;$('turnPlay').textContent='▶ PLAY';}simIndex=0;fitAndDraw();};
-  function exportFile(ext){
-    if(!lastVerified){alert('⚠️ WARNING\\n\\nPlease VERIFY CODE first and review the X/Z simulation. Export is intentionally blocked until basic verification passes.');return;}
-    const ok=confirm('⚠️ WARNING\\n\\nThis file is for learning/simulation and must be independently verified before use on any CNC machine. Check controller, X diameter/radius mode, work offset, tooling, workholding, feeds, speeds, clearances and complete toolpath before machining.\\n\\nPress OK only to download the file.');
-    if(!ok)return;
-    const data=$('turnEditor').value||generatedCode,blob=new Blob([data],{type:'text/plain;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');
-    a.href=url;const base=window.cncVeyraSafeFileBase('CNCVEYRA');if(!base)return;a.download=base+'.'+ext;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),500);
-  }
-  $('turnExportNC').onclick=()=>exportFile('nc');$('turnExportTXT').onclick=()=>exportFile('txt');
+  function validExportName(v){return /^[A-Za-z0-9]+$/.test(v.trim());}
+  function exportFile(ext){if(!lastVerified){alert('Please VERIFY CODE first and review the X/Z simulation.');return;}const name=$('turnExportName').value.trim()||'CNCVEYRA';if(!validExportName(name)){alert('File name must contain letters and numbers only. Example: ODROUGH01');return;}const blob=new Blob([$('turnEditor').value||generatedCode],{type:'text/plain;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name+'.'+ext;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),500);}
+  function manualExport(ext){const name=$('manualExportName').value.trim()||'CNCVEYRA';if(!validExportName(name)){alert('File name must contain letters and numbers only. Example: ODROUGH01');return;}const blob=new Blob([$('turnEditor').value||''],{type:'text/plain;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name+'.'+ext;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),500);}
+  $('turnExportNC').onclick=()=>exportFile('NC');$('turnExportTXT').onclick=()=>exportFile('TXT');$('manualExportNC').onclick=()=>manualExport('NC');$('manualExportTXT').onclick=()=>manualExport('TXT');
   $('homeOpenCncLab').onclick=()=>document.querySelector('a[data-nav="cnc-simulator"]')?.click();
   document.querySelectorAll('a[data-nav="cnc-simulator"]').forEach(a=>a.addEventListener('click',()=>setTimeout(()=>{$('cnc-simulator').scrollIntoView({behavior:'smooth',block:'start'});},0)));
   verifyManual(false);
