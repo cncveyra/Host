@@ -393,6 +393,10 @@ footer#contact .founder-role{
 /* Thread-page inline X/Z simulation */
 .thread-inline-sim{margin-top:20px}.thread-inline-sim .thread-sim-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}.thread-sim-actions{display:flex;gap:8px;flex-wrap:wrap}.thread-sim-canvas-wrap{margin-top:12px;border:1px solid #203a46;background:#02080d;overflow:auto;border-radius:2px}.thread-sim-canvas-wrap canvas{display:block;width:100%;min-width:680px;height:auto}.thread-sim-legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;color:#8fa8b2;font:10px monospace}.thread-sim-legend span{display:inline-flex;align-items:center;gap:6px}.thread-sim-dot{width:9px;height:9px;border-radius:50%;display:inline-block;background:#64748b}.thread-sim-dot.rapid{background:#f59e0b}.thread-sim-dot.cut{background:#38bdf8}.thread-sim-dot.thread{background:#22d3ee}.thread-sim-dot.tool{background:#f43f5e}.thread-sim-position{margin-top:10px;color:#9db4bd;font:11px monospace}.thread-inline-sim .simulation-note{margin-top:12px}
 
+
+/* CNCVEYRA calculator workflow */
+.thread-workflow{margin-top:20px}.thread-workflow-head{display:flex;justify-content:space-between;gap:14px;align-items:end;flex-wrap:wrap}.thread-workflow-head h3{margin:0}.thread-workflow-head p{margin:6px 0 0;color:#8fa8b2;font-size:12px;max-width:720px;line-height:1.6}.thread-workflow-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:14px}.thread-workflow-step{border:1px solid #203a46;background:#061119;padding:14px;min-height:112px}.thread-workflow-step .num{font:10px monospace;color:#5eead4;letter-spacing:.12em}.thread-workflow-step h4{margin:7px 0 5px;font-size:13px;color:#dcebf0}.thread-workflow-step p{margin:0;color:#829aa5;font-size:11px;line-height:1.55}.thread-explain{margin-top:12px;display:grid;grid-template-columns:1.1fr .9fr;gap:12px}.thread-explain-box{border:1px solid #203a46;background:#061119;padding:14px}.thread-explain-box h4{margin:0 0 10px;font-size:12px;color:#dcebf0}.thread-checklist{display:grid;grid-template-columns:repeat(2,1fr);gap:7px}.thread-checkitem{font:10px monospace;color:#9db4bd;padding:8px;border:1px solid #17303b}.thread-checkitem.ok{color:#67e8b0;border-color:#245b4c}.thread-explain-text{color:#91a9b3;font-size:11px;line-height:1.65;margin:0}.thread-explain-values{display:grid;grid-template-columns:repeat(2,1fr);gap:7px;margin-top:10px}.thread-value{padding:8px;background:#081820;border:1px solid #17303b;font:10px monospace;color:#a9c0c8}.thread-value b{display:block;color:#e1eef2;margin-bottom:3px}@media(max-width:800px){.thread-workflow-grid{grid-template-columns:repeat(2,1fr)}.thread-explain{grid-template-columns:1fr}}@media(max-width:560px){.thread-workflow-grid,.thread-checklist,.thread-explain-values{grid-template-columns:1fr}}
+
 @media(max-width:900px){.thread-layout{grid-template-columns:1fr}.thread-editor{min-height:420px}}
 @media(max-width:560px){.thread-page{padding:70px 20px}.thread-grid,.thread-summary,.thread-download{grid-template-columns:1fr}.thread-actions{grid-template-columns:1fr 1fr}.thread-card{padding:15px}}
 </style>
@@ -514,6 +518,23 @@ footer#contact .founder-role{
       <div class="thread-note"><b>TRACK / SIMULATE:</b> loads this generated thread program into CNC Code Lab and runs its basic verification/toolpath simulator.</div>
     </div>
   </div>
+
+
+    <div class="thread-card thread-workflow" id="threadWorkflow">
+      <div class="thread-workflow-head">
+        <div><span class="cnc-kicker">CNC THREAD WORKFLOW</span><h3>Input → Program → Check → Simulation</h3><p>The calculator now keeps the complete workflow together: enter dimensions, generate the CNC program, run a structural check, then inspect the same generated X/Z moves in the visual simulation.</p></div>
+      </div>
+      <div class="thread-workflow-grid">
+        <div class="thread-workflow-step"><div class="num">01 INPUT</div><h4>Thread dimensions</h4><p>Major/minor diameter, pitch, Z start/end, cutting depth and clearance drive the calculation.</p></div>
+        <div class="thread-workflow-step"><div class="num">02 GENERATE</div><h4>Structured G33 program</h4><p>Creates the selected reference-style program with calculated passes, approach, thread and retract moves.</p></div>
+        <div class="thread-workflow-step"><div class="num">03 CHECK</div><h4>Program structure check</h4><p>Checks the input values and generated NC structure before simulation. It is not a machine-safety guarantee.</p></div>
+        <div class="thread-workflow-step"><div class="num">04 SIMULATE</div><h4>X / Z toolpath</h4><p>Runs the generated program through the inline toolpath view so the programmed movement can be inspected visually.</p></div>
+      </div>
+      <div class="thread-explain">
+        <div class="thread-explain-box"><h4>PROGRAM EXPLANATION</h4><p id="tgExplanation" class="thread-explain-text">Generate a program to see the calculation and movement summary here.</p><div id="tgExplainValues" class="thread-explain-values"></div></div>
+        <div class="thread-explain-box"><h4>STRUCTURE CHECK</h4><div id="tgChecklist" class="thread-checklist"><div class="thread-checkitem">Waiting for program…</div></div></div>
+      </div>
+    </div>
 
     <div class="thread-card thread-inline-sim" id="threadInlineSimulation">
       <div class="thread-sim-head">
@@ -1826,6 +1847,33 @@ M30
     for(let i=1;i<=count;i++){const next=Math.min(total,i*dep);a.push(i===count?Number(minor.toFixed(3)):Number((major-next).toFixed(3)));}
     return a;
   }
+  function updateWorkflow(v,passes,clearX,approachZ,retractZ){
+    const ex=$("tgExplanation"), vals=$("tgExplainValues"), list=$("tgChecklist");
+    if(!ex||!vals||!list)return;
+    const first=passes[0], last=passes[passes.length-1], feed=Number(v.pitch).toFixed(2);
+    ex.textContent=`The program uses the entered Major Ø${v.major.toFixed(3)} and Minor Ø${v.minor.toFixed(3)} with ${v.dep.toFixed(3)} mm X-diameter cutting depth. It starts at Z${fmtZ(v.z1)}, approaches from Z${fmtZ(approachZ)}, threads to Z${fmtZ(v.z2)}, then retracts to Z${fmtZ(retractZ)}. The feed is F${feed}. ${passes.length} cutting passes are generated, with the final pass ending at the entered minor diameter.`;
+    vals.innerHTML=[
+      ["Clearance X",fmtClearX(clearX)],
+      ["First pass X",fmtX(first)],
+      ["Final pass X",fmtX(last)],
+      ["Passes",String(passes.length)],
+      ["Approach Z",fmtZ(approachZ)],
+      ["Thread end Z",fmtZ(v.z2)],
+      ["Retract Z",fmtZ(retractZ)],
+      ["Feed",`F${feed}`]
+    ].map(([a,b])=>`<div class="thread-value"><b>${a}</b>${b}</div>`).join("");
+    const checks=[
+      ["Major > Minor",v.major>v.minor],
+      ["Passes reach Minor",Math.abs(last-v.minor)<0.0005],
+      ["Feed format F##.##",/^\d+\.\d{2}$/.test(feed)],
+      ["Clearance above Major",clearX>v.major],
+      ["Approach = Start + 0.5",Math.abs(approachZ-(v.z1+0.5))<0.0005],
+      ["Retract = End - 0.5",Math.abs(retractZ-(v.z2-0.5))<0.0005],
+      ["Q/Q0 absent",!out.value.includes("Q0")&&!/\bQ\d/.test(out.value)],
+      ["Final return present",out.value.includes("G0G40X100.0Z50.0")]
+    ];
+    list.innerHTML=checks.map(([a,ok])=>`<div class="thread-checkitem ${ok?"ok":""}">${ok?"✓":"!"} ${a}</div>`).join("");
+  }
   function generate(){try{
     const v=validate();
     const passes=passDiameters(v.major,v.minor,v.dep);
@@ -1842,6 +1890,7 @@ M30
     }
     lines.push("","G0G40X100.0Z50.0","G0G28U0.0W0.0M09","M05","M1","M30","%");
     out.value=lines.join("\n");
+    updateWorkflow(v,passes,clearX,approachZ,retractZ);
     $("tgLead").textContent=feed+" mm";
     $("tgSummaryStarts").textContent="1";
     $("tgPasses").textContent=passes.length;
@@ -1850,7 +1899,7 @@ M30
   function reset(){ $("tgMajor").value="24.8";$("tgMinor").value="23.3";$("tgPitch").value="3.0";$("tgStartZ").value="-27.5";$("tgEndZ").value="-36.5";$("tgDepth").value="0.15";$("tgClearance").value="3";$("tgType").value="OD";$("tgSpindle").value="M04";$("tgCode").value="G33";$("tgTool").value="3";$("tgOffset").value="3";$("tgFileName").value="CNCVEYRA";$("tgMode").value="half";out.value="%";$("tgLead").textContent="3.00 mm";$("tgSummaryStarts").textContent="1";$("tgPasses").textContent="—";$("tgStatus").className="thread-status";$("tgStatus").textContent="Reset complete. Ready for new program.";}
   function download(ext){const raw=$("tgFileName").value.trim(),base=raw||"CNCVEYRA";if(!/^[A-Za-z0-9]+$/.test(base)){setStatus("ERROR: File name must contain letters and numbers only. Example: ODTHREAD01.",false);return;}const blob=new Blob([out.value],{type:"text/plain;charset=utf-8"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=base+"."+ext;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),500);}
   $("tgGenerate").onclick=generate;
-  $("tgCheck").onclick=()=>{try{validate();setStatus("Inputs look valid. Still verify the generated NC before use.",true);}catch(e){setStatus("ERROR: "+e.message,false);}};
+  $("tgCheck").onclick=()=>{try{const v=validate();const passes=passDiameters(v.major,v.minor,v.dep);updateWorkflow(v,passes,v.major+v.clearance,v.z1+0.5,v.z2-0.5);setStatus("Inputs and program structure look valid. Inspect the generated NC and simulation before use.",true);}catch(e){setStatus("ERROR: "+e.message,false);}};
   $("tgReset").onclick=reset;
   $("tgExportNC").onclick=()=>download("nc");$("tgExportTXT").onclick=()=>download("txt");
   $("tgSimulate").onclick=()=>{if(out.value.trim().length>2){const el=$("cncEditor");if(el){el.value=out.value;document.querySelector('[data-page="cnc-simulator"]')?.scrollIntoView({behavior:"smooth"});if(typeof window.__cncVerify==="function")window.__cncVerify();}}};
