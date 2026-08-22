@@ -482,13 +482,10 @@ footer#contact .founder-role{
         <div class="thread-field"><label>Tool offset</label><input id="tgOffset" type="number" min="1" max="99" step="1" value="1"></div>
         <div class="thread-field full"><label>Thread program type</label>
           <select id="tgMode">
-            <option value="simple">1. Simple Thread — 1 start</option>
-            <option value="multi">2. Multi-Start Thread</option>
             <option value="half">3. Half-Diameter Thread — Special G33</option>
           </select>
-          <div class="thread-help">Option 1 keeps the existing CNCVEYRA formula. Option 2 uses the multi-start logic. Option 3 uses the special reference G33 format with no Q output and F formatted to two decimals.</div>
+          <div class="thread-help">Special G33 reference format: fixed X/Z tool movement, pitch as F with two decimals, and no Q/Q0 output.</div>
         </div>
-        <div class="thread-field tg-multi thread-extra full"><label>Number of starts</label><input id="tgStarts" type="number" min="2" max="20" step="1" value="2"><div class="thread-help">Used only for Multi-Start Thread.</div></div>
       </div>
       <div class="thread-actions">
         <button class="thread-btn primary" id="tgGenerate" type="button">GENERATE PROGRAM</button>
@@ -1809,52 +1806,54 @@ M30
 <script id="cnc-thread-generator-js">
 (function(){
   const $=id=>document.getElementById(id); const out=$("tgOutput"); if(!out)return;
-  const n=id=>Number($(id).value); const fmt=v=>Number(v).toFixed(3).replace(/\.?(0+)$/,'').replace(/\.$/,''); const feedFmt=v=>fmt(v);
+  const n=id=>Number($(id).value);
+  const fmt=v=>Number(v).toFixed(3).replace(/\.?0+$/,'').replace(/\.$/,'');
+  const fmtX=v=>Number(v).toFixed(2);
+  const fmtClearX=v=>Number(v).toFixed(1);
+  const fmtZ=v=>Number(v).toFixed(1);
   function setStatus(msg,good=false){const el=$("tgStatus");el.className="thread-status "+(good?"good":"bad");el.textContent=msg;}
-  function toggleMode(){const mode=$("tgMode").value;document.querySelectorAll(".tg-multi").forEach(e=>e.classList.toggle("show",mode==="multi"));}
-  $("tgMode").addEventListener("change",toggleMode); toggleMode();
   function validate(){
     const major=n("tgMajor"),minor=n("tgMinor"),pitch=n("tgPitch"),z1=n("tgStartZ"),z2=n("tgEndZ"),dep=n("tgDepth"),clear=n("tgClearance"),tool=n("tgTool"),off=n("tgOffset");
-    const type=$("tgType").value,mode=$("tgMode").value;
     if(![major,minor,pitch,z1,z2,dep,clear,tool,off].every(Number.isFinite))throw Error("Please enter valid numeric values.");
     if(major<=0||minor<=0||pitch<=0||dep<=0||clear<0)throw Error("Diameter, pitch, cutting depth and clearance must be valid.");
     if(major<=minor)throw Error("Major Diameter must be greater than Minor Diameter.");
     if(z1===z2)throw Error("Start Z and End Z cannot be the same.");
     if(tool<1||tool>99||off<1||off>99)throw Error("Tool and offset must be 1–99.");
-    let starts=1;if(mode==="multi"){starts=Math.round(n("tgStarts"));if(starts<2||starts>20)throw Error("Multi-start generator accepts 2–20 starts.");}
-    return {major,minor,pitch,z1,z2,dep,clear,tool,off,type,mode,starts};
+    return {major,minor,pitch,z1,z2,dep,clear,tool,off};
   }
-  function passDiameters(major,minor,dep,type){const a=[],start=type==="OD"?major:minor,target=type==="OD"?minor:major,dir=type==="OD"?-1:1,total=Math.abs(start-target),count=Math.ceil((total-1e-9)/dep);for(let i=1;i<=count;i++){const next=Math.min(total,i*dep);a.push(i===count?Number(target.toFixed(3)):Number((start+dir*next).toFixed(3)));}return a;}
+  function passDiameters(major,minor,dep){
+    const total=major-minor,count=Math.ceil((total-1e-9)/dep),a=[];
+    for(let i=1;i<=count;i++){const next=Math.min(total,i*dep);a.push(i===count?Number(minor.toFixed(3)):Number((major-next).toFixed(3)));}
+    return a;
+  }
   function generate(){try{
     const v=validate();
-    const passes=passDiameters(v.major,v.minor,v.dep,v.type);
-    const clearX=v.type==="OD"?v.major+v.clear:Math.max(.5,v.minor-v.clear);
-    const startZ=v.z1,endZ=v.z2,approachZ=v.z1+0.5,retractZ=v.z2-0.5;
+    const passes=passDiameters(v.major,v.minor,v.dep);
+    const clearX=v.major+v.clear;
+    const approachZ=v.z1+0.5;
+    const retractZ=v.z2-0.5;
     const T="T"+String(v.tool).padStart(2,"0")+String(v.off).padStart(2,"0");
     const feed=Number(v.pitch).toFixed(2);
-    // Option 3 is intentionally locked to the user's exact reference G33 movement pattern.
-    // No Q/Q0 is generated. Feed is always displayed with two decimals (e.g. F3.00).
-    let lines=["%","N2","","G0G28U0.0W0.0","",T,"","G97S80"+$("tgSpindle").value,"","G0X"+fmt(clearX)+"Z"+fmt(approachZ)+"M08"];
+    let lines=["%","N2","","G0G28U0.0W0.0","",T,"","G97S80"+$("tgSpindle").value,"","G0X"+fmtClearX(clearX)+"Z"+fmtZ(approachZ)+"M08"];
     for(let i=0;i<passes.length;i++){
       const x=passes[i];
-      lines.push("");
-      lines.push("G33X"+fmt(x)+"Z"+fmt(startZ)+"F"+feed);
-      lines.push("G33Z"+fmt(endZ)+"F"+feed);
-      lines.push("G33X"+fmt(clearX)+"Z"+fmt(retractZ)+"F"+feed);
-      // Reference format: G0 return after every pass except the final pass.
-      if(i<passes.length-1) lines.push("","G0X"+fmt(clearX)+"Z"+fmt(approachZ));
+      lines.push("","G33X"+fmtX(x)+"Z"+fmtZ(v.z1)+"F"+feed,"G33Z"+fmtZ(v.z2)+"F"+feed,"G33X"+fmtClearX(clearX)+"Z"+fmtZ(retractZ)+"F"+feed);
+      if(i<passes.length-1) lines.push("","G0X"+fmtClearX(clearX)+"Z"+fmtZ(approachZ));
     }
-    lines.push("");
-    lines.push("G0G40X100.0Z50.0","G0G28U0.0W0.0M09","M05","M1","M30","%");
+    lines.push("","G0G40X100.0Z50.0","G0G28U0.0W0.0M09","M05","M1","M30","%");
     out.value=lines.join("\n");
     $("tgLead").textContent=feed+" mm";
-    $("tgSummaryStarts").textContent=v.starts;
+    $("tgSummaryStarts").textContent="1";
     $("tgPasses").textContent=passes.length;
-    setStatus("Program generated. Verify tool geometry, clearance and controller settings before machining.",true);
+    setStatus("Program generated in the CNCVEYRA reference G33 format. Verify before machining.",true);
   }catch(e){out.value="%\n";setStatus("ERROR: "+e.message,false);}}
-  function reset(){ $("tgMajor").value="24.8";$("tgMinor").value="23.3";$("tgPitch").value="3.0";$("tgStartZ").value="-27.5";$("tgEndZ").value="-36.5";$("tgDepth").value="0.15";$("tgClearance").value="3";$("tgType").value="OD";$("tgSpindle").value="M04";$("tgCode").value="G33";$("tgTool").value="1";$("tgOffset").value="1";$("tgMode").value="simple";$("tgStarts").value="2";$("tgFileName").value="CNCVEYRA";out.value="%";$("tgLead").textContent="3.00 mm";$("tgSummaryStarts").textContent="1";$("tgPasses").textContent="—";toggleMode();$("tgStatus").className="thread-status";$("tgStatus").textContent="Reset complete. Ready for new program.";}
+  function reset(){ $("tgMajor").value="24.8";$("tgMinor").value="23.3";$("tgPitch").value="3.0";$("tgStartZ").value="-27.5";$("tgEndZ").value="-36.5";$("tgDepth").value="0.15";$("tgClearance").value="3";$("tgType").value="OD";$("tgSpindle").value="M04";$("tgCode").value="G33";$("tgTool").value="3";$("tgOffset").value="3";$("tgFileName").value="CNCVEYRA";$("tgMode").value="half";out.value="%";$("tgLead").textContent="3.00 mm";$("tgSummaryStarts").textContent="1";$("tgPasses").textContent="—";$("tgStatus").className="thread-status";$("tgStatus").textContent="Reset complete. Ready for new program.";}
   function download(ext){const raw=$("tgFileName").value.trim(),base=raw||"CNCVEYRA";if(!/^[A-Za-z0-9]+$/.test(base)){setStatus("ERROR: File name must contain letters and numbers only. Example: ODTHREAD01.",false);return;}const blob=new Blob([out.value],{type:"text/plain;charset=utf-8"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=base+"."+ext;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),500);}
-  $("tgGenerate").onclick=generate;$("tgCheck").onclick=()=>{try{validate();setStatus("Inputs look valid. Still verify the generated NC before use.",true);}catch(e){setStatus("ERROR: "+e.message,false);}};$("tgReset").onclick=reset;$("tgExportNC").onclick=()=>download("nc");$("tgExportTXT").onclick=()=>download("txt");$("tgSimulate").onclick=()=>{if(out.value.trim().length>2){const el=$("cncEditor");if(el){el.value=out.value;document.querySelector('[data-page="cnc-simulator"]')?.scrollIntoView({behavior:"smooth"});if(typeof window.__cncVerify==="function")window.__cncVerify();}}};
+  $("tgGenerate").onclick=generate;
+  $("tgCheck").onclick=()=>{try{validate();setStatus("Inputs look valid. Still verify the generated NC before use.",true);}catch(e){setStatus("ERROR: "+e.message,false);}};
+  $("tgReset").onclick=reset;
+  $("tgExportNC").onclick=()=>download("nc");$("tgExportTXT").onclick=()=>download("txt");
+  $("tgSimulate").onclick=()=>{if(out.value.trim().length>2){const el=$("cncEditor");if(el){el.value=out.value;document.querySelector('[data-page="cnc-simulator"]')?.scrollIntoView({behavior:"smooth"});if(typeof window.__cncVerify==="function")window.__cncVerify();}}};
 })();
 </script>
 
