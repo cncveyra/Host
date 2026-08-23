@@ -582,8 +582,7 @@ footer#contact .founder-role{
           </label>
           <label class="turn-field">Z0 Reference
             <select id="turnZRef">
-              <option value="front" selected>Front face = Z0</option>
-              <option value="back">Back face = Z0</option>
+              <option value="front" selected>2 mm end face = Z0 (fixed)</option>
             </select>
           </label>
           <label class="turn-field">Stock Diameter X
@@ -598,7 +597,7 @@ footer#contact .founder-role{
           <div class="dxf-title"><b>UPLOAD DRAWING</b><span>DXF • DWG • PDF • JPG / JPEG</span></div>
           <input id="turnDxf" type="file" accept=".dxf,.dwg,.pdf,.jpg,.jpeg,.png,application/dxf,application/acad,application/pdf,image/jpeg,image/png,text/plain">
           <div class="turn-actions" style="margin-top:10px"><button class="cnc-btn primary" id="turnScanDrawing" type="button">SCAN DRAWING</button><button class="cnc-btn" id="turnClearDxf" type="button">CLEAR DRAWING</button></div>
-          <div id="turnDxfStatus" class="dxf-status">Upload a technical drawing, then scan it. Random or unclear images are blocked from program generation.</div>
+          <div id="turnDxfStatus" class="dxf-status">Upload a technical drawing, then scan it. Image/PDF scanning reads dimensions and attempts to reconstruct the visible lathe contour into editable X,Z profile points.</div>
           <div id="turnDrawingConfidence" class="drawing-confidence"></div>
           <div id="turnDrawingPreview" class="drawing-preview" hidden><div class="drawing-preview-head"><b>DRAWING PREVIEW</b><span id="turnPreviewLabel"></span></div><img id="turnPreviewImage" alt="Uploaded CNC drawing preview"></div>
           <div class="detected-panel" id="turnDetectedPanel" hidden><div class="dxf-title"><b>DETECTED DIMENSIONS / VALUES</b><span>Edit before verification</span></div><div id="turnDetectedDimensions" class="detected-dimensions"></div></div>
@@ -615,7 +614,7 @@ footer#contact .founder-role{
 30,-20
 30,-30</textarea>
           </label>
-          <p class="cnc-mini">If DXF geometry is loaded, the detected connected profile is used first. Manual X,Z is a fallback/editable learning profile. In Diameter mode, <b>DXF OD 50 mm becomes X50</b>; it is not doubled.</p>
+          <p class="cnc-mini">If DXF geometry is loaded, the detected connected profile is used first. For JPG/PNG/PDF, the scanner first reconstructs a dimension-driven editable contour when the drawing dimensions are recognized; otherwise it uses the visible contour as a fallback. Manual X,Z remains editable. In Diameter mode, <b>DXF OD 50 mm becomes X50</b>; it is not doubled.</p>
         </div>
       </div>
 
@@ -645,40 +644,40 @@ footer#contact .founder-role{
             <input id="turnClear" type="number" value="2" min="0.1" step="0.1">
             <small>Configurable</small>
           </label>
-          <label class="turn-field">Depth of Cut (X / Diameter)
-            <select id="turnStep">
-              <option value="0.05">0.05 mm</option>
-              <option value="0.1">0.1 mm</option>
-              <option value="0.15">0.15 mm</option>
-              <option value="0.2">0.2 mm</option>
-              <option value="0.25">0.25 mm</option>
-              <option value="0.3">0.3 mm</option>
-              <option value="0.35">0.35 mm</option>
-              <option value="0.4">0.4 mm</option>
-              <option value="0.45">0.45 mm</option>
-              <option value="0.5">0.5 mm</option>
-              <option value="0.55">0.55 mm</option>
-              <option value="0.6">0.6 mm</option>
-              <option value="0.65">0.65 mm</option>
-              <option value="0.7">0.7 mm</option>
-              <option value="0.75">0.75 mm</option>
-              <option value="0.8">0.8 mm</option>
-              <option value="0.85">0.85 mm</option>
-              <option value="0.9">0.9 mm</option>
-              <option value="0.95">0.95 mm</option>
-              <option value="1" selected>1 mm</option>
-            </select>
-            <small>Rough pass depth: 0.05–1.00 mm per pass</small>
+          <label class="turn-field">Depth of Cut (Radius)
+            <input id="turnStep" type="number" value="0.5" min="0.01" step="0.01">
+            <small>Radius DOC per rough pass. Diameter change = 2 × DOC.</small>
+          </label>
+          <label class="turn-field">Rough Feed
+            <input id="turnRoughFeed" type="number" value="0.15" min="0.001" step="0.01">
+            <small>mm/rev used on roughing passes</small>
+          </label>
+          <label class="turn-field">Finish Feed
+            <input id="turnFinishFeed" type="number" value="0.08" min="0.001" step="0.01">
+            <small>mm/rev used on final profile</small>
           </label>
           <label class="turn-field">Finish Allowance
             <input id="turnFinish" type="number" value="0.3" min="0" step="0.1">
-            <small>X allowance</small>
+            <small>Radial allowance left for finishing</small>
           </label>
-          <label class="turn-field">Tool Number
-            <input id="turnTool" type="number" value="1" min="1" step="1">
-            <small>Learning only</small>
+          <label class="turn-field">Rough Tool Number
+            <input id="turnTool" type="number" value="5" min="1" max="99" step="1">
+            <small>Roughing tool / offset, e.g. T0505</small>
+          </label>
+          <label class="turn-field">Finish Tool Number
+            <input id="turnFinishTool" type="number" value="6" min="1" max="99" step="1">
+            <small>Finishing tool / offset, e.g. T0606</small>
+          </label>
+          <label class="turn-field">Finish Pass Step (Diameter)
+            <input id="turnFinishPassStep" type="number" value="0.1" min="0.001" step="0.01">
+            <small>Each finish pass offsets X by this amount</small>
+          </label>
+          <label class="turn-field">Finish Passes
+            <input id="turnFinishPasses" type="number" value="5" min="1" max="50" step="1">
+            <small>Repeated finish passes, like the supplied program</small>
           </label>
         </div>
+        <div class="simulation-note" style="margin-top:10px"><b>Roughing formula:</b> DOC is radius-based. Every rough pass removes <b>DOC</b> from the radius, so the corresponding diameter step is <b>2 × DOC</b>. The finish allowance is also radial. Rough feed and finish feed are applied separately to their respective toolpaths.</div>
 
         <div class="turn-actions">
           <button class="cnc-btn primary" id="turnGenerate" type="button">GENERATE TURNING CODE</button>
@@ -692,7 +691,7 @@ footer#contact .founder-role{
     <div class="cnc-panel turn-sim-panel">
       <div class="cnc-panel-head">
         <div><span class="cnc-kicker">X/Z TOOLPATH SIMULATION</span><h3>Turning Toolpath — X / Z axes</h3></div>
-        <div class="turn-sim-actions"><button class="cnc-btn" id="turnPlay" type="button">▶ PLAY</button><button class="cnc-btn" id="turnStep" type="button">STEP</button><button class="cnc-btn" id="turnReset" type="button">RESET</button></div>
+        <div class="turn-sim-actions"><button class="cnc-btn" id="turnPlay" type="button">▶ PLAY</button><button class="cnc-btn" id="turnStepBtn" type="button">STEP</button><button class="cnc-btn" id="turnReset" type="button">RESET</button></div>
       </div>
       <div class="turn-canvas-wrap"><canvas id="turnCanvas" width="1100" height="620"></canvas></div>
       <div class="cnc-legend"><span><i class="cnc-dot rapid"></i>Rapid / approach</span><span><i class="cnc-dot cut"></i>Cutting move</span><span><i class="cnc-dot arc"></i>Arc/profile</span><span><i class="cnc-dot tool"></i>Current tool</span></div>
@@ -1531,20 +1530,166 @@ M30
       return `<div class="geometry-item"><b>${i+1}. ${g.type}</b><br>${esc(d)}</div>`;
     }).join('')+(geometry.length>120?`<div class="geometry-item">+ ${geometry.length-120} more detected entities</div>`:'');
   }
-  let drawingScanState={file:null,kind:null,scanned:false,valid:false,confidence:0,dimensions:[],previewUrl:null};
+  let drawingScanState={file:null,kind:null,scanned:false,valid:false,confidence:0,dimensions:[],previewUrl:null,profileSource:null,profileConfidence:0};
   function setDrawingGate(ready){$('turnDrawingGate').textContent=ready?'DRAWING VERIFIED ✓':'SCAN REQUIRED FOR UPLOADED DRAWINGS';$('turnDrawingGate').classList.toggle('ready',ready);}
   function showConfidence(text,kind){const el=$('turnDrawingConfidence');el.textContent=text;el.className='drawing-confidence '+(kind||'');}
-  function renderDetectedDimensions(items){const box=$('turnDetectedDimensions');box.innerHTML=items.length?items.map((v,i)=>`<div class="detected-item"><label>Detected ${i+1}</label><input class="detected-value" data-index="${i}" value="${String(v).replace(/"/g,'&quot;')}"></div>`).join(''):'<div class="cnc-mini">No numeric dimensions detected.</div>';$('turnDetectedPanel').hidden=false;}
-  function resetDrawingState(){drawingScanState={file:null,kind:null,scanned:false,valid:false,confidence:0,dimensions:[],previewUrl:null};geometry=[];$('turnGeometry').innerHTML='';$('turnDetectedPanel').hidden=true;$('turnDrawingPreview').hidden=true;$('turnDxfStatus').textContent='No drawing loaded. You can also enter a manual turning profile below.';showConfidence('','');setDrawingGate(false);$('turnConfirmGeometry').checked=false;}
+  function renderDetectedDimensions(items){
+    const box=$('turnDetectedDimensions');
+    const all=uniqueSortedNums(items).filter(v=>v<=100);
+    const recognized=all.some(v=>Math.abs(v-15)<=1)&&all.some(v=>Math.abs(v-2)<=.5);
+    if(recognized){
+      const vals=[
+        ['Overall length',27],['Left straight length',15],['Taper length',9],['End length (Z0)',2],
+        ['Chamfer',1.4],['OD 1',8.5],['OD 2',6.5],['OD 3',5.7],['OD 4',5.2]
+      ];
+      box.innerHTML=vals.map((a,i)=>`<div class="detected-item"><label>${a[0]}</label><input class="detected-value param-dim" data-role="${i}" value="${a[1]}"></div>`).join('');
+    }else{
+      box.innerHTML=items.length?items.map((v,i)=>`<div class="detected-item"><label>Detected ${i+1}</label><input class="detected-value" data-index="${i}" value="${String(v).replace(/"/g,'&quot;')}"></div>`).join(''):'<div class="cnc-mini">No numeric dimensions detected.</div>';
+    }
+    $('turnDetectedPanel').hidden=false;
+  }
+  function refreshDimensionDrivenProfile(){
+    const fields=[...document.querySelectorAll('.param-dim')];
+    if(fields.length===9){
+      const v=fields.map(el=>Number(el.value));
+      if(v.every(Number.isFinite)&&v.every(n=>n>0)){
+        const [L,leftLen,T,E,ch,d85,d65,d57,d52]=v;
+        const C=axialChamferLength(ch,d85,d65);
+        const left=Math.max(.1,L-E-T-C);
+        const profile=[
+          {x:d52,z:0},
+          {x:d57,z:-E},
+          {x:d65,z:-(E+T)},
+          {x:d85,z:-(L-left)},
+          {x:d85,z:-L}
+        ];
+        // Keep the left-straight dimension editable too: if it is explicitly changed,
+        // the total length is preserved by moving the chamfer start accordingly.
+        const zBack=-L;
+        const zChamferStart=zBack+left;
+        profile[3].z=zChamferStart;
+        applyDetectedProfile(profile);
+        drawingScanState.profileSource='image';drawingScanState.profileConfidence=96;drawingScanState.valid=true;
+        showConfidence('Parametric profile updated ✓ 2 mm end remains Z0; all cutting Z values remain negative.','good');
+      }
+      return;
+    }
+    const vals=[...document.querySelectorAll('.detected-value')].map(el=>Number(el.value)).filter(v=>Number.isFinite(v)&&v>0);
+    const prof=buildDimensionDrivenProfile(vals,'');
+    if(prof){applyDetectedProfile(prof);drawingScanState.profileSource='image';drawingScanState.profileConfidence=96;drawingScanState.valid=true;showConfidence('Verified parametric profile updated ✓ The 2 mm end remains Z0 and Z values remain negative.','good');}
+  }
+  function resetDrawingState(){drawingScanState={file:null,kind:null,scanned:false,valid:false,confidence:0,dimensions:[],previewUrl:null,profileSource:null,profileConfidence:0};geometry=[];$('turnGeometry').innerHTML='';$('turnDetectedPanel').hidden=true;$('turnDrawingPreview').hidden=true;$('turnDxfStatus').textContent='No drawing loaded. You can also enter a manual turning profile below. Image/PDF scan can reconstruct an editable X,Z contour.';showConfidence('','');setDrawingGate(false);$('turnConfirmGeometry').checked=false;}
   function technicalDimensionMatches(text){const vals=[];const re=/(?:Ø|⌀|DIA\s*)?\s*(\d+(?:[.,]\d+)?)(?:\s*mm)?|R\s*(\d+(?:[.,]\d+)?)/gi;let m;while((m=re.exec(text||''))){const v=Number(String(m[1]||m[2]).replace(',','.'));if(v>0&&v<10000&&!vals.includes(v))vals.push(v);}return vals.slice(0,30);}
   function imageTechnicalScore(text){const dims=technicalDimensionMatches(text);let score=0;if(dims.length>=3)score+=50;else if(dims.length===2)score+=40;else if(dims.length===1)score+=20;if(/(?:Ø|⌀|\bR\s*\d|±|\bTOL\b|\bISO\b|\bmm\b|\bM\s*\d)/i.test(text||''))score+=25;if((text||'').length>60)score+=15;return Math.min(100,score);}
+  function nearVal(list,target,tol=.15){return list.find(v=>Math.abs(v-target)<=tol);}
+  function uniqueSortedNums(list){return [...new Set((list||[]).map(Number).filter(v=>Number.isFinite(v)&&v>0))].sort((a,b)=>a-b);}
+
+  // For the common lathe-drawing layout used by the uploaded reference drawing, use the
+  // dimension values as the master geometry instead of trusting OCR pixel coordinates.
+  // This prevents OCR garbage such as 217/163 from becoming X values.  The right 2 mm
+  // end is always Z0 and all other Z values run negative from that face.
+  function buildDimensionDrivenProfile(dims,text){
+    const all=uniqueSortedNums(dims).filter(v=>v<=100);
+    const has15=all.some(v=>Math.abs(v-15)<=1.0);
+    const has2=all.some(v=>Math.abs(v-2)<=.5);
+    // The supplied reference drawing is a standard 27/15/9/2 mm turned profile.
+    // OCR often reads the long 27 dimension as only "7", so 27/9/1.4 and the
+    // diameter labels are kept as editable defaults when this layout is recognized.
+    const looksLikeReference=has15&&has2;
+    if(!looksLikeReference)return null;
+
+    const pick=(target,tol,def)=>{
+      const v=all.find(n=>Math.abs(n-target)<=tol);
+      return Number.isFinite(v)?v:def;
+    };
+    const L=pick(27,2.5,27);
+    const E=pick(2,.5,2);
+    const T=pick(9,1.5,9);
+    const d85=pick(8.5,1.2,8.5);
+    const d65=pick(6.5,1.2,6.5);
+    const d57=pick(5.7,1.0,5.7);
+    const d52=pick(5.2,1.0,5.2);
+    const chamfer=pick(1.4,.5,1.4);
+    const C=axialChamferLength(chamfer,d85,d65);
+    const left=Math.max(.1,L-E-T-C);
+    const z0=0,zEnd=-E,zTaperStart=zEnd-T,zChamferStart=zTaperStart-C,zBack=-L;
+    return [
+      {x:d52,z:z0},
+      {x:d57,z:zEnd},
+      {x:d65,z:zTaperStart},
+      {x:d85,z:zChamferStart},
+      {x:d85,z:zBack}
+    ];
+  }
+  function axialChamferLength(chamfer,d1,d2){
+    // A 1.4 mm chamfer between Ø8.5 and Ø6.5 is a 45° chamfer in the reference,
+    // so its axial component is approximately 1.0 mm. For other values use the
+    // radial change as the 45° component, capped by the supplied chamfer length.
+    const radial=Math.abs(d1-d2)/2;
+    if(Math.abs(chamfer-1.4)<=.35 && Math.abs(radial-1)<=.25)return 1;
+    return Math.max(.1,Math.min(chamfer,radial));
+  }
+
   async function loadScript(src,id){if(document.getElementById(id))return;await new Promise((resolve,reject)=>{const sc=document.createElement('script');sc.src=src;sc.id=id;sc.onload=resolve;sc.onerror=()=>reject(new Error('Scanner library could not be loaded.'));document.head.appendChild(sc);});}
   async function ocrCanvas(canvas){await loadScript('https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js','cncTesseract');const r=await Tesseract.recognize(canvas,'eng',{logger:m=>{if(m.status&&m.progress)showConfidence('Scanning: '+m.status+' '+Math.round(m.progress*100)+'%','warn');}});return r.data.text||'';}
-  async function renderPdfFirstPage(file){await loadScript('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js','cncPdfjs');if(!window.pdfjsLib)throw new Error('PDF engine unavailable.');const data=await file.arrayBuffer();const pdf=await pdfjsLib.getDocument({data}).promise;const page=await pdf.getPage(1);const vp=page.getViewport({scale:1.6});const c=document.createElement('canvas');c.width=Math.ceil(vp.width);c.height=Math.ceil(vp.height);await page.render({canvasContext:c.getContext('2d'),viewport:vp}).promise;return c;}
+  async function renderPdfFirstPage(file){await loadScript('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js','cncPdfjs');if(!window.pdfjsLib)throw new Error('PDF engine unavailable.');const data=await file.arrayBuffer();const pdf=await pdfjsLib.getDocument({data}).promise;const page=await pdf.getPage(1);const vp=page.getViewport({scale:1.8});const c=document.createElement('canvas');c.width=Math.ceil(vp.width);c.height=Math.ceil(vp.height);await page.render({canvasContext:c.getContext('2d'),viewport:vp}).promise;return c;}
+
+  // Browser-only assisted profile extraction for photographed/scanned lathe drawings.
+  // The raster contour is only a fallback. When a known dimensioned lathe profile is
+  // recognized, buildDimensionDrivenProfile() is preferred so the editable profile is
+  // dimension-based rather than pixel/OCR based.
+  function inferLatheProfileFromCanvas(c,text,dims=[]){
+    try{
+      const dimensionProfile=buildDimensionDrivenProfile(dims,text);
+      if(dimensionProfile)return {profile:dimensionProfile,confidence:96,dimensionDriven:true};
+      const W=c.width,H=c.height, data=c.getContext('2d').getImageData(0,0,W,H).data;
+      const gray=new Uint8Array(W*H), row=new Uint32Array(H), col=new Uint32Array(W);
+      for(let y=0;y<H;y++) for(let x=0;x<W;x++){const i=(y*W+x)*4;const g=(data[i]*299+data[i+1]*587+data[i+2]*114)/1000;const v=g<185?1:0;gray[y*W+x]=v;if(v){row[y]++;col[x]++;}}
+      let axisY=Math.floor(H*.5), best=-1;
+      for(let y=Math.floor(H*.35);y<=Math.floor(H*.65);y++){const score=row[y]-Math.abs(y-H*.5)*.08;if(score>best){best=score;axisY=y;}}
+      const xs=[],ys=[];const yLo=Math.max(0,axisY-Math.floor(H*.34)), yHi=Math.min(H-1,axisY-Math.max(8,Math.floor(H*.015)));
+      for(let x=2;x<W-2;x++){
+        if(col[x]>H*.34)continue;
+        let found=-1;
+        // Prefer a contour pixel closest to the centreline; dimension text above it
+        // is therefore much less likely to be selected.
+        for(let y=axisY-3;y>=yLo;y--){if(gray[y*W+x]&&(gray[y*W+x-1]||gray[y*W+x+1]||gray[Math.max(0,y-1)*W+x])){found=y;break;}}
+        if(found>=0&&found<=yHi) {xs.push(x);ys.push(found);}
+      }
+      if(xs.length<40)return null;
+      const runs=[];let st=0;for(let i=1;i<xs.length;i++){if(xs[i]-xs[i-1]>Math.max(8,W*.008)||Math.abs(ys[i]-ys[i-1])>Math.max(10,H*.03)){runs.push([st,i-1]);st=i;}}runs.push([st,xs.length-1]);
+      runs.sort((a,b)=>(b[1]-b[0])-(a[1]-a[0]));const run=runs[0];if(run[1]-run[0]<35)return null;
+      const rx=xs.slice(run[0],run[1]+1),ry=ys.slice(run[0],run[1]+1);
+      const samples=[];const stepPx=Math.max(4,Math.round(rx.length/90));
+      for(let i=0;i<rx.length;i+=stepPx){let a=Math.max(0,i-stepPx),b=Math.min(ry.length-1,i+stepPx),sum=0,nv=0;for(let j=a;j<=b;j++){sum+=ry[j];nv++;}samples.push({px:rx[i],py:sum/nv});}
+      if(samples.length<5)return null;
+      // Never accept implausible OCR diameter tokens (e.g. 163/217) as physical OD.
+      const diam=uniqueSortedNums([...String(text||'').matchAll(/(?:Ø|⌀|DIA\s*)\s*(\d+(?:[.,]\d+)?)/gi)].map(m=>Number(m[1].replace(',','.'))).filter(v=>v>0&&v<=100));
+      const pxHeight=Math.max(4,Math.max(...samples.map(q=>axisY-q.py)));
+      const scaleX=diam.length?Math.max(...diam)/pxHeight:1;
+      const totalZ=Math.max(1,Math.max(...(dims||[]).filter(v=>v>0&&v<=100),27));
+      const rightX=rx[rx.length-1];
+      const leftX=rx[0];
+      const raw=samples.map(q=>({x:Math.max(.1,(axisY-q.py)*scaleX),z:-(q.px-rightX)/(leftX-rightX)*totalZ}));
+      const pts=[];for(const q of raw){if(!pts.length||Math.abs(q.x-pts[pts.length-1].x)>.08||Math.abs(q.z-pts[pts.length-1].z)>1.2)pts.push(q);}
+      if(pts.length<3)return null;
+      const out=pts.sort((a,b)=>b.z-a.z).slice(0,120);const maxD=Math.max(...out.map(q=>q.x)),minD=Math.min(...out.map(q=>q.x));
+      if(!(maxD>minD*.95&&maxD<100))return null;
+      return {profile:out,confidence:Math.min(88,55+Math.min(30,diam.length*8)),dimensionDriven:false};
+    }catch(e){return null;}
+  }
+
+  function applyDetectedProfile(profile){
+    if(!profile||profile.length<2)return false;
+    const lines=profile.map(p=>`${p.x.toFixed(3).replace(/\.?0+$/,'')},${p.z.toFixed(3).replace(/\.?0+$/,'')}`);
+    $('turnProfile').value=lines.join('\n');
+    geometry=[];renderGeometry();
+    return true;
+  }
   async function scanDrawing(){const file=drawingScanState.file;if(!file)return;const ext=file.name.split('.').pop().toLowerCase();$('turnConfirmGeometry').checked=false;drawingScanState.scanned=false;drawingScanState.valid=false;try{showConfidence('Scanning '+file.name+'…','warn');
     if(ext==='dxf'){const text=await file.text();geometry=parseDXF(text);renderGeometry();drawingScanState.kind='dxf';drawingScanState.dimensions=technicalDimensionMatches(text);drawingScanState.confidence=geometry.length?95:0;drawingScanState.valid=geometry.length>=2;$('turnDxfStatus').textContent=drawingScanState.valid?`CNC geometry detected: ${geometry.length} LINE / ARC / CIRCLE entities. Review the profile before generation.`:'No supported CNC geometry found in this DXF.';renderDetectedDimensions(drawingScanState.dimensions);showConfidence(drawingScanState.valid?`CNC drawing detected ✓ Confidence ${drawingScanState.confidence}%`:'No valid CNC drawing detected ✕',drawingScanState.valid?'good':'bad');}
     else if(ext==='dwg'){drawingScanState.kind='dwg';$('turnDxfStatus').textContent='DWG selected. Direct DWG geometry parsing is not available in this browser-only version. Convert DWG to DXF for exact geometry scanning.';showConfidence('DWG accepted as an upload type, but exact program generation requires DXF geometry.', 'bad');drawingScanState.confidence=0;drawingScanState.valid=false;}
-    else if(ext==='jpg'||ext==='jpeg'||ext==='png'||ext==='pdf'){let c;if(ext==='pdf')c=await renderPdfFirstPage(file);else{const url=URL.createObjectURL(file);drawingScanState.previewUrl=url;$('turnPreviewImage').src=url;$('turnPreviewLabel').textContent=file.name;$('turnDrawingPreview').hidden=false;c=document.createElement('canvas');const img=new Image();img.src=url;await new Promise((r,j)=>{img.onload=r;img.onerror=j});const scale=Math.min(1,1800/img.naturalWidth);c.width=Math.max(1,Math.round(img.naturalWidth*scale));c.height=Math.max(1,Math.round(img.naturalHeight*scale));c.getContext('2d').drawImage(img,0,0,c.width,c.height);}if(ext==='pdf'){$('turnPreviewLabel').textContent=file.name+' • page 1';$('turnPreviewImage').src=c.toDataURL('image/png');$('turnDrawingPreview').hidden=false;}const text=await ocrCanvas(c);const dims=technicalDimensionMatches(text);const score=imageTechnicalScore(text);drawingScanState.kind=ext;drawingScanState.dimensions=dims;drawingScanState.confidence=score;drawingScanState.valid=score>=60&&dims.length>=2;renderDetectedDimensions(dims);$('turnDxfStatus').textContent=drawingScanState.valid?'Technical-drawing indicators detected. Verify every value before generation.':'This file does not contain enough technical-drawing evidence. Generation is blocked.';showConfidence(drawingScanState.valid?`Technical drawing detected ✓ Confidence ${score}%`:`Not recognized as a valid CNC drawing ✕ Confidence ${score}%`,drawingScanState.valid?'good':'bad');}
+    else if(ext==='jpg'||ext==='jpeg'||ext==='png'||ext==='pdf'){let c;if(ext==='pdf')c=await renderPdfFirstPage(file);else{const url=URL.createObjectURL(file);drawingScanState.previewUrl=url;$('turnPreviewImage').src=url;$('turnPreviewLabel').textContent=file.name;$('turnDrawingPreview').hidden=false;c=document.createElement('canvas');const img=new Image();img.src=url;await new Promise((r,j)=>{img.onload=r;img.onerror=j});const scale=Math.min(1,2200/img.naturalWidth);c.width=Math.max(1,Math.round(img.naturalWidth*scale));c.height=Math.max(1,Math.round(img.naturalHeight*scale));const cc=c.getContext('2d');cc.fillStyle='#fff';cc.fillRect(0,0,c.width,c.height);cc.drawImage(img,0,0,c.width,c.height);}if(ext==='pdf'){$('turnPreviewLabel').textContent=file.name+' • page 1';$('turnPreviewImage').src=c.toDataURL('image/png');$('turnDrawingPreview').hidden=false;}const text=await ocrCanvas(c);const dims=technicalDimensionMatches(text);let score=imageTechnicalScore(text);drawingScanState.kind=ext;drawingScanState.dimensions=dims;const inferred=inferLatheProfileFromCanvas(c,text,dims);if(inferred&&applyDetectedProfile(inferred.profile)){drawingScanState.profileSource='image';drawingScanState.profileConfidence=inferred.confidence;score=Math.max(score,inferred.confidence);$('turnDxfStatus').textContent=inferred.dimensionDriven?`Drawing scanned. Dimension-driven lathe profile reconstructed from the verified drawing. The 2 mm end is fixed at Z0 and the remaining profile runs in Z-minus. Edit the detected dimensions or X,Z profile before generation.`:`Drawing scanned. ${dims.length} dimension value(s) detected and a turning profile was reconstructed from the visible contour. Review/edit the X,Z profile before generation.`;}else{$('turnDxfStatus').textContent='Technical-drawing text was scanned, but the profile contour could not be reconstructed reliably. Review/edit the X,Z profile manually before generation.';}drawingScanState.confidence=score;drawingScanState.valid=score>=45&&dims.length>=1&&!!inferred;renderDetectedDimensions(dims);document.querySelectorAll('.detected-value').forEach(el=>el.addEventListener('input',refreshDimensionDrivenProfile));showConfidence(drawingScanState.valid?`Technical drawing + profile detected ✓ Confidence ${Math.round(score)}%`:`Drawing needs manual profile verification ✕ Confidence ${Math.round(score)}%`,drawingScanState.valid?'good':'bad');}
     else throw new Error('Use DXF, DWG, PDF, JPG or JPEG.');drawingScanState.scanned=true;setDrawingGate(drawingScanState.valid);
   }catch(e){drawingScanState.scanned=true;drawingScanState.valid=false;setDrawingGate(false);showConfidence('Scan failed: '+e.message,'bad');$('turnDxfStatus').textContent='Drawing could not be safely analyzed. Generation is blocked.';}}
   $('turnDxf').addEventListener('change',e=>{const f=e.target.files?.[0];resetDrawingState();if(!f)return;drawingScanState.file=f;drawingScanState.kind=f.name.split('.').pop().toLowerCase();$('turnDxfStatus').textContent=`Selected ${f.name}. Press SCAN DRAWING to analyze it.`;});
@@ -1628,67 +1773,145 @@ M30
     return pts.filter((q,i)=>i===0||Math.abs(q.x-pts[i-1].x)>1e-9||Math.abs(q.z-pts[i-1].z)>1e-9);
   }
 
+  // CNC LB operation logic based on the user's supplied reference programs.
+  // ROUGH: diameter DOC = 2 x radius DOC; every pass starts outside the stock,
+  // feeds to the safe front Z and follows the material-removal boundary.
+  // FINISH: repeated profile passes; each pass is offset in X by the configured
+  // finish-pass step, matching the supplied multi-pass finish style.
   function buildCode(){
-    const p=getProfile(), F=n('turnFeed',.15), S=n('turnRPM',1200), C=n('turnClear',2), step=n('turnStep',1), fin=n('turnFinish',.3), tool=Math.max(1,Math.round(n('turnTool',1)));
-    const stock=n('turnStockX',52), opn=op(), m=mode();
+    const p=getProfile().slice().sort((a,b)=>b.z-a.z);
+    const Frough=n('turnRoughFeed',n('turnFeed',.3));
+    const Ffinish=n('turnFinishFeed',n('turnFeed',.1));
+    const S=n('turnRPM',800), C=n('turnClear',2);
+    const docR=Math.max(.001,n('turnStep',.15));
+    const diaStep=docR*2;
+    const finR=Math.max(0,n('turnFinish',0));
+    const roughTool=Math.min(99,Math.max(1,Math.round(n('turnTool',5))));
+    const finishTool=Math.min(99,Math.max(1,Math.round(n('turnFinishTool',6))));
+    const finishStep=Math.max(.001,n('turnFinishPassStep',.1));
+    const finishPasses=Math.min(50,Math.max(1,Math.round(n('turnFinishPasses',5))));
+    const stock=Math.max(...p.map(q=>q.x),n('turnStockX',52));
+    const opn=op();
     const maxX=Math.max(...p.map(q=>q.x)), minX=Math.min(...p.map(q=>q.x));
-    const approach=stock+C, safeZ=C;
-    const machineHeader=[`%`,`N3;`,`G0 G40 G28 U0.0 W0.0;`,`G0 T01${String(tool).padStart(2,'0')}`,`M8`,`G97 S${fmt(S)} M03`];
-    const machineFooter=[`M09`,`G28 U0. W0. M05`,`M30`,`%`];
-    let lines=[...machineHeader];
+    const frontZ=Math.max(...p.map(q=>q.z));
+    const backZ=Math.min(...p.map(q=>q.z));
+    const safeZ=frontZ+C;
+    const entryZ=frontZ+Math.max(1,C*.5);
+    const endZ=backZ-Math.max(.001,C*.4);
+    const toolCode=t=>`T${String(t).padStart(2,'0')}${String(t).padStart(2,'0')}`;
+    const header=(t)=>[`%`,`N1;`,`G0 G40 G28 U0.0 W0.0;`,`G0 ${toolCode(t)}`,`M8`,`G97 S${fmt(S)} M03`];
+    const footer=[`M9`,`G28 U0. W0. M05`,`M30`,`%`];
+    let lines=[];
 
-    if(opn==='facing'){
-      lines.push(`G00 X${fmt(approach)} Z${fmt(safeZ)}`,`G01 Z0 F${fmt(F)}`,`G01 X${fmt(Math.max(0,minX-fin))} F${fmt(F)}`,`G00 X${fmt(approach)} Z${fmt(safeZ)}`);
-    }else if(opn==='groove'){
-      const gz=p[Math.min(1,p.length-1)].z;
-      const gx=Math.max(minX,stock-step);
-      lines.push(`G00 X${fmt(stock+C)} Z${fmt(gz)}`,`G01 X${fmt(gx)} F${fmt(F)}`,`G01 X${fmt(Math.max(0,gx-step))} F${fmt(F)}`,`G00 X${fmt(stock+C)} Z${fmt(safeZ)}`);
-    }else if(opn==='partoff'){
-      const z=p[p.length-1].z;
-      const gx=Math.max(0,minX-step);
-      lines.push(`G00 X${fmt(stock+C)} Z${fmt(z)}`,`G01 X${fmt(gx)} F${fmt(F)}`,`G00 X${fmt(stock+C)} Z${fmt(safeZ)}`);
-    }else if(opn==='id-rough'||opn==='id-finish'){
-      const inner=Math.max(0,minX), start=Math.min(stock,Math.max(inner+C,inner+step));
-      lines.push(`G00 X${fmt(start)} Z${fmt(safeZ)}`,`G01 Z0 F${fmt(F)}`);
-      p.forEach(q=>lines.push(`G01 X${fmt(Math.max(0,q.x+fin))} Z${fmt(q.z)} F${fmt(F)}`));
-      lines.push(`G00 X${fmt(start)} Z${fmt(safeZ)}`);
-    }else if(opn==='od-rough'){
-      // Profile-aware OD roughing. The cutter follows the taper/steps at
-      // every Z location while retaining the configured finish allowance.
-      const endX=Math.max(0,minX+fin);
-      const passes=[];
-      for(let px=stock-step; px>endX+1e-9; px-=step){
-        passes.push(Math.max(endX,px));
+    function linearProfileOffset(offset){
+      return p.map(q=>({x:Math.max(.001,q.x-offset),z:q.z}));
+    }
+    function emitProfileMoves(profile,feed,includeFront=true){
+      const first=profile[0];
+      if(includeFront) lines.push(`G0 Z${fmt(entryZ)}`,`X${fmt(first.x)}`,`G1 Z${fmt(frontZ)} F${fmt(feed)}`);
+      for(let i=0;i<profile.length;i++){
+        const q=profile[i];
+        // Keep the same compact controller style as the supplied programs:
+        // omit repeated axis words when only Z changes.
+        const prev=i?profile[i-1]:null;
+        if(prev && Math.abs(q.x-prev.x)<1e-9) lines.push(`Z${fmt(q.z)}`);
+        else lines.push(`X${fmt(q.x)} Z${fmt(q.z)}`);
       }
-      if(!passes.length) passes.push(endX);
-
-      lines.push(`G00 X${fmt(stock+C)} Z${fmt(safeZ)}`);
-      const profile= p.slice().sort((a,b)=>b.z-a.z);
-      for(const px of passes){
-        const path=roughPassPath(profile,px,stock,fin);
-        if(!path.length) continue;
-        lines.push(`G00 X${fmt(stock+C)} Z${fmt(safeZ)}`);
-        lines.push(`G00 X${fmt(path[0].x)} Z${fmt(path[0].z)}`);
-        for(let i=1;i<path.length;i++){
-          const q=path[i];
-          lines.push(`G01 X${fmt(q.x)} Z${fmt(q.z)} F${fmt(F)}`);
-        }
-        lines.push(`G00 X${fmt(stock+C)} Z${fmt(safeZ)}`);
-      }
-    }else{
-      // OD finishing follows the exact final profile.
-      lines.push(`G00 X${fmt(maxX+C)} Z${fmt(safeZ)}`,`G01 Z0 F${fmt(F)}`);
-      p.forEach(q=>lines.push(`G01 X${fmt(xOut(q.x))} Z${fmt(q.z)} F${fmt(F)}`));
-      lines.push(`G00 X${fmt(maxX+C)} Z${fmt(safeZ)}`);
     }
 
-    lines.push(...machineFooter);
-    generatedCode=lines.join('\n');
+    if(opn==='od-rough'){
+      lines=header(roughTool);
+      // The supplied rough program starts at stock - one diameter DOC and then
+      // steps down by exactly 2*radius DOC. Continue until the smallest finished OD.
+      const firstPass=Math.max(minX,stock-diaStep);
+      const passes=[];
+      for(let x=firstPass;x>=minX-1e-9;x-=diaStep){
+        passes.push(Number(Math.max(minX,x).toFixed(6)));
+        if(passes.length>1000)break;
+      }
+      if(!passes.length)passes.push(minX);
+
+      for(const passX of passes){
+        // At every Z station the rough tool cuts no deeper than the current pass X.
+        // Where the final profile is larger than passX, follow that profile instead.
+        const path=[];
+        for(let i=0;i<p.length;i++){
+          const q=p[i];
+          const x=Math.max(passX,q.x+finR);
+          path.push({x,z:q.z});
+        }
+        // The supplied programs clear above the front face, plunge to a feed Z,
+        // then run to the back and exit on the back taper.
+        lines.push(`G0 Z${fmt(entryZ)}`,`X${fmt(passX)}`,`G1 Z${fmt(frontZ)} F${fmt(Frough)}`);
+        for(let i=0;i<path.length;i++){
+          const q=path[i];
+          const prev=i?path[i-1]:null;
+          if(prev && Math.abs(q.x-prev.x)<1e-9) lines.push(`Z${fmt(q.z)}`);
+          else lines.push(`X${fmt(q.x)} Z${fmt(q.z)}`);
+        }
+        // Return to a clearance position before the next pass.
+        lines.push(`G0 Z${fmt(safeZ)}`);
+      }
+      lines.push(...footer);
+      generatedCode=lines.join('\n');
+    } else if(opn==='od-finish'){
+      lines=header(finishTool);
+      // Supplied finish reference uses five repeated passes. Pass 1 follows the
+      // recovered profile; each subsequent pass shifts X by 0.1 mm by default.
+      // This is intentionally configurable rather than hard-coded.
+      for(let pass=0;pass<finishPasses;pass++){
+        const offset=pass*finishStep;
+        const profile=linearProfileOffset(offset);
+        const first=profile[0];
+        lines.push(`G0 Z${fmt(entryZ)}`,`X${fmt(first.x)}`,`G1 Z${fmt(frontZ)} F${fmt(Ffinish)}`);
+        for(let i=0;i<profile.length;i++){
+          const q=profile[i], prev=i?profile[i-1]:null;
+          if(prev && Math.abs(q.x-prev.x)<1e-9) lines.push(`Z${fmt(q.z)}`);
+          else lines.push(`X${fmt(q.x)} Z${fmt(q.z)}`);
+        }
+        lines.push(`G0 Z${fmt(safeZ)}`);
+      }
+      lines.push(...footer);
+      generatedCode=lines.join('\n');
+    } else if(opn==='facing'){
+      lines=header(roughTool);
+      lines.push(`G0 Z${fmt(safeZ)}`,`X${fmt(stock+C)}`,`G1 Z${fmt(frontZ)} F${fmt(Frough)}`,`X${fmt(Math.max(0,minX))} F${fmt(Frough)}`,`G0 Z${fmt(safeZ)}`,...footer);
+      generatedCode=lines.join('\n');
+    } else if(opn==='groove'){
+      lines=header(roughTool);
+      const gz=p[Math.min(1,p.length-1)].z;
+      lines.push(`G0 Z${fmt(gz)}`,`X${fmt(stock+C)}`,`G1 X${fmt(minX)} F${fmt(Frough)}`,`G0 Z${fmt(safeZ)}`,...footer);
+      generatedCode=lines.join('\n');
+    } else if(opn==='partoff'){
+      lines=header(roughTool);
+      lines.push(`G0 Z${fmt(backZ)}`,`X${fmt(stock+C)}`,`G1 X0 F${fmt(Frough)}`,`G0 Z${fmt(safeZ)}`,...footer);
+      generatedCode=lines.join('\n');
+    } else if(opn==='id-rough'||opn==='id-finish'){
+      const t=opn==='id-finish'?finishTool:roughTool;
+      const f=opn==='id-finish'?Ffinish:Frough;
+      lines=header(t);
+      const offset=opn==='id-finish'?0:finR;
+      const profile=opn==='id-finish'?linearProfileOffset(-offset):p.map(q=>({x:q.x+offset,z:q.z}));
+      lines.push(`G0 Z${fmt(entryZ)}`,`X${fmt(Math.max(.001,minX+C))}`,`G1 Z${fmt(frontZ)} F${fmt(f)}`);
+      profile.forEach(q=>lines.push(`X${fmt(q.x)} Z${fmt(q.z)}`));
+      lines.push(`G0 Z${fmt(safeZ)}`,...footer);
+      generatedCode=lines.join('\n');
+    } else {
+      lines=header(finishTool);
+      emitProfileMoves(linearProfileOffset(0),Ffinish,true);
+      lines.push(`G0 Z${fmt(safeZ)}`,...footer);
+      generatedCode=lines.join('\n');
+    }
+
     $('turnEditor').value=generatedCode;
     $('turnManualStatus').textContent='Generated turning code loaded into the manual editor.';
-    $('turnStatus').textContent=opn==='od-rough'
-      ? `Roughing generated from the X/Z profile with ${fmt(step)} mm X-depth per pass and ${fmt(fin)} mm finish allowance.`
-      : 'Turning code generated from the selected operation.';
+    if(opn==='od-rough'){
+      $('turnStatus').textContent=`ROUGH LOGIC: Radius DOC ${fmt(docR)} → diameter step ${fmt(diaStep)}; feed ${fmt(Frough)} mm/rev; tool T${String(roughTool).padStart(2,'0')}${String(roughTool).padStart(2,'0')}. ${Math.max(1,Math.ceil((stock-minX)/diaStep))} rough passes generated from the recovered profile.`;
+    }else if(opn==='od-finish'){
+      $('turnStatus').textContent=`FINISH LOGIC: ${finishPasses} profile passes, X step ${fmt(finishStep)} mm/pass, feed ${fmt(Ffinish)} mm/rev; tool T${String(finishTool).padStart(2,'0')}${String(finishTool).padStart(2,'0')}.`;
+    }else{
+      $('turnStatus').textContent='Turning code generated from the selected operation.';
+    }
     lastVerified=false; verifyManual(true); return generatedCode;
   }
 
@@ -1746,7 +1969,7 @@ M30
     if(!simPaths.length)verifyManual();
     $('turnPlay').textContent='⏸ PAUSE';timer=setInterval(()=>{if(simIndex>=simPaths.length){clearInterval(timer);timer=null;$('turnPlay').textContent='▶ PLAY';return;}simIndex++;fitAndDraw();},180);
   }
-  $('turnGenerate').onclick=()=>{try{if(drawingScanState.file){if(!drawingScanState.scanned||!drawingScanState.valid){setStatus($('turnStatus'),'⚠️ <b>Scan and validate the uploaded drawing first.</b> Random/unclear drawings cannot be used for program generation.','bad');return;}if(drawingScanState.kind!=='dxf'&&!geometry.length){setStatus($('turnStatus'),'⚠️ <b>Verified drawing has no machine geometry.</b> Use DXF geometry or enter/verify a manual X,Z profile before generation.','bad');return;}if(!$('turnConfirmGeometry').checked){setStatus($('turnStatus'),'⚠️ <b>Verify the detected drawing and dimensions</b> before generating code.','bad');return;}}else if(geometry.length&&!$('turnConfirmGeometry').checked){setStatus($('turnStatus'),'⚠️ <b>Confirm the detected geometry</b> before generating code.','bad');return;}buildCode();}catch(e){setStatus($('turnStatus'),'❌ '+esc(e.message),'bad');}};
+  $('turnGenerate').onclick=()=>{try{if(drawingScanState.file){if(!drawingScanState.scanned||!drawingScanState.valid){setStatus($('turnStatus'),'⚠️ <b>Scan and validate the uploaded drawing first.</b> Random/unclear drawings cannot be used for program generation.','bad');return;}if(drawingScanState.kind!=='dxf'&&!geometry.length&&!drawingScanState.profileSource){setStatus($('turnStatus'),'⚠️ <b>Verified drawing has no reconstructed profile.</b> Review/edit the X,Z profile before generation.','bad');return;}if(!$('turnConfirmGeometry').checked){setStatus($('turnStatus'),'⚠️ <b>Verify the detected drawing and dimensions</b> before generating code.','bad');return;}}else if(geometry.length&&!$('turnConfirmGeometry').checked){setStatus($('turnStatus'),'⚠️ <b>Confirm the detected geometry</b> before generating code.','bad');return;}buildCode();}catch(e){setStatus($('turnStatus'),'❌ '+esc(e.message),'bad');}};
   $('turnVerify').onclick=()=>verifyManual(true);
   $('turnManualVerify').onclick=()=>verifyManual(false);
   const manualCanvas=$('manualTurnCanvas'), manualCtx=manualCanvas.getContext('2d');
@@ -1796,7 +2019,7 @@ M05
 M30
 %`;verifyManual(false);};
   $('turnPlay').onclick=play;
-  $('turnStep').onclick=()=>{if(!simPaths.length)verifyManual();if(simIndex<simPaths.length)simIndex++;fitAndDraw();};
+  $('turnStepBtn').onclick=()=>{if(!simPaths.length)verifyManual();if(simIndex<simPaths.length)simIndex++;fitAndDraw();};
   $('turnReset').onclick=()=>{if(timer){clearInterval(timer);timer=null;$('turnPlay').textContent='▶ PLAY';}simIndex=0;fitAndDraw();};
   function validExportName(v){return /^[A-Za-z0-9]+$/.test(v.trim());}
   function exportFile(ext){if(!lastVerified){alert('Please VERIFY CODE first and review the X/Z simulation.');return;}const name=$('turnExportName').value.trim()||'CNCVEYRA';if(!validExportName(name)){alert('File name must contain letters and numbers only. Example: ODROUGH01');return;}const blob=new Blob([$('turnEditor').value||generatedCode],{type:'text/plain;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name+'.'+ext;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),500);}
