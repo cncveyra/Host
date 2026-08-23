@@ -18,7 +18,7 @@
 <meta name="twitter:card" content="summary"/>
 <meta name="twitter:title" content="CNCVEYRA | CNC • CAD/CAM"/>
 <meta name="twitter:description" content="Professional remote CNC programming and CAD/CAM support for VMC, CNC machining, mould and die manufacturing."/>
-<title>CNC Thread Program Generator, CNC G-Code Simulator &amp; CNC Programming | CNCVEYRA</title>
+<title>CNC Turning G-Code Generator &amp; Simulator | OD Roughing &amp; Finishing | CNCVEYRA</title>
 <style>
 :root{--b:#061018;--p:#0b1821;--l:#1c3541;--t:#edf7fa;--m:#8ca2ad;--a:#38bdf8}
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--b);color:var(--t);font-family:Inter,Arial,sans-serif;overflow-x:hidden}a{text-decoration:none;color:inherit}
@@ -272,17 +272,17 @@ footer#contact .founder-role{
 
 <!-- CNC LAB SEO -->
 <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
-<meta name="keywords" content="CNC G-code simulator, CNC code verifier, G-code generator, CNC toolpath simulation, CNC milling program, CNC turning program, G-code learning, CNC code checker, Fanuc G-code, CNC programming">
+<meta name="keywords" content="CNC program generator, create CNC program from image, CNC program from PDF, CNC turning G-code generator, CNC lathe programming, CNC drawing to G-code, CNC code generator, CNC roughing and finishing, Fanuc CNC program, CNC toolpath simulator, CNC programming">
 <meta name="keywords" content="CNC programming, CNC thread program, thread program generator, CNC code generator, G33 thread program, CNC simulator, CNC code test, CNC code checker, FANUC threading, CNC turning, CNC G-code, CNCVEYRA">
 <meta name="author" content="CNCVEYRA">
 <meta name="creator" content="Manmohan Yadav, Founder of CNCVEYRA">
 <meta property="og:type" content="website">
 <meta property="og:title" content="CNC Code Lab - G-Code Generator, Verifier & Toolpath Simulator">
-<meta property="og:description" content="Learn CNC programming with a browser-based G-code editor, verifier, hints, toolpath simulation and machining-operation generator.">
+<meta property="og:description" content="Create CNC programs from technical drawings, images and PDFs with browser-based CNC turning G-code generation, verification and toolpath simulation.">
 <meta property="og:url" content="https://cncveyra.in/">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="CNC Code Lab - G-Code Generator & Simulator">
-<meta name="twitter:description" content="Write, generate, verify and simulate CNC G-code in your browser.">
+<meta name="twitter:description" content="Create, generate, verify and simulate CNC G-code from drawings, images and PDF technical profiles in your browser.">
 <script type="application/ld+json">{
   "@context":"https://schema.org",
   "@type":"Organization",
@@ -319,9 +319,9 @@ footer#contact .founder-role{
 <meta name="description" content="CNC Code Lab for CNC drawing analysis, PDF JPG DXF DWG upload, CNC turning G-code generation, verification and X/Z toolpath simulation. Scan technical drawings, review detected dimensions and generate machine-format CNC programs.">
 <meta name="keywords" content="CNC drawing to G-code, PDF to CNC, JPG to CNC, DXF to CNC, DWG to CNC, CNC drawing scanner, CNC dimension detection, CNC turning code, CNC simulator, CNC G-code verification, CNC turning simulator, CNC G-code generator, CNC code checker">
 <meta property="og:title" content="CNC Code Lab | CNC Turning Code, DXF to G-code & Simulator">
-<meta property="og:description" content="Upload PDF, JPG, DXF or DWG technical drawings, scan detected dimensions and geometry, verify the result, generate CNC turning G-code and inspect the X/Z toolpath.">
+<meta property="og:description" content="Create CNC programs from image, PDF, DXF or DWG technical drawings. Scan dimensions and geometry, verify the profile, generate CNC turning G-code, and inspect the roughing and finishing X/Z toolpath.">
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"SoftwareApplication","name":"CNC Code Lab","applicationCategory":"EducationalApplication","operatingSystem":"Web Browser","url":"https://cncveyra.in/#cnc-simulator","description":"Browser-based CNC drawing analysis, dimension review, turning G-code generation, basic verification and X/Z toolpath simulation with PDF/JPG/DXF/DWG drawing upload support.","isAccessibleForFree":true}
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":"CNC Code Lab","applicationCategory":"EducationalApplication","operatingSystem":"Web Browser","url":"https://cncveyra.in/#cnc-simulator","description":"CNC program generator for technical drawings, images and PDF files. Analyze dimensions, create CNC turning G-code, verify roughing and finishing toolpaths, and simulate X/Z motion in the browser.","isAccessibleForFree":true}
 </script>
 
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4399948678622543"
@@ -414,6 +414,12 @@ footer#contact .founder-role{
        data-ad-format="auto"
        data-full-width-responsive="true"></ins>
 </div>
+
+<style>
+  .op-card.op-unavailable{opacity:.72;cursor:not-allowed;position:relative}
+  .op-card.op-unavailable small{color:#9aa6b2}
+  .turn-service-note{margin-top:10px;padding:10px 12px;border:1px solid rgba(255,255,255,.12);border-radius:8px;background:rgba(255,255,255,.04);font-size:13px;line-height:1.4}
+</style>
 <script>
   (adsbygoogle = window.adsbygoogle || []).push({});
 </script>
@@ -586,10 +592,10 @@ footer#contact .founder-role{
             </select>
           </label>
           <label class="turn-field">Stock Diameter X
-            <input id="turnStockX" type="number" value="52" min="0.1" step="0.1">
+            <input id="turnStockX" type="number" value="1" min="0.1" step="0.1">
           </label>
           <label class="turn-field">Stock Length Z
-            <input id="turnStockZ" type="number" value="32" min="0.1" step="0.1">
+            <input id="turnStockZ" type="number" value="0.5" min="0.1" step="0.1">
           </label>
         </div>
 
@@ -624,11 +630,11 @@ footer#contact .founder-role{
         <div class="operation-grid">
           <label class="op-card"><input type="radio" name="turnOp" value="od-rough" checked><b>OD Roughing</b><small>Progressive stock removal</small></label>
           <label class="op-card"><input type="radio" name="turnOp" value="od-finish"><b>OD Finishing</b><small>Follow final profile</small></label>
-          <label class="op-card"><input type="radio" name="turnOp" value="facing"><b>Facing</b><small>Front-face machining</small></label>
-          <label class="op-card"><input type="radio" name="turnOp" value="id-rough"><b>ID Boring Rough</b><small>Internal roughing</small></label>
-          <label class="op-card"><input type="radio" name="turnOp" value="id-finish"><b>ID Boring Finish</b><small>Internal finish pass</small></label>
-          <label class="op-card"><input type="radio" name="turnOp" value="groove"><b>Groove</b><small>Simple groove pass</small></label>
-          <label class="op-card"><input type="radio" name="turnOp" value="partoff"><b>Cut / Part-off</b><small>Parting-style learning path</small></label>
+          <label class="op-card op-unavailable" data-unavailable="true"><input type="radio" name="turnOp" value="facing"><b>Facing</b><small>Service currently unavailable • coming soon</small></label>
+          <label class="op-card op-unavailable" data-unavailable="true"><input type="radio" name="turnOp" value="id-rough"><b>ID Boring Rough</b><small>Service currently unavailable • coming soon</small></label>
+          <label class="op-card op-unavailable" data-unavailable="true"><input type="radio" name="turnOp" value="id-finish"><b>ID Boring Finish</b><small>Service currently unavailable • coming soon</small></label>
+          <label class="op-card op-unavailable" data-unavailable="true"><input type="radio" name="turnOp" value="groove"><b>Groove</b><small>Service currently unavailable • coming soon</small></label>
+          <label class="op-card op-unavailable" data-unavailable="true"><input type="radio" name="turnOp" value="partoff"><b>Cut / Part-off</b><small>Service currently unavailable • coming soon</small></label>
         </div>
 
         <div class="turn-grid params">
@@ -1482,6 +1488,25 @@ M30
   const n=(id,f=0)=>Math.max(0,Number($(id).value)||f);
   const mode=()=>$('turnMode').value;
   const op=()=>document.querySelector('input[name="turnOp"]:checked')?.value||'od-rough';
+  const unavailableOps=new Set(['facing','id-rough','id-finish','groove','partoff']);
+  const serviceNote=()=>{
+    let el=$('turnServiceNote');
+    if(!el){
+      el=document.createElement('div');el.id='turnServiceNote';el.className='turn-service-note';
+      const grid=document.querySelector('.operation-grid');
+      if(grid)grid.insertAdjacentElement('afterend',el);
+    }
+    return el;
+  };
+  document.querySelectorAll('.op-card.op-unavailable').forEach(card=>card.addEventListener('click',e=>{
+    e.preventDefault();
+    const input=card.querySelector('input');
+    if(input)input.checked=false;
+    const name=card.querySelector('b')?.textContent||'This operation';
+    serviceNote().textContent=`${name}: service abhi available nahi hai. Iska program logic abhi add nahi kiya gaya hai. Future updates mein services one-by-one available ki jayengi.`;
+  }));
+  document.querySelectorAll('.op-card:not(.op-unavailable) input').forEach(input=>input.addEventListener('change',()=>{const el=$('turnServiceNote');if(el)el.remove();}));
+
 
   function setStatus(el,msg,kind=''){
     el.className='cnc-status '+kind; el.innerHTML=msg;
@@ -1821,40 +1846,117 @@ M30
 
     if(opn==='od-rough'){
       lines=header(roughTool);
-      // The supplied rough program starts at stock - one diameter DOC and then
-      // steps down by exactly 2*radius DOC. Continue until the smallest finished OD.
-      const firstPass=Math.max(minX,stock-diaStep);
+      // ROUGHING REFERENCE LOGIC — cumulative X-band roughing.
+      // The first rough pass opens the full remaining profile. Every next pass
+      // only travels through the Z region that is still between the current
+      // X level and the previous rough level. This is what makes Z travel
+      // progressively shorter as the upper OD/step/chamfer is already formed.
+      const prof=p.map(q=>({x:q.x+finR,z:q.z}));
+      const maxPX=Math.max(...prof.map(q=>q.x));
+      const minPX=Math.min(...prof.map(q=>q.x));
+      const stockAllowanceX=Math.max(0,n('turnStockX',1));
+      const stockTop=maxPX+stockAllowanceX;
+      const firstPass=Math.max(minPX,stockTop-diaStep);
       const passes=[];
-      for(let x=firstPass;x>=minX-1e-9;x-=diaStep){
-        passes.push(Number(Math.max(minX,x).toFixed(6)));
+      for(let x=firstPass;x>=minPX-1e-9;x-=diaStep){
+        passes.push(Number(Math.max(minPX,x).toFixed(6)));
         if(passes.length>1000)break;
       }
-      if(!passes.length)passes.push(minX);
+      if(!passes.length)passes.push(minPX);
 
-      for(const passX of passes){
-        // At every Z station the rough tool cuts no deeper than the current pass X.
-        // Where the final profile is larger than passX, follow that profile instead.
+      const eps=1e-9;
+      const clean=(arr)=>arr.filter((q,i)=>i===0||Math.abs(q.x-arr[i-1].x)>eps||Math.abs(q.z-arr[i-1].z)>eps);
+
+      // Interpolate every Z crossing where the profile enters/leaves the
+      // current X-band. The resulting path is intentionally compact so the
+      // generated code follows the same learning/reference style as the
+      // verified roughing program supplied by the user.
+      function bandSegments(lowX,highX){
+        const segs=[];
+        for(let i=0;i<prof.length-1;i++){
+          const a=prof[i],b=prof[i+1];
+          const dx=b.x-a.x, dz=b.z-a.z;
+          const cuts=[0,1];
+          if(Math.abs(dx)>eps){
+            for(const x of [lowX,highX]){
+              const t=(x-a.x)/dx;
+              if(t>eps&&t<1-eps)cuts.push(t);
+            }
+          }
+          cuts.sort((u,v)=>u-v);
+          for(let j=0;j<cuts.length-1;j++){
+            const t1=cuts[j],t2=cuts[j+1];
+            const tm=(t1+t2)/2;
+            const xm=a.x+dx*tm;
+            if(xm>=lowX-eps && xm<=highX+eps){
+              segs.push({z1:a.z+dz*t1,z2:a.z+dz*t2,x1:a.x+dx*t1,x2:a.x+dx*t2});
+            }
+          }
+        }
+        return segs;
+      }
+
+      for(let passIndex=0;passIndex<passes.length;passIndex++){
+        const passX=passes[passIndex];
+        const prevX=passIndex===0?stockTop:passes[passIndex-1];
+        const low=Math.min(passX,prevX), high=Math.max(passX,prevX);
         const path=[];
-        for(let i=0;i<p.length;i++){
-          const q=p[i];
-          const x=Math.max(passX,q.x+finR);
-          path.push({x,z:q.z});
+
+        if(passIndex===0){
+          // Initial pass: full length, matching the verified reference style.
+          path.push({x:passX,z:frontZ},{x:passX,z:backZ});
+          path.push({x:Math.max(passX+C*.7,minPX+C*.7),z:backZ+Math.max(.001,C*.4)});
+        }else{
+          const segs=bandSegments(low,high);
+          if(segs.length){
+            // Merge contiguous/overlapping band segments in Z order.
+            segs.sort((a,b)=>b.z1-a.z1);
+            let groups=[];
+            for(const sg of segs){
+              const zHi=Math.max(sg.z1,sg.z2), zLo=Math.min(sg.z1,sg.z2);
+              const last=groups[groups.length-1];
+              if(last && zLo>=last.zLo-eps){
+                last.zLo=Math.min(last.zLo,zLo);
+                last.zHi=Math.max(last.zHi,zHi);
+              }else groups.push({zHi,zLo});
+            }
+            for(const g of groups){
+              // Entry at the front of each remaining material pocket.
+              path.push({x:passX,z:g.zHi});
+              path.push({x:passX,z:g.zLo});
+            }
+            const last=path[path.length-1];
+            path.push({x:Math.max(passX+C*.7,minPX+C*.7),z:last.z+Math.max(.001,C*.4)});
+          }
         }
-        // The supplied programs clear above the front face, plunge to a feed Z,
-        // then run to the back and exit on the back taper.
-        lines.push(`G0 Z${fmt(entryZ)}`,`X${fmt(passX)}`,`G1 Z${fmt(frontZ)} F${fmt(Frough)}`);
-        for(let i=0;i<path.length;i++){
-          const q=path[i];
-          const prev=i?path[i-1]:null;
-          if(prev && Math.abs(q.x-prev.x)<1e-9) lines.push(`Z${fmt(q.z)}`);
-          else lines.push(`X${fmt(q.x)} Z${fmt(q.z)}`);
+
+        const finalPath=clean(path);
+        if(finalPath.length>=2){
+          const first=finalPath[0];
+          lines.push(`G0 Z${fmt(entryZ)}`,`X${fmt(passX)}`,`G1 Z${fmt(frontZ)} F${fmt(Frough)}`);
+          // For subsequent passes, move to the actual remaining Z pocket before
+          // cutting; this avoids the old unconditional Z-27 travel.
+          if(passIndex===0){
+            lines.push(`Z${fmt(backZ)}`);
+          }else{
+            for(let i=0;i<finalPath.length;i++){
+              const q=finalPath[i];
+              if(i===0)lines.push(`Z${fmt(q.z)}`);
+              else if(Math.abs(q.x-passX)<eps)lines.push(`Z${fmt(q.z)}`);
+              else lines.push(`X${fmt(q.x)} Z${fmt(q.z)}`);
+            }
+          }
+          lines.push(`G0 Z${fmt(safeZ)}`);
+        }else{
+          // No material remains in this X-band; skip the pass rather than
+          // forcing a full-length Z move.
+          continue;
         }
-        // Return to a clearance position before the next pass.
-        lines.push(`G0 Z${fmt(safeZ)}`);
       }
       lines.push(...footer);
       generatedCode=lines.join('\n');
     } else if(opn==='od-finish'){
+
       lines=header(finishTool);
       // Supplied finish reference uses five repeated passes. Pass 1 follows the
       // recovered profile; each subsequent pass shifts X by 0.1 mm by default.
