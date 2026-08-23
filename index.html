@@ -317,7 +317,7 @@ footer#contact .founder-role{
 
 <!-- CNC Code Lab SEO enhancements -->
 <meta name="description" content="CNC Code Lab for CNC drawing analysis, PDF JPG DXF DWG upload, CNC turning G-code generation, verification and X/Z toolpath simulation. Scan technical drawings, review detected dimensions and generate machine-format CNC programs.">
-<meta name="keywords" content="CNC drawing to G-code, PDF to CNC, JPG to CNC, DXF to CNC, DWG to CNC, CNC drawing scanner, CNC dimension detection, CNC turning code, CNC simulator, CNC G-code verification, CNC turning simulator, CNC G-code generator, CNC code checker">
+<meta name="keywords" content="CNC drawing to G-code, editable CNC profile, PDF to CNC, JPG to CNC, DXF to CNC, DWG to CNC, CNC drawing scanner, CNC dimension detection, CNC turning code, CNC simulator, CNC G-code verification, CNC turning simulator, CNC G-code generator, CNC code checker, CNC profile editor">
 <meta property="og:title" content="CNC Code Lab | CNC Turning Code, DXF to G-code & Simulator">
 <meta property="og:description" content="Create CNC programs from image, PDF, DXF or DWG technical drawings. Scan dimensions and geometry, verify the profile, generate CNC turning G-code, and inspect the roughing and finishing X/Z toolpath.">
 <script type="application/ld+json">
@@ -352,6 +352,11 @@ footer#contact .founder-role{
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"Organization","name":"CNCVEYRA","url":"https://cncveyra.in/","founder":{"@type":"Person","name":"Manmohan Yadav"},"email":"mk096063@gmail.com","telephone":"+919592813879","description":"CNC programming, CAD/CAM and CNC engineering support."}
 </script>
+
+
+<style id="cnc-editable-profile-css">
+.editable-profile-panel{margin-top:14px;border:1px solid #203a46;background:#061018;padding:12px;border-radius:8px}.editable-profile-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px;color:#b9d0d8;font:11px monospace}.editable-profile-head span{color:#718b95;font-size:9px}.editable-profile-wrap{border:1px solid #203a46;background:#02080d;overflow:auto;min-height:380px}.editable-profile-wrap svg{display:block;width:100%;min-width:760px;height:390px}.ep-dim{fill:#8fe4ff;font:12px monospace;font-weight:700;cursor:pointer}.ep-sub{fill:#6f8993;font:9px monospace}.ep-line{stroke:#f4b942;stroke-width:4;fill:none;stroke-linejoin:round;stroke-linecap:round}.ep-arc{stroke:#f4b942;stroke-width:4;fill:none;stroke-linecap:round}.ep-guide{stroke:#315766;stroke-width:1;stroke-dasharray:4 4}.ep-ext{stroke:#52717c;stroke-width:1}.ep-axis{stroke:#607d87;stroke-width:1}.ep-center{stroke:#52717c;stroke-width:1;stroke-dasharray:7 6}.ep-point{fill:#f0b84b;stroke:#02080d;stroke-width:2;cursor:pointer}.ep-radius{fill:#ffcc66;font:11px monospace;font-weight:700;cursor:pointer}.ep-note{fill:#78949e;font:10px monospace}.ep-hint{margin-top:8px;color:#708992;font:10px monospace}.editable-profile-wrap input{font:11px monospace;background:#061018;color:#d8edf4;border:1px solid #38bdf8;border-radius:4px;padding:3px 5px;width:64px}
+</style>
 
 <style id="cnc-drawing-scan-css">.drawing-confidence{margin-top:10px;font:11px monospace;color:#8fa7b1}.drawing-confidence.good{color:#7ee787}.drawing-confidence.warn{color:#f0c674}.drawing-confidence.bad{color:#ff8f8f}.drawing-preview{margin-top:12px;border:1px solid #203a46;background:#02080d;padding:10px}.drawing-preview-head{display:flex;justify-content:space-between;color:#9db4bd;font:10px monospace;margin-bottom:8px}.drawing-preview img{display:block;max-width:100%;max-height:420px;margin:auto;object-fit:contain;background:#fff}.detected-panel{margin-top:12px;border:1px solid #203a46;background:#061018;padding:12px}.detected-dimensions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.detected-item{border:1px solid #294752;border-radius:8px;padding:8px}.detected-item label{display:block;color:#708992;font:9px monospace;text-transform:uppercase}.detected-item input{width:100%;margin-top:5px;padding:8px;background:#02080d;color:#d8edf4;border:1px solid #27424e;border-radius:6px}.drawing-gate{font:9px monospace;color:#d5a94a;border:1px solid #594a27;border-radius:999px;padding:6px 9px}.drawing-gate.ready{color:#7ee787;border-color:#285a35}.export-name-row{display:grid;grid-template-columns:1fr auto;align-items:end;gap:10px;margin-top:12px}.export-exts{display:flex;gap:6px;padding-bottom:1px}.export-exts span{font:10px monospace;color:#8fe4ff;border:1px solid #295262;border-radius:999px;padding:8px 10px}@media(max-width:560px){.detected-dimensions{grid-template-columns:1fr 1fr}.export-name-row{grid-template-columns:1fr}}</style>
 <style id="cnc-thread-generator-css">
@@ -607,6 +612,12 @@ footer#contact .founder-role{
           <div id="turnDrawingConfidence" class="drawing-confidence"></div>
           <div id="turnDrawingPreview" class="drawing-preview" hidden><div class="drawing-preview-head"><b>DRAWING PREVIEW</b><span id="turnPreviewLabel"></span></div><img id="turnPreviewImage" alt="Uploaded CNC drawing preview"></div>
           <div class="detected-panel" id="turnDetectedPanel" hidden><div class="dxf-title"><b>DETECTED DIMENSIONS / VALUES</b><span>Edit before verification</span></div><div id="turnDetectedDimensions" class="detected-dimensions"></div></div>
+          <div class="editable-profile-panel" id="turnEditableProfilePanel" hidden>
+            <div class="editable-profile-head"><b>AI 2D PROFILE — DRAWING STYLE</b><span>Drawing-style view • click a dimension to edit</span></div>
+            <div class="editable-profile-wrap"><svg id="turnEditableProfile" viewBox="0 0 1000 360" role="img" aria-label="Editable reconstructed CNC turning profile"></svg></div>
+            <div class="ep-hint">Original drawing remains above. This clean engineering profile is the geometry used for verification/generation. Edit a blue diameter or length dimension and the X/Z profile updates immediately.</div>
+          </div>
+
           <div id="turnGeometry" class="geometry-list"></div>
         </div>
         <div class="turn-confirm"><label><input id="turnConfirmGeometry" type="checkbox"> I have reviewed and verified the detected drawing, dimensions and profile.</label><span id="turnDrawingGate" class="drawing-gate">SCAN REQUIRED FOR UPLOADED DRAWINGS</span></div>
@@ -1555,7 +1566,7 @@ M30
       return `<div class="geometry-item"><b>${i+1}. ${g.type}</b><br>${esc(d)}</div>`;
     }).join('')+(geometry.length>120?`<div class="geometry-item">+ ${geometry.length-120} more detected entities</div>`:'');
   }
-  let drawingScanState={file:null,kind:null,scanned:false,valid:false,confidence:0,dimensions:[],previewUrl:null,profileSource:null,profileConfidence:0};
+  let drawingScanState={file:null,kind:null,scanned:false,valid:false,confidence:0,dimensions:[],previewUrl:null,profileSource:null,profileConfidence:0,radiusValues:[]};
   function setDrawingGate(ready){$('turnDrawingGate').textContent=ready?'DRAWING VERIFIED ✓':'SCAN REQUIRED FOR UPLOADED DRAWINGS';$('turnDrawingGate').classList.toggle('ready',ready);}
   function showConfidence(text,kind){const el=$('turnDrawingConfidence');el.textContent=text;el.className='drawing-confidence '+(kind||'');}
   function renderDetectedDimensions(items){
@@ -1603,8 +1614,92 @@ M30
     const prof=buildDimensionDrivenProfile(vals,'');
     if(prof){applyDetectedProfile(prof);drawingScanState.profileSource='image';drawingScanState.profileConfidence=96;drawingScanState.valid=true;showConfidence('Verified parametric profile updated ✓ The 2 mm end remains Z0 and Z values remain negative.','good');}
   }
-  function resetDrawingState(){drawingScanState={file:null,kind:null,scanned:false,valid:false,confidence:0,dimensions:[],previewUrl:null,profileSource:null,profileConfidence:0};geometry=[];$('turnGeometry').innerHTML='';$('turnDetectedPanel').hidden=true;$('turnDrawingPreview').hidden=true;$('turnDxfStatus').textContent='No drawing loaded. You can also enter a manual turning profile below. Image/PDF scan can reconstruct an editable X,Z contour.';showConfidence('','');setDrawingGate(false);$('turnConfirmGeometry').checked=false;}
+
+  function currentVisualProfile(){
+    try{return manualProfile();}catch(e){return [];}
+  }
+  function renderEditableProfile(){
+    const panel=$('turnEditableProfilePanel'),svg=$('turnEditableProfile'); if(!panel||!svg)return;
+    const p=currentVisualProfile(); if(p.length<2){panel.hidden=true;svg.innerHTML='';return;}
+    panel.hidden=false;
+    const W=1000,H=390,padL=95,padR=65,padT=72,padB=70;
+    const minZ=Math.min(...p.map(q=>q.z)),maxZ=Math.max(...p.map(q=>q.z)),minX=Math.min(...p.map(q=>q.x)),maxX=Math.max(...p.map(q=>q.x));
+    const zSpan=Math.max(1,maxZ-minZ),xSpan=Math.max(1,maxX-minX),sc=Math.min((W-padL-padR)/zSpan,(H-padT-padB)/xSpan);
+    const usedW=zSpan*sc,usedH=xSpan*sc,x0=padL+(W-padL-padR-usedW)/2,y0=padT+(H-padT-padB-usedH)/2;
+    const X=q=>x0+(q.z-minZ)*sc, Y=q=>H-padB-(q.x-minX)*sc;
+    const fmt=n=>Number(n).toFixed(3).replace(/\.?(0+)$/,'');
+    let out='';
+    const axisY=Y({x:0,z:maxZ});
+    out+=`<line class="ep-axis" x1="${x0}" y1="${H-padB+20}" x2="${x0+usedW}" y2="${H-padB+20}"/>`;
+    out+=`<line class="ep-center" x1="${x0-20}" y1="${axisY}" x2="${x0+usedW+20}" y2="${axisY}"/>`;
+    out+=`<text class="ep-sub" x="${x0+usedW-10}" y="${H-18}">Z AXIS</text><text class="ep-sub" x="18" y="${padT-18}">X AXIS (DIAMETER)</text>`;
+    out+=`<text class="ep-note" x="${x0}" y="${padT-42}">PROFILE — EDIT BLUE DIMENSIONS / VALUES</text>`;
+
+    // Draw the engineering profile. At an orthogonal corner, if an R value was
+    // recognized in the uploaded drawing, show a visual fillet rather than a
+    // sharp pixel-derived corner. The underlying X/Z points remain unchanged.
+    const hasRadius=(drawingScanState.dimensions||[]).some(v=>v>0&&v<=20);
+    let path='';
+    for(let i=0;i<p.length;i++){
+      const q=p[i],cx=X(q),cy=Y(q);
+      if(i===0){path+=`M ${cx.toFixed(1)} ${cy.toFixed(1)}`;continue;}
+      const prev=p[i-1],px=X(prev),py=Y(prev);
+      const dx=cx-px,dy=cy-py;
+      const next=p[i+1];
+      if(hasRadius && next && Math.abs(dx)>3 && Math.abs(dy)<3 && Math.abs(X(next)-cx)<3 && Math.abs(Y(next)-cy)>3){
+        const rpx=Math.min(18,Math.abs(dx)*.22,Math.abs(Y(next)-cy)*.22);
+        const ex=cx+(dx>0?-rpx:rpx), ey=cy;
+        const nx=cx, ny=cy+(Y(next)-cy>0?rpx:-rpx);
+        path+=` L ${ex.toFixed(1)} ${ey.toFixed(1)} Q ${cx.toFixed(1)} ${cy.toFixed(1)} ${nx.toFixed(1)} ${ny.toFixed(1)}`;
+      }else{
+        path+=` L ${cx.toFixed(1)} ${cy.toFixed(1)}`;
+      }
+    }
+    out+=`<path class="ep-line" d="${path}"/>`;
+
+    // Diameter labels on each distinct X level.
+    const seenX=[];
+    p.forEach((q,i)=>{
+      const dup=seenX.some(v=>Math.abs(v-q.x)<0.001); if(!dup){
+        seenX.push(q.x); const xx=X(q),yy=Y(q);
+        out+=`<line class="ep-ext" x1="${xx}" y1="${yy}" x2="${xx}" y2="${Math.max(28,yy-28)}"/>`;
+        out+=`<text class="ep-dim" x="${xx+7}" y="${Math.max(22,yy-34)}" data-ep-x="${i}">Ø${fmt(q.x)}</text>`;
+      }
+    });
+
+    // Z/length dimensions between consecutive profile stations.
+    for(let i=1;i<p.length;i++){
+      const a=p[i-1],b=p[i];
+      if(Math.abs(a.z-b.z)<1e-6)continue;
+      const xa=X(a),xb=X(b),top=Math.min(Y(a),Y(b))-30-Math.min(i,3)*8;
+      out+=`<line class="ep-ext" x1="${xa}" y1="${Math.min(Y(a),Y(b))-5}" x2="${xa}" y2="${top+5}"/>`;
+      out+=`<line class="ep-ext" x1="${xb}" y1="${Math.min(Y(a),Y(b))-5}" x2="${xb}" y2="${top+5}"/>`;
+      out+=`<line class="ep-guide" x1="${xa}" y1="${top}" x2="${xb}" y2="${top}"/>`;
+      out+=`<text class="ep-dim" text-anchor="middle" x="${(xa+xb)/2}" y="${top-6}" data-ep-z="${i}">${fmt(Math.abs(a.z-b.z))} mm</text>`;
+    }
+
+    // If OCR saw radius annotations, display them as editable callouts. This is
+    // intentionally separate from raw OCR coordinates so bad text cannot distort
+    // the actual profile geometry.
+    const radii=[]; const src=drawingScanState.radiusValues||[];
+    src.forEach(r=>{if(!radii.some(v=>Math.abs(v-r)<.001))radii.push(r);});
+    radii.slice(0,6).forEach((r,j)=>{
+      const idx=Math.min(p.length-1,Math.max(1,Math.floor(p.length/2)+j%2));
+      const q=p[idx],xx=X(q),yy=Y(q);
+      out+=`<text class="ep-radius" x="${xx+18}" y="${yy+18+j*14}" data-ep-radius="${r}">R${fmt(r)}</text>`;
+    });
+    p.forEach((q,i)=>{out+=`<circle class="ep-point" cx="${X(q)}" cy="${Y(q)}" r="4" data-ep-point="${i}"/>`;});
+    svg.innerHTML=out;
+    svg.querySelectorAll('[data-ep-x]').forEach(el=>el.addEventListener('click',()=>editProfileX(Number(el.dataset.epX))));
+    svg.querySelectorAll('[data-ep-z]').forEach(el=>el.addEventListener('click',()=>editProfileZ(Number(el.dataset.epZ))));
+  }
+  function updateProfilePoints(p){$('turnProfile').value=p.map(q=>`${Number(q.x).toFixed(3).replace(/\.?0+$/,'')},${Number(q.z).toFixed(3).replace(/\.?0+$/,'')}`).join('\n'); renderEditableProfile();}
+  function editProfileX(i){const p=currentVisualProfile();if(!p[i])return;const v=prompt(`Edit diameter X for point ${i+1}:`,Number(p[i].x).toString());if(v===null)return;const n=Number(v);if(!Number.isFinite(n)||n<=0)return alert('Enter a valid positive diameter.');p[i].x=n;updateProfilePoints(p);drawingScanState.valid=true;}
+  function editProfileZ(i){const p=currentVisualProfile();if(i<1||!p[i])return;const old=Math.abs(p[i].z-p[i-1].z);const v=prompt(`Edit Z length for segment ${i}:`,old.toString());if(v===null)return;const n=Number(v);if(!Number.isFinite(n)||n<0)return alert('Enter a valid Z length.');const dir=p[i].z>=p[i-1].z?1:-1;p[i].z=p[i-1].z+dir*n;for(let j=i+1;j<p.length;j++)p[j].z=p[j-1].z+(p[j].z>=p[j-1].z?1:-1)*Math.abs(p[j].z-p[j-1].z);updateProfilePoints(p);drawingScanState.valid=true;}
+
+  function resetDrawingState(){drawingScanState={file:null,kind:null,scanned:false,valid:false,confidence:0,dimensions:[],previewUrl:null,profileSource:null,profileConfidence:0,radiusValues:[]};geometry=[];renderEditableProfile();$('turnGeometry').innerHTML='';$('turnDetectedPanel').hidden=true;$('turnDrawingPreview').hidden=true;$('turnDxfStatus').textContent='No drawing loaded. You can also enter a manual turning profile below. Image/PDF scan can reconstruct an editable X,Z contour.';showConfidence('','');setDrawingGate(false);$('turnConfirmGeometry').checked=false;}
   function technicalDimensionMatches(text){const vals=[];const re=/(?:Ø|⌀|DIA\s*)?\s*(\d+(?:[.,]\d+)?)(?:\s*mm)?|R\s*(\d+(?:[.,]\d+)?)/gi;let m;while((m=re.exec(text||''))){const v=Number(String(m[1]||m[2]).replace(',','.'));if(v>0&&v<10000&&!vals.includes(v))vals.push(v);}return vals.slice(0,30);}
+  function technicalRadiusMatches(text){const vals=[];const re=/\bR\s*(\d+(?:[.,]\d+)?)/gi;let m;while((m=re.exec(text||''))){const v=Number(m[1].replace(',','.'));if(v>0&&v<=50&&!vals.includes(v))vals.push(v);}return vals.slice(0,12);}
   function imageTechnicalScore(text){const dims=technicalDimensionMatches(text);let score=0;if(dims.length>=3)score+=50;else if(dims.length===2)score+=40;else if(dims.length===1)score+=20;if(/(?:Ø|⌀|\bR\s*\d|±|\bTOL\b|\bISO\b|\bmm\b|\bM\s*\d)/i.test(text||''))score+=25;if((text||'').length>60)score+=15;return Math.min(100,score);}
   function nearVal(list,target,tol=.15){return list.find(v=>Math.abs(v-target)<=tol);}
   function uniqueSortedNums(list){return [...new Set((list||[]).map(Number).filter(v=>Number.isFinite(v)&&v>0))].sort((a,b)=>a-b);}
@@ -1708,18 +1803,19 @@ M30
     if(!profile||profile.length<2)return false;
     const lines=profile.map(p=>`${p.x.toFixed(3).replace(/\.?0+$/,'')},${p.z.toFixed(3).replace(/\.?0+$/,'')}`);
     $('turnProfile').value=lines.join('\n');
-    geometry=[];renderGeometry();
+    geometry=[];renderGeometry();renderEditableProfile();
     return true;
   }
   async function scanDrawing(){const file=drawingScanState.file;if(!file)return;const ext=file.name.split('.').pop().toLowerCase();$('turnConfirmGeometry').checked=false;drawingScanState.scanned=false;drawingScanState.valid=false;try{showConfidence('Scanning '+file.name+'…','warn');
     if(ext==='dxf'){const text=await file.text();geometry=parseDXF(text);renderGeometry();drawingScanState.kind='dxf';drawingScanState.dimensions=technicalDimensionMatches(text);drawingScanState.confidence=geometry.length?95:0;drawingScanState.valid=geometry.length>=2;$('turnDxfStatus').textContent=drawingScanState.valid?`CNC geometry detected: ${geometry.length} LINE / ARC / CIRCLE entities. Review the profile before generation.`:'No supported CNC geometry found in this DXF.';renderDetectedDimensions(drawingScanState.dimensions);showConfidence(drawingScanState.valid?`CNC drawing detected ✓ Confidence ${drawingScanState.confidence}%`:'No valid CNC drawing detected ✕',drawingScanState.valid?'good':'bad');}
     else if(ext==='dwg'){drawingScanState.kind='dwg';$('turnDxfStatus').textContent='DWG selected. Direct DWG geometry parsing is not available in this browser-only version. Convert DWG to DXF for exact geometry scanning.';showConfidence('DWG accepted as an upload type, but exact program generation requires DXF geometry.', 'bad');drawingScanState.confidence=0;drawingScanState.valid=false;}
-    else if(ext==='jpg'||ext==='jpeg'||ext==='png'||ext==='pdf'){let c;if(ext==='pdf')c=await renderPdfFirstPage(file);else{const url=URL.createObjectURL(file);drawingScanState.previewUrl=url;$('turnPreviewImage').src=url;$('turnPreviewLabel').textContent=file.name;$('turnDrawingPreview').hidden=false;c=document.createElement('canvas');const img=new Image();img.src=url;await new Promise((r,j)=>{img.onload=r;img.onerror=j});const scale=Math.min(1,2200/img.naturalWidth);c.width=Math.max(1,Math.round(img.naturalWidth*scale));c.height=Math.max(1,Math.round(img.naturalHeight*scale));const cc=c.getContext('2d');cc.fillStyle='#fff';cc.fillRect(0,0,c.width,c.height);cc.drawImage(img,0,0,c.width,c.height);}if(ext==='pdf'){$('turnPreviewLabel').textContent=file.name+' • page 1';$('turnPreviewImage').src=c.toDataURL('image/png');$('turnDrawingPreview').hidden=false;}const text=await ocrCanvas(c);const dims=technicalDimensionMatches(text);let score=imageTechnicalScore(text);drawingScanState.kind=ext;drawingScanState.dimensions=dims;const inferred=inferLatheProfileFromCanvas(c,text,dims);if(inferred&&applyDetectedProfile(inferred.profile)){drawingScanState.profileSource='image';drawingScanState.profileConfidence=inferred.confidence;score=Math.max(score,inferred.confidence);$('turnDxfStatus').textContent=inferred.dimensionDriven?`Drawing scanned. Dimension-driven lathe profile reconstructed from the verified drawing. The 2 mm end is fixed at Z0 and the remaining profile runs in Z-minus. Edit the detected dimensions or X,Z profile before generation.`:`Drawing scanned. ${dims.length} dimension value(s) detected and a turning profile was reconstructed from the visible contour. Review/edit the X,Z profile before generation.`;}else{$('turnDxfStatus').textContent='Technical-drawing text was scanned, but the profile contour could not be reconstructed reliably. Review/edit the X,Z profile manually before generation.';}drawingScanState.confidence=score;drawingScanState.valid=score>=45&&dims.length>=1&&!!inferred;renderDetectedDimensions(dims);document.querySelectorAll('.detected-value').forEach(el=>el.addEventListener('input',refreshDimensionDrivenProfile));showConfidence(drawingScanState.valid?`Technical drawing + profile detected ✓ Confidence ${Math.round(score)}%`:`Drawing needs manual profile verification ✕ Confidence ${Math.round(score)}%`,drawingScanState.valid?'good':'bad');}
+    else if(ext==='jpg'||ext==='jpeg'||ext==='png'||ext==='pdf'){let c;if(ext==='pdf')c=await renderPdfFirstPage(file);else{const url=URL.createObjectURL(file);drawingScanState.previewUrl=url;$('turnPreviewImage').src=url;$('turnPreviewLabel').textContent=file.name;$('turnDrawingPreview').hidden=false;c=document.createElement('canvas');const img=new Image();img.src=url;await new Promise((r,j)=>{img.onload=r;img.onerror=j});const scale=Math.min(1,2200/img.naturalWidth);c.width=Math.max(1,Math.round(img.naturalWidth*scale));c.height=Math.max(1,Math.round(img.naturalHeight*scale));const cc=c.getContext('2d');cc.fillStyle='#fff';cc.fillRect(0,0,c.width,c.height);cc.drawImage(img,0,0,c.width,c.height);}if(ext==='pdf'){$('turnPreviewLabel').textContent=file.name+' • page 1';$('turnPreviewImage').src=c.toDataURL('image/png');$('turnDrawingPreview').hidden=false;}const text=await ocrCanvas(c);const dims=technicalDimensionMatches(text);drawingScanState.radiusValues=technicalRadiusMatches(text);let score=imageTechnicalScore(text);drawingScanState.kind=ext;drawingScanState.dimensions=dims;const inferred=inferLatheProfileFromCanvas(c,text,dims);if(inferred&&applyDetectedProfile(inferred.profile)){drawingScanState.profileSource='image';drawingScanState.profileConfidence=inferred.confidence;score=Math.max(score,inferred.confidence);$('turnDxfStatus').textContent=inferred.dimensionDriven?`Drawing scanned. Dimension-driven lathe profile reconstructed from the verified drawing. The 2 mm end is fixed at Z0 and the remaining profile runs in Z-minus. Edit the detected dimensions or X,Z profile before generation.`:`Drawing scanned. ${dims.length} dimension value(s) detected and a turning profile was reconstructed from the visible contour. Review/edit the X,Z profile before generation.`;}else{$('turnDxfStatus').textContent='Technical-drawing text was scanned, but the profile contour could not be reconstructed reliably. Review/edit the X,Z profile manually before generation.';}drawingScanState.confidence=score;drawingScanState.valid=score>=45&&dims.length>=1&&!!inferred;renderDetectedDimensions(dims);renderEditableProfile();document.querySelectorAll('.detected-value').forEach(el=>el.addEventListener('input',refreshDimensionDrivenProfile));showConfidence(drawingScanState.valid?`Technical drawing + profile detected ✓ Confidence ${Math.round(score)}%`:`Drawing needs manual profile verification ✕ Confidence ${Math.round(score)}%`,drawingScanState.valid?'good':'bad');}
     else throw new Error('Use DXF, DWG, PDF, JPG or JPEG.');drawingScanState.scanned=true;setDrawingGate(drawingScanState.valid);
   }catch(e){drawingScanState.scanned=true;drawingScanState.valid=false;setDrawingGate(false);showConfidence('Scan failed: '+e.message,'bad');$('turnDxfStatus').textContent='Drawing could not be safely analyzed. Generation is blocked.';}}
   $('turnDxf').addEventListener('change',e=>{const f=e.target.files?.[0];resetDrawingState();if(!f)return;drawingScanState.file=f;drawingScanState.kind=f.name.split('.').pop().toLowerCase();$('turnDxfStatus').textContent=`Selected ${f.name}. Press SCAN DRAWING to analyze it.`;});
   $('turnScanDrawing').onclick=scanDrawing;
   $('turnClearDxf').onclick=()=>{$('turnDxf').value='';resetDrawingState();};
+  $('turnProfile').addEventListener('input',()=>{renderEditableProfile();});
 
   function profileFromGeometry(){
     const lines=geometry.filter(g=>g.type==='LINE');
@@ -2071,6 +2167,7 @@ M30
     if(!simPaths.length)verifyManual();
     $('turnPlay').textContent='⏸ PAUSE';timer=setInterval(()=>{if(simIndex>=simPaths.length){clearInterval(timer);timer=null;$('turnPlay').textContent='▶ PLAY';return;}simIndex++;fitAndDraw();},180);
   }
+  renderEditableProfile();
   $('turnGenerate').onclick=()=>{try{if(drawingScanState.file){if(!drawingScanState.scanned||!drawingScanState.valid){setStatus($('turnStatus'),'⚠️ <b>Scan and validate the uploaded drawing first.</b> Random/unclear drawings cannot be used for program generation.','bad');return;}if(drawingScanState.kind!=='dxf'&&!geometry.length&&!drawingScanState.profileSource){setStatus($('turnStatus'),'⚠️ <b>Verified drawing has no reconstructed profile.</b> Review/edit the X,Z profile before generation.','bad');return;}if(!$('turnConfirmGeometry').checked){setStatus($('turnStatus'),'⚠️ <b>Verify the detected drawing and dimensions</b> before generating code.','bad');return;}}else if(geometry.length&&!$('turnConfirmGeometry').checked){setStatus($('turnStatus'),'⚠️ <b>Confirm the detected geometry</b> before generating code.','bad');return;}buildCode();}catch(e){setStatus($('turnStatus'),'❌ '+esc(e.message),'bad');}};
   $('turnVerify').onclick=()=>verifyManual(true);
   $('turnManualVerify').onclick=()=>verifyManual(false);
