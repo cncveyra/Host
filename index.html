@@ -338,4 +338,19 @@ footer#contact .founder-role{
 </script>
 <script>
   (adsbygoogle = window.adsbygoogle || []).push({});
-</script></body></html>
+</script>
+<style id="cncveyra-assistant-launcher-css">
+/* Lightweight home-page CNC Assistant launcher. Full assistant stays on cncassistant.html for faster loading. */
+#cncveyra-assistant-launcher{position:fixed;right:18px;bottom:18px;z-index:99998;text-decoration:none;font-family:Inter,Arial,sans-serif;display:flex;align-items:center;gap:8px}
+#cncveyra-assistant-launcher .cal-label{background:#07131b;color:#dcebf0;border:1px solid #294752;border-radius:18px;padding:7px 10px;font:700 10px/1 Inter,Arial,sans-serif;box-shadow:0 8px 24px #0009;opacity:.94}
+#cncveyra-assistant-launcher .cal-avatar{width:58px;height:58px;border-radius:50%;border:2px solid #38bdf8;background:#07131b;padding:3px;box-shadow:0 10px 35px #000b;object-fit:cover}
+#cncveyra-assistant-launcher:active .cal-avatar{transform:scale(.96)}
+@media(max-width:560px){#cncveyra-assistant-launcher{right:12px;bottom:12px}.cal-label{display:none!important}#cncveyra-assistant-launcher .cal-avatar{width:56px;height:56px}}
+</style>
+
+<!-- Lightweight launcher; full assistant is loaded only when opened. -->
+<a id="cncveyra-assistant-launcher" href="cncassistant.html" aria-label="Open Manmohan Yadav CNC Assistant" title="CNCVEYRA Assistant">
+  <span class="cal-label">CNC Assistant</span>
+  <img class="cal-avatar" src="assets/assistant-avatar.png" alt="Manmohan Yadav CNC Assistant" loading="lazy" decoding="async">
+</a>
+</body></html>
