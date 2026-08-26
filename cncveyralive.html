@@ -46,7 +46,7 @@
 <div class="top">
   <div class="brand"><b>CNCVEYRA</b><small>● LIVE DRAWING</small></div>
   <div class="topTools">
-    <button class="toolTop" id="newBtn"><span>＋</span>New</button><button class="toolTop" id="openBtn"><span>□</span>Open</button><button class="toolTop" id="saveBtn"><span>▣</span>Save</button><button class="toolTop" id="exportBtn"><span>⇩</span>Save JSON</button><button class="toolTop" id="sendCncBtn" title="Send current Live Drawing profile to CNC Program"><span>↗</span>Send to CNC</button><input id="openFile" type="file" accept=".json,application/json" hidden><a class="toolTop" href="index.html#cnc-simulator" style="text-decoration:none" title="Back to CNC Code Lab"><span>⚙</span>CNC LAB</a><button class="toolTop" id="undo"><span>↶</span>Undo</button><button class="toolTop" id="redo"><span>↷</span>Redo</button><button class="toolTop" id="deleteTop" data-tool="delete"><span>⌫</span>Delete</button><button class="toolTop" id="clearTop"><span>⌧</span>Clear</button><button class="toolTop" data-tool="mirror"><span>◫</span>Mirror</button><button class="toolTop" id="gridBtn"><span>▦</span>Grid</button><button class="toolTop active" id="orthoBtn"><span>∠</span>Ortho</button><button class="toolTop" id="snapBtn"><span>⌖</span>Snap</button><button class="toolTop" id="polarBtn"><span>◈</span>Polar</button><button class="toolTop" data-tool="measure"><span>⌁</span>Measure</button><button class="toolTop" data-tool="makeref"><span>┄</span>Make Reference</button><button class="toolTop" data-tool="makeactive"><span>━</span>Make Active</button><button class="toolTop" id="helpBtn"><span>?</span>Help</button><button class="toolTop" id="printBtn"><span>⎙</span>Print 1:1</button><button class="toolTop" id="toolsToggle"><span>☰</span>Tools</button><button class="toolTop" id="propsToggle"><span>⚙</span>Props</button>
+    <button type="button" class="toolTop" id="newBtn"><span>＋</span>New</button><button type="button" class="toolTop" id="openBtn"><span>□</span>Open</button><button type="button" class="toolTop" id="saveBtn"><span>▣</span>Save</button><button type="button" class="toolTop" id="exportBtn"><span>⇩</span>Save JSON</button><button type="button" class="toolTop" id="sendCncBtn" title="Send current Live Drawing profile to CNC Program"><span>↗</span>Send to CNC</button><input id="openFile" type="file" accept=".json,application/json" hidden><a class="toolTop" href="index.html#cnc-simulator" style="text-decoration:none" title="Back to CNC Code Lab"><span>⚙</span>CNC LAB</a><button type="button" class="toolTop" id="undo"><span>↶</span>Undo</button><button type="button" class="toolTop" id="redo"><span>↷</span>Redo</button><button type="button" class="toolTop" id="deleteTop" data-tool="delete"><span>⌫</span>Delete</button><button type="button" class="toolTop" id="clearTop"><span>⌧</span>Clear</button><button type="button" class="toolTop" data-tool="mirror"><span>◫</span>Mirror</button><button type="button" class="toolTop" id="gridBtn"><span>▦</span>Grid</button><button class="toolTop active" id="orthoBtn"><span>∠</span>Ortho</button><button type="button" class="toolTop" id="snapBtn"><span>⌖</span>Snap</button><button type="button" class="toolTop" id="polarBtn"><span>◈</span>Polar</button><button type="button" class="toolTop" data-tool="measure"><span>⌁</span>Measure</button><button type="button" class="toolTop" data-tool="makeref"><span>┄</span>Make Reference</button><button type="button" class="toolTop" data-tool="makeactive"><span>━</span>Make Active</button><button type="button" class="toolTop" id="helpBtn"><span>?</span>Help</button><button type="button" class="toolTop" id="printBtn"><span>⎙</span>Print 1:1</button><button type="button" class="toolTop" id="toolsToggle"><span>☰</span>Tools</button><button type="button" class="toolTop" id="propsToggle"><span>⚙</span>Props</button>
   </div><div class="topSpacer"></div><div class="coordTop">X: <b id="topX">0.000</b>&nbsp;&nbsp; Z: <b id="topZ">0.000</b></div><select class="units"><option>mm</option></select>
 </div>
 <div class="main">
@@ -132,7 +132,24 @@ function drawingPayload(){
 }
 function downloadBlob(filename,data,type){const b=new Blob([data],{type}),url=URL.createObjectURL(b),a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),500);}
 function syncCncProfileToHome(showStatus){
-  try{const payload=drawingPayload();payload.source='CNCVEYRA Live Drawing';payload.syncedAt=new Date().toISOString();localStorage.setItem('cncveyraLiveProfile',JSON.stringify(payload));if(showStatus)setStatus('Live profile sent to CNC Program ✓');return true;}catch(e){if(showStatus)setStatus('Could not send Live profile: '+e.message);return false;}
+  try{
+    const payload=drawingPayload();
+    payload.source='CNCVEYRA Live Drawing';
+    payload.syncedAt=new Date().toISOString();
+    const raw=JSON.stringify(payload);
+    // Same-origin bridge for normal hosting.
+    localStorage.setItem('cncveyraLiveProfile',raw);
+    // URL bridge as a fallback when Live Drawing and CNC LAB are hosted on
+    // different origins/domains. This keeps the actual profile data intact.
+    const bytes=new TextEncoder().encode(raw);let bin='';
+    for(let i=0;i<bytes.length;i+=0x8000)bin+=String.fromCharCode(...bytes.subarray(i,i+0x8000));
+    const transfer=btoa(bin).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+    const target=new URL('https://cncveyra.in/index.html',location.href);
+    target.hash='live='+transfer;
+    if(showStatus)setStatus('Live profile sent to CNC Program ✓ Opening CNC LAB…');
+    window.location.href=target.toString();
+    return true;
+  }catch(e){if(showStatus)setStatus('Could not send Live profile: '+e.message);return false;}
 }
 function saveDrawingFile(){syncCncProfileToHome(false);downloadBlob('CNCVEYRA_Live_Drawing.json',JSON.stringify(drawingPayload(),null,2),'application/json;charset=utf-8');setStatus('Drawing saved as CNCVEYRA_Live_Drawing.json'+(originPt?' • X/Z Zero included':' • No X/Z Zero set'));}
 function loadDrawingData(data){

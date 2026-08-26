@@ -1771,7 +1771,25 @@ M30
   // coordinates for reopening, and origin-relative cncObjects for the machine.
   (function(){
     const LIVE_KEY='cncveyraLiveProfile';
-    function livePayload(){try{const raw=localStorage.getItem(LIVE_KEY);return raw?JSON.parse(raw):null;}catch(e){return null;}}
+    function livePayload(){
+      try{
+        const raw=localStorage.getItem(LIVE_KEY);
+        if(raw)return JSON.parse(raw);
+      }catch(e){}
+      // Cross-origin fallback: Live Drawing can pass the exact payload in the
+      // URL hash when localStorage is isolated on another domain.
+      try{
+        const h=location.hash||'';
+        if(h.indexOf('#live=')===0){
+          let b64=h.slice(6).replace(/-/g,'+').replace(/_/g,'/');
+          while(b64.length%4)b64+='=';
+          const bin=atob(b64),bytes=new Uint8Array(bin.length);
+          for(let i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);
+          return JSON.parse(new TextDecoder().decode(bytes));
+        }
+      }catch(e){}
+      return null;
+    }
     function arcPts(o,steps){const out=[],a1=Number(o.a1),a2=Number(o.a2),r=Number(o.r),cx0=Number(o.c&&o.c.x),cy0=Number(o.c&&o.c.y);if(![a1,a2,r,cx0,cy0].every(Number.isFinite))return out;let da=a2-a1;while(da>Math.PI*2)da-=Math.PI*2;while(da<-Math.PI*2)da+=Math.PI*2;const n=Math.max(8,Math.min(48,steps||24));for(let i=0;i<=n;i++){const a=a1+da*i/n;out.push({x:cx0+r*Math.sin(a),z:cy0+r*Math.cos(a)});}return out;}
     function buildLiveLines(p){
       const src=Array.isArray(p&&p.cncObjects)?p.cncObjects:(Array.isArray(p&&p.objects)?p.objects:[]),out=[];
@@ -1807,7 +1825,11 @@ M30
     }
     window.importCncveyraLiveProfile=importLiveProfile;
     const b=document.getElementById('importLiveProfile');if(b)b.onclick=()=>importLiveProfile(true);
-    if(livePayload())setTimeout(()=>importLiveProfile(false),150);
+    const initialLivePayload=livePayload();
+    if(initialLivePayload)setTimeout(()=>{
+      importLiveProfile(false);
+      if((location.hash||'').indexOf('#live=')===0)history.replaceState(null,'',location.pathname+location.search+'#cnc-simulator');
+    },150);
     window.addEventListener('storage',e=>{if(e.key===LIVE_KEY&&e.newValue)setTimeout(()=>importLiveProfile(false),50);});
   })();
   $('turnGenerate').onclick=()=>{try{if(drawingScanState.file){if(!drawingScanState.scanned||!drawingScanState.valid){setStatus($('turnStatus'),'⚠️ <b>Scan and validate the uploaded drawing first.</b> Random/unclear drawings cannot be used for program generation.','bad');return;}if(drawingScanState.kind!=='dxf'&&!geometry.length){setStatus($('turnStatus'),'⚠️ <b>Verified drawing has no machine geometry.</b> Use DXF geometry or enter/verify a manual X,Z profile before generation.','bad');return;}if(!$('turnConfirmGeometry').checked){setStatus($('turnStatus'),'⚠️ <b>Verify the detected drawing and dimensions</b> before generating code.','bad');return;}}else if(geometry.length&&!$('turnConfirmGeometry').checked){setStatus($('turnStatus'),'⚠️ <b>Confirm the detected geometry</b> before generating code.','bad');return;}buildCode();}catch(e){setStatus($('turnStatus'),'❌ '+esc(e.message),'bad');}};
