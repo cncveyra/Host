@@ -1,0 +1,598 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="index,follow,max-image-preview:large"><meta name="google-adsense-account" content="ca-pub-4399948678622543"><link rel="icon" href="data:,"><title>CNCVEYRA Assistant</title><meta name="description" content="CNCVEYRA Assistant for CNC, G-code and machining questions."><link rel="canonical" href="https://cncveyra.in/cncassistant.html"><meta name="theme-color" content="#061018"><style>
+:root{--b:#061018;--p:#0b1821;--l:#1c3541;--t:#edf7fa;--m:#8ca2ad;--a:#38bdf8}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--b);color:var(--t);font-family:Inter,Arial,sans-serif;overflow-x:hidden}a{text-decoration:none;color:inherit}
+header{position:fixed;z-index:9;top:0;width:100%;height:72px;padding:0 5%;display:flex;align-items:center;justify-content:space-between;background:#061018dd;backdrop-filter:blur(14px);border-bottom:1px solid #ffffff12}.logo{display:flex;gap:10px;align-items:center;font-weight:900;letter-spacing:.12em}.mark{width:34px;height:34px;border:1px solid var(--a);display:grid;place-items:center;color:var(--a)}nav{display:flex;gap:22px;align-items:center;font-size:12px;color:#b5c7ce}nav a:hover{color:var(--a)}.cta{padding:11px 15px;border:1px solid #38bdf877;color:var(--a)!important}.menu{display:none;background:none;border:0;color:white;font-size:25px;cursor:pointer}.nav-close{display:none}
+@media(max-width:1100px){nav.open{display:flex;position:absolute;top:72px;left:0;right:0;padding:16px 20px;flex-direction:column;align-items:stretch;gap:0;background:#061018f7;border-bottom:1px solid #ffffff12;backdrop-filter:blur(14px);z-index:20}nav.open a{padding:15px 8px;border-bottom:1px solid #ffffff10}nav.open .cta{margin-top:8px;text-align:center}}
+.hero{min-height:820px;padding:130px 5% 70px;display:grid;grid-template-columns:46% 54%;align-items:center;position:relative;max-width:1450px;margin:auto;background-image:linear-gradient(#38bdf208 1px,transparent 1px),linear-gradient(90deg,#38bdf208 1px,transparent 1px);background-size:55px 55px}.ey{font:800 13px monospace;letter-spacing:.2em;color:var(--a)}.ey:before{content:"";display:inline-block;width:25px;height:1px;background:var(--a);margin:0 9px 3px 0}.hero h1{font-size:clamp(43px,5.5vw,76px);line-height:.96;letter-spacing:-.055em;margin:20px 0}.hero h1 em,h2 em{font-style:normal;color:var(--a)}.hero p{color:var(--m);font-size:17px;max-width:550px}.buttons{display:flex;gap:12px;margin:28px 0}.btn{padding:14px 19px;border:1px solid #ffffff20;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}.primary{background:var(--a);color:#031018;border-color:var(--a)}.meta{display:flex;gap:12px;color:#66808c;font:11px monospace;flex-wrap:wrap}.machine{height:570px;position:relative}.piece{position:absolute;inset:95px 5% 100px;background:linear-gradient(145deg,#17303b,#08131a);border:1px solid #38bdf855;transform:perspective(800px) rotateX(13deg);overflow:hidden;box-shadow:0 30px 80px #0008}.grid{position:absolute;inset:0;background:linear-gradient(#38bdf20b 1px,transparent 1px),linear-gradient(90deg,#38bdf20b 1px,transparent 1px);background-size:36px 36px}.paths{position:absolute;inset:12%;width:76%;height:76%}.paths path{fill:none;stroke:#38bdf8;stroke-width:2;stroke-dasharray:10 9;animation:dash 5s linear infinite}@keyframes dash{to{stroke-dashoffset:-190}}.cutter{position:absolute;top:3%;left:43%;width:18px;height:130px;background:linear-gradient(90deg,#71848b,#f0f8fa,#687c83);animation:cut 6s ease-in-out infinite}.cutter:after{content:"";position:absolute;bottom:-32px;left:-8px;border-left:17px solid transparent;border-right:17px solid transparent;border-top:35px solid #c2d0d4}@keyframes cut{25%{transform:translate(150px,90px)}50%{transform:translate(-30px,190px)}75%{transform:translate(170px,255px)}}.code{position:absolute;right:0;bottom:35px;background:#030a0f;border:1px solid #38bdf855;padding:13px;width:235px;color:#8ee1ff;font:10px/1.7 monospace}.gear{position:fixed;right:2.5%;top:88px;width:120px;height:120px;border:17px solid #34525e;border-radius:50%;background:repeating-conic-gradient(#34525e 0 8deg,transparent 8deg 18deg);-webkit-mask:radial-gradient(circle,transparent 0 32%,#000 33%);mask:radial-gradient(circle,transparent 0 32%,#000 33%);z-index:30;pointer-events:none;transition:opacity .2s ease}
+.ticker{height:58px;border-block:1px solid var(--l);display:flex;justify-content:space-around;align-items:center;color:#8aa3ad;font:13px monospace;letter-spacing:.16em}
+section{max-width:1220px;margin:auto;padding:105px 5%}.split{display:grid;grid-template-columns:1.1fr .9fr;gap:60px}h2{font-size:clamp(35px,4.5vw,58px);line-height:1;letter-spacing:-.045em;margin:14px 0}.copy{color:var(--m);font-size:15px}.stats{display:grid;grid-template-columns:repeat(4,1fr);margin-top:50px;border-top:1px solid var(--l)}.stats div{padding:22px;border-right:1px solid var(--l)}.stats b{font-size:28px;display:block}.stats small{color:var(--m);font-size:9px;text-transform:uppercase}
+.services{border-top:1px solid var(--l)}.servicebox{display:grid;grid-template-columns:38% 62%;border:1px solid var(--l)}.list button{width:100%;padding:20px;border:0;border-bottom:1px solid var(--l);background:none;color:#9cb0b8;text-align:left;cursor:pointer}.list button.active,.list button:hover{background:#0c202c;color:white;border-left:3px solid var(--a)}.list b{color:var(--a);font:12px monospace;margin-right:18px}.screen{min-height:500px;background:#07131b;position:relative;overflow:hidden}.screen:before{content:"";position:absolute;inset:0;background:linear-gradient(#38bdf20b 1px,transparent 1px),linear-gradient(90deg,#38bdf20b 1px,transparent 1px);background-size:30px 30px}.model{position:absolute;width:230px;height:160px;border:2px solid #38bdf8;left:50%;top:45%;transform:translate(-50%,-50%) skewY(-8deg) rotateX(50deg);box-shadow:0 0 50px #38bdf822}.screen h3{position:absolute;top:22px;left:25px;font:12px monospace;color:var(--a);letter-spacing:.12em}.screen p{position:absolute;bottom:25px;left:25px;color:#7895a0;font:12px monospace}
+.flow{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}.step{border-top:1px solid var(--a);padding-top:18px}.step b{font:12px monospace;color:var(--a)}.step h3{font-size:18px}.step p{color:var(--m);font-size:12px}
+.projects{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}.project{border:1px solid var(--l);background:var(--p)}.art{height:250px;position:relative;background:radial-gradient(circle,#153746,#071018 65%);overflow:hidden;background-size:cover;background-position:center}.art.photo{background-image:linear-gradient(#06101866,#06101899),var(--img)}.art.photo:after{display:none}.art:after{content:"";position:absolute;inset:20%;border:1px dashed #38bdf899;border-radius:30%;transform:rotate(-15deg)}.project div:last-child{padding:18px}.project h3{margin:6px 0}.project p{color:var(--m);font-size:12px}
+.quote,.career{max-width:none;background:#09151d;border-block:1px solid var(--l);display:grid;grid-template-columns:.8fr 1.2fr;gap:70px}.form{border:1px solid var(--l);padding:26px;background:#061018}.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}.form label{display:block;color:#9ab0b9;font:12px monospace;text-transform:uppercase;margin-bottom:14px}.form input,.form select,.form textarea{width:100%;margin-top:6px;padding:12px;background:#0a1821;border:1px solid #24404c;color:white;outline:0}.form textarea{min-height:110px}.form button{width:100%;padding:14px;margin-top:4px;border:0;font-weight:900;cursor:pointer;background:var(--a);color:#031018}.note{font-size:12px;color:#8098a2;border-left:2px solid var(--a);padding-left:12px}
+footer{padding:55px 5% 22px;border-top:1px solid var(--l);background:#040b10}.foot{max-width:1220px;margin:auto;display:grid;grid-template-columns:2fr 1fr 1fr;gap:40px}.foot a{display:block;color:#8ea4ad;font-size:12px;margin:8px 0}.bottom{max-width:1220px;margin:45px auto 0;border-top:1px solid var(--l);padding-top:15px;color:#68818b;font-size:11px;display:flex;justify-content:space-between}
+@media(max-width:1100px){nav{display:none}.menu{display:block}.hero{grid-template-columns:1fr;padding-top:105px}.machine{height:440px}.gear{display:block;width:78px;height:78px;border-width:11px;right:4%;top:88px}.split,.quote,.career{grid-template-columns:1fr}.stats{grid-template-columns:1fr 1fr}.servicebox{grid-template-columns:1fr}.screen{min-height:350px}.flow,.projects{grid-template-columns:1fr 1fr}.foot{grid-template-columns:1fr 1fr}.bottom{display:block}.bottom span{display:block;margin-top:8px}}
+.page-hidden{display:none!important}.page-visible{display:block!important}.view-transition{animation:viewIn .35s ease}@keyframes viewIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+.my-chat-faq{border-top:1px solid #294752;background:#07131b;padding:9px}.faq-title{font-size:11px;font-weight:900;color:#dcebf0;margin:0 0 7px}.faq-cats{display:flex;gap:5px;overflow:auto;padding-bottom:7px}.faq-cats button{flex:0 0 auto;background:#0a1821;color:#b9d1d9;border:1px solid #294752;border-radius:8px;padding:6px 8px;font-size:10px;cursor:pointer}.faq-cats button.active{background:#38bdf8;color:#031018}.faq-list{max-height:135px;overflow:auto;display:grid;gap:4px}.faq-list button{width:100%;text-align:left;background:#0a1821;color:#dcebf0;border:1px solid #203b47;border-radius:7px;padding:7px 8px;font-size:10px;cursor:pointer}.faq-list button:hover{border-color:#38bdf8}.faq-contact{display:flex;gap:5px;margin-top:7px;align-items:center;overflow:auto}.faq-contact-title{font-size:9px;color:#8ea9b3;white-space:nowrap}.faq-contact button{white-space:nowrap;background:#10232d;color:#dcebf0;border:1px solid #315766;border-radius:7px;padding:6px 8px;font-size:9px;cursor:pointer}.faq-contact button:first-of-type{background:#14352a}.faq-contact button:last-of-type{background:#1c2830}
+@media(max-width:560px){.hero{padding-left:20px;padding-right:20px}.hero h1{font-size:44px}.buttons{flex-direction:column}.machine{height:390px}.piece{inset:55px 0 80px}.code{width:180px;font-size:8px}.ticker{overflow:hidden;gap:34px;justify-content:flex-start;padding:0 20px;white-space:nowrap}.ticker div{flex:0 0 auto}.ticker div:nth-child(n+4){display:block}section{padding:75px 20px}.stats{grid-template-columns:1fr 1fr}.row,.flow,.projects,.foot{grid-template-columns:1fr}.servicebox{margin:0}.screen{min-height:300px}.form{padding:18px}}
+
+.servicevisual{position:absolute;inset:55px 25px 55px;display:grid;place-items:center;perspective:700px;background:#07131b;border:1px solid #38bdf833;border-radius:2px;overflow:hidden;box-shadow:0 20px 55px #0008}.servicevisual img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#07131b;z-index:0;display:block}.servicevisual img.cover{object-fit:cover}.servicevisual.photo-mode img{animation:remoteGifIn .5s ease,remoteGifZoom 7s ease-in-out infinite;transform-origin:center}@keyframes remoteGifIn{from{opacity:.25;transform:scale(.94)}to{opacity:1;transform:scale(1)}}@keyframes remoteGifZoom{0%,100%{filter:saturate(.9) brightness(.92);transform:scale(1)}50%{filter:saturate(1.15) brightness(1.05);transform:scale(1.035)}}.servicevisual:before{content:"";position:absolute;inset:0;background:linear-gradient(135deg,#06101855,#06101822 55%,#38bdf811);z-index:1;pointer-events:none}.servicevisual>*{z-index:2}.servicevisual.photo-mode .mold,.servicevisual.photo-mode .toolpath{display:none}.servicevisual.photo-mode{animation:visualIn .45s ease}@keyframes visualIn{from{opacity:.4;transform:scale(.98)}to{opacity:1;transform:scale(1)}}.mold{position:absolute;width:230px;height:150px;border:2px solid #38bdf8;background:linear-gradient(145deg,#17303b,#071018);box-shadow:0 0 45px #38bdf822;transform:rotateX(48deg) rotateZ(-7deg);animation:moldswap 6s ease-in-out infinite}.mold-b{transform:rotateX(48deg) rotateZ(8deg) translate(25px,8px);opacity:.35;animation-delay:3s}.servicevisual .toolpath,.art .toolpath{position:absolute;width:190px;height:120px;border:2px dashed #38bdf8;border-radius:40%;animation:toolspin 4s linear infinite}.art .toolpath{left:50%;top:50%;transform:translate(-50%,-50%)}@keyframes moldswap{0%,100%{transform:rotateX(48deg) rotateZ(-7deg) scale(.9);opacity:.65}50%{transform:rotateX(48deg) rotateZ(8deg) scale(1.05);opacity:1}}@keyframes toolspin{to{transform:translate(-50%,-50%) rotate(360deg)}}.moldshape{position:absolute;left:50%;top:50%;width:145px;height:105px;transform:translate(-50%,-50%) rotateX(55deg);border:2px solid #38bdf8;border-radius:20px;box-shadow:0 0 30px #38bdf844;animation:shapePulse 3s ease-in-out infinite}.injection-art .moldshape{border-radius:8px;transform:translate(-50%,-50%) rotateX(55deg) rotateZ(8deg)}.vmc-art .toolpath{width:170px;height:110px}.mini{top:18%;left:48%;height:75px;width:9px;transform:none;animation:cut 3.5s ease-in-out infinite}
+.servicevisual.photo-mode:before{background:linear-gradient(135deg,#06101818,#06101808 55%,#38bdf804)}.servicevisual.photo-mode img{z-index:2!important}.servicevisual.photo-mode>*:not(img){display:none}
+/* Home image slider - directly below the original Home ticker */
+.home-bottom-slider{width:100%;overflow:hidden;background:#061018;border-bottom:1px solid var(--l);padding:24px 0 46px;position:relative;clear:both}
+.home-bottom-track{display:flex;flex-wrap:nowrap;align-items:stretch;gap:16px;width:max-content;animation:homeMouldSlide 42s linear infinite;will-change:transform}
+.home-bottom-slider:hover .home-bottom-track{animation-play-state:paused}
+.bottom-mould-slide{flex:0 0 260px;width:260px;height:180px;min-width:260px;overflow:hidden;border:1px solid #294752;background:#07131b}
+.bottom-mould-slide img{display:block;width:100%;height:100%;object-fit:cover}
+@keyframes homeMouldSlide{from{transform:translateX(0)}to{transform:translateX(calc(-50% - 8px))}}
+@media(max-width:560px){.home-bottom-slider{padding:18px 0 34px}.home-bottom-track{gap:12px;animation-duration:34s}.bottom-mould-slide{flex:0 0 205px;width:205px;min-width:205px;height:145px}}
+@media(prefers-reduced-motion:reduce){.home-bottom-track{animation:none}}
+
+.home-second-slider{width:100%;overflow:hidden;background:#061018;padding:22px 0 52px;border-bottom:1px solid var(--l);clear:both;position:relative}
+.home-second-track{display:flex;flex-wrap:nowrap;align-items:stretch;gap:18px;width:max-content;animation:homeSecondSlide 36s linear infinite;will-change:transform}
+.machining-slide{flex:0 0 300px;width:300px;min-width:300px;height:205px;overflow:hidden;border:1px solid #294752;background:#07131b}
+.machining-slide img{display:block;width:100%;height:100%;object-fit:cover}
+@keyframes homeSecondSlide{from{transform:translateX(0)}to{transform:translateX(calc(-50% - 9px))}}
+@media(max-width:560px){
+ .home-second-slider{padding:18px 0 38px}
+ .home-second-track{gap:12px;animation-duration:30s}
+ .machining-slide{flex:0 0 245px;width:245px;min-width:245px;height:165px}
+}
+@media(prefers-reduced-motion:reduce){.home-second-track{animation:none}}
+
+/* Contact section readability */
+footer#contact .foot{
+  gap:55px;
+}
+footer#contact .foot > div{
+  min-width:0;
+}
+footer#contact .foot > div > b{
+  display:block;
+  color:#dcebf0;
+  font:800 14px/1.2 Inter,Arial,sans-serif;
+  letter-spacing:.12em;
+  margin-bottom:14px;
+}
+footer#contact .foot p{
+  font-size:14px !important;
+  line-height:1.6;
+}
+footer#contact .foot a{
+  color:#b6c9d0;
+  font-size:15px;
+  line-height:1.5;
+  margin:10px 0;
+}
+footer#contact .foot a:hover{
+  color:var(--a);
+}
+footer#contact .logo{
+  font-size:16px;
+}
+footer#contact .logo small{
+  font-size:9px !important;
+}
+@media(max-width:560px){
+  footer#contact .foot > div > b{font-size:13px}
+  footer#contact .foot p{font-size:14px !important}
+  footer#contact .foot a{font-size:15px}
+}
+
+/* Professional contact profile */
+footer#contact .contact-profile{
+  display:flex;
+  align-items:center;
+  gap:20px;
+  min-width:300px;
+  max-width:390px;
+}
+footer#contact .contact-profile img{
+  width:125px;
+  height:125px;
+  flex:0 0 125px;
+  object-fit:cover;
+  object-position:center top;
+  border:1px solid #2b5969;
+  border-radius:8px;
+  box-shadow:0 14px 35px rgba(0,0,0,.35);
+}
+footer#contact .contact-profile-kicker{
+  color:var(--a);
+  font:800 11px/1.4 monospace;
+  letter-spacing:.14em;
+  margin-bottom:8px;
+}
+footer#contact .contact-profile-title{
+  color:#e8f3f6;
+  font:800 18px/1.25 Inter,Arial,sans-serif;
+  margin-bottom:9px;
+}
+footer#contact .contact-profile-line{
+  color:#829ba5;
+  font:11px/1.6 monospace;
+  letter-spacing:.04em;
+}
+@media(max-width:560px){
+  footer#contact .contact-profile{
+    width:100%;
+    max-width:none;
+    padding-bottom:8px;
+  }
+  footer#contact .contact-profile img{
+    width:105px;
+    height:105px;
+    flex-basis:105px;
+  }
+  footer#contact .contact-profile-title{font-size:17px}
+  footer#contact .contact-profile-line{font-size:10px}
+}
+
+/* Founder profile — photo directly above the founder's name */
+footer#contact .founder-column{
+  min-width:300px;
+}
+footer#contact .founder-column .logo{
+  margin-bottom:12px;
+}
+footer#contact .company-tagline{
+  font-size:14px !important;
+  line-height:1.55;
+  margin:0 0 20px;
+}
+footer#contact .founder-card{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  gap:7px;
+}
+footer#contact .founder-card img{
+  width:120px;
+  height:120px;
+  object-fit:cover;
+  object-position:center top;
+  border:1px solid #315d6c;
+  border-radius:7px;
+  box-shadow:0 12px 30px rgba(0,0,0,.35);
+}
+footer#contact .founder-name{
+  color:#edf7fa;
+  font:800 17px/1.3 Inter,Arial,sans-serif;
+  letter-spacing:.01em;
+}
+footer#contact .founder-role{
+  color:var(--a);
+  font:800 11px/1.4 monospace;
+  letter-spacing:.12em;
+}
+@media(max-width:560px){
+  footer#contact .founder-column{
+    min-width:0;
+    width:100%;
+  }
+  footer#contact .founder-card img{
+    width:105px;
+    height:105px;
+  }
+  footer#contact .founder-name{
+    font-size:16px;
+  }
+}
+/* ===== MANMOHAN YADAV FREE CNC ASSISTANT ===== */
+#my-chatbot{position:fixed;right:20px;bottom:20px;z-index:99999;font-family:Inter,Arial,sans-serif}
+#my-chatbot *{box-sizing:border-box}
+#my-chat-open{width:62px;height:62px;border-radius:50%;border:2px solid #38bdf8;background:#07131b;box-shadow:0 10px 35px #000b;cursor:pointer;padding:3px;overflow:hidden}
+#my-chat-open img{width:100%;height:100%;object-fit:cover;border-radius:50%}
+#my-chat-panel{display:none;width:min(390px,calc(100vw - 28px));height:min(610px,calc(100vh - 105px));background:#07131b;border:1px solid #294752;box-shadow:0 20px 70px #000d;overflow:hidden;border-radius:16px;flex-direction:column}
+#my-chat-panel.show{display:flex}.my-chat-head{height:70px;display:flex;align-items:center;gap:11px;padding:10px 13px;background:#091c27;border-bottom:1px solid #294752}
+.my-chat-head img{width:46px;height:46px;border-radius:50%;object-fit:cover;border:1px solid #38bdf8}
+.my-chat-title{font-weight:900;color:#edf7fa;font-size:14px}.my-chat-sub{font:10px monospace;color:#38bdf8;margin-top:3px}
+.my-chat-x{margin-left:auto;border:0;background:none;color:#9cb0b8;font-size:25px;cursor:pointer}
+#my-chat-messages{flex:1;overflow:auto;padding:15px 12px;background:linear-gradient(#07131b,#061018)}
+.my-msg{max-width:88%;padding:10px 12px;margin:7px 0;border-radius:12px;font-size:13px;line-height:1.45;white-space:pre-wrap}
+.my-bot{background:#0c202c;border:1px solid #24404c;color:#dcebf0;border-top-left-radius:3px}.my-user{background:#38bdf8;color:#031018;margin-left:auto;border-top-right-radius:3px}
+.my-chat-quick{display:flex;gap:6px;overflow:auto;padding:8px;border-top:1px solid #1d3440}.my-chat-quick button{white-space:nowrap;background:#0a1821;border:1px solid #294752;color:#a9c1ca;border-radius:20px;padding:7px 9px;font-size:10px;cursor:pointer}
+.my-chat-input{display:flex;gap:7px;padding:9px;background:#061018;border-top:1px solid #294752}#my-chat-text{flex:1;min-width:0;background:#0a1821;color:#fff;border:1px solid #294752;border-radius:10px;padding:11px;outline:0;font-size:13px}#my-chat-send{width:48px;border:0;border-radius:10px;background:#38bdf8;color:#031018;font-weight:900;cursor:pointer}.my-disclaimer{font-size:9px;color:#708892;padding:5px 12px 8px;background:#061018}
+/* ===== CNC GUIDE ===== */
+.cg-page{max-width:1220px;margin:auto;padding:105px 5%;background:var(--b)}
+.cg-hero{padding:35px 0 55px;border-bottom:1px solid var(--l)}
+.cg-hero h2{margin:15px 0 18px}.cg-hero p{max-width:850px;color:var(--m);font-size:16px;line-height:1.8}
+.cg-stats{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--l);margin-top:38px}
+.cg-stats span{padding:18px 14px;border-right:1px solid var(--l);font:10px monospace;color:#7895a0;letter-spacing:.08em}.cg-stats b{display:block;color:#edf7fa;font-size:17px;margin-bottom:5px}
+.cg-toolbar{display:flex;justify-content:space-between;align-items:center;gap:25px;padding:32px 0 20px}.cg-toolbar b{display:block;color:#dcebf0;font-size:13px;letter-spacing:.12em}.cg-toolbar small{display:block;color:#718a95;margin-top:7px;font-size:11px}
+#cg-search{width:min(350px,100%);padding:13px 14px;background:#0a1821;border:1px solid #294752;color:#fff;outline:0;border-radius:2px}#cg-search:focus{border-color:var(--a)}
+.cg-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}.cg-card{display:grid;grid-template-columns:60px 1fr;border:1px solid var(--l);background:#07131b;min-height:205px;transition:.25s}.cg-card:hover{border-color:#38bdf866;transform:translateY(-2px)}
+.cg-num{padding:20px 10px;border-right:1px solid var(--l);font:700 13px monospace;color:var(--a)}.cg-card-body{padding:20px}.cg-kicker{font:800 10px monospace;letter-spacing:.12em;color:var(--a)}
+.cg-card h3{font-size:20px;line-height:1.15;margin:12px 0 10px;color:#edf7fa}.cg-card p{font-size:12px;line-height:1.7;color:var(--m);margin:0 0 17px}
+.cg-read,.cg-back{border:1px solid #315766;background:#0a1821;color:#dcebf0;padding:10px 12px;font:800 10px monospace;letter-spacing:.06em;cursor:pointer}.cg-read:hover,.cg-back:hover{border-color:var(--a);color:var(--a)}
+.cg-empty{padding:40px 0;color:var(--m);text-align:center}.cg-detail{display:none;padding:28px 0 30px}.cg-detail.active{display:block;animation:viewIn .35s ease}.cg-detail h2{font-size:clamp(34px,5vw,58px);max-width:980px;margin:20px 0}
+.cg-seo{border-left:2px solid var(--a);padding:12px 15px;background:#071820;color:#8fa8b1;font:11px/1.6 monospace;margin:0 0 30px}.cg-content{max-width:920px;color:#c0d0d5;font-size:16px;line-height:1.9}.cg-content p{margin:0 0 22px}
+.cg-summary{margin-top:35px;border:1px solid #294752;background:#081922;padding:24px}.cg-summary strong{font:800 11px monospace;letter-spacing:.12em;color:var(--a)}.cg-summary p{margin:12px 0 0;color:#dcebf0}.cg-back{margin-bottom:25px}
+@media(max-width:800px){.cg-grid{grid-template-columns:1fr}.cg-stats{grid-template-columns:1fr 1fr}.cg-toolbar{align-items:stretch;flex-direction:column}.cg-card h3{font-size:18px}}
+@media(max-width:560px){.cg-page{padding:75px 20px}.cg-card{grid-template-columns:45px 1fr}.cg-card-body{padding:17px}.cg-content{font-size:15px;line-height:1.8}}
+</style>
+<style id="cnc-lab-css">
+.cnc-lab{max-width:1180px;margin:0 auto;padding:38px 22px 70px}
+.cnc-lab-hero{margin-bottom:22px}
+.cnc-lab-hero h2{font-size:clamp(32px,5vw,58px);margin:6px 0 10px}
+.cnc-lab-hero p{max-width:850px;color:#8ea3ad;line-height:1.75}
+.cnc-lab-grid{display:grid;grid-template-columns:minmax(300px,.95fr) minmax(320px,1.2fr);gap:18px}
+.cnc-panel{background:rgba(7,20,29,.86);border:1px solid rgba(120,160,175,.2);border-radius:18px;padding:16px;box-shadow:0 18px 55px rgba(0,0,0,.18)}
+.cnc-panel h3{margin:0 0 10px;font-size:16px;letter-spacing:.08em;text-transform:uppercase}
+.cnc-editor{width:100%;min-height:390px;resize:vertical;border:1px solid #27424e;border-radius:12px;background:#02080d;color:#d8edf4;padding:14px;font:14px/1.65 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;outline:none;box-sizing:border-box}
+.cnc-editor:focus{border-color:#38bdf8;box-shadow:0 0 0 2px rgba(56,189,248,.12)}
+.cnc-actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:10px}
+.cnc-btn{border:1px solid #2b4653;background:#0b1b25;color:#dff7ff;border-radius:10px;padding:10px 14px;cursor:pointer;font-weight:700}
+.cnc-btn:hover{border-color:#38bdf8}
+.cnc-btn.primary{background:#0b5f82;border-color:#1496c9}
+.cnc-btn.danger{border-color:#6a3740}
+.cnc-status{margin-top:12px;padding:12px;border-radius:12px;background:#06131b;border:1px solid #1e3945;line-height:1.55}
+.cnc-status.ok{border-color:#23604b}
+.cnc-status.bad{border-color:#713944}
+.cnc-canvas-wrap{position:relative;background:#02080d;border:1px solid #27424e;border-radius:14px;overflow:hidden}
+#cncCanvas{display:block;width:100%;height:auto;aspect-ratio:1.45;background:#02080d}
+.cnc-legend{display:flex;gap:15px;flex-wrap:wrap;padding:10px 2px 0;color:#9db2bc;font-size:12px}
+.cnc-dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;background:#38bdf8}
+.cnc-dot.rapid{background:#64748b}.cnc-dot.cut{background:#f59e0b}.cnc-dot.arc{background:#a78bfa}.cnc-dot.tool{background:#f43f5e}
+.cnc-findings{margin-top:14px;display:grid;gap:8px;max-height:300px;overflow:auto}
+.cnc-finding{padding:10px 12px;border-radius:10px;border:1px solid #203a46;background:#07141c;font-size:13px;line-height:1.5}
+.cnc-finding.error{border-color:#713944}.cnc-finding.warn{border-color:#735f2f}.cnc-finding.info{border-color:#28516a}
+.cnc-finding b{display:block;margin-bottom:3px}
+.cnc-code-line{white-space:pre;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.cnc-learn{margin-top:18px;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.cnc-card{border:1px solid rgba(120,160,175,.18);border-radius:14px;padding:14px;background:rgba(4,13,19,.55)}
+.cnc-card h4{margin:0 0 7px}.cnc-card p{margin:0;color:#91a8b2;line-height:1.6;font-size:13px}
+.cnc-stepbar{display:flex;gap:7px;flex-wrap:wrap;margin:0 0 14px}
+.cnc-chip{font-size:11px;border:1px solid #294551;border-radius:999px;padding:6px 9px;color:#9fb7c0}
+.cnc-mini{color:#8fa5af;font-size:12px;line-height:1.55;margin-top:9px}
+@media(max-width:850px){.cnc-lab-grid,.cnc-learn{grid-template-columns:1fr}.cnc-editor{min-height:300px}}
+</style>
+<style id="cnc-turning-enhancements">
+.home-cnc-lab-card{max-width:1220px;margin:0 auto;padding:34px 5%;display:flex;align-items:center;justify-content:space-between;gap:28px;background:linear-gradient(135deg,#0a1c26,#07131b);border-block:1px solid #294752}
+.home-cnc-lab-card h2{font-size:clamp(27px,3.4vw,46px);margin:9px 0 12px}.home-cnc-lab-card p{max-width:760px;color:#8fa7b1;margin:0;font-size:14px;line-height:1.65}.home-cnc-lab-card .btn{white-space:nowrap;cursor:pointer}
+.turning-workflow{display:grid;grid-template-columns:1.05fr .95fr;gap:18px;margin-top:22px}.cnc-panel-head{display:flex;justify-content:space-between;align-items:flex-start;gap:14px}.cnc-kicker{font:10px monospace;letter-spacing:.16em;color:#38bdf8}.turning-badge{font:10px monospace;color:#8fe4ff;border:1px solid #295262;border-radius:999px;padding:6px 9px;white-space:nowrap}.turn-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:14px}.turn-grid.params{grid-template-columns:repeat(3,minmax(0,1fr))}.turn-field{display:block;color:#a5bbc4;font:11px monospace;text-transform:uppercase}.turn-field input,.turn-field select,.turn-field textarea,.dxf-box input[type=file]{width:100%;margin-top:6px;padding:10px;background:#02080d;color:#d8edf4;border:1px solid #27424e;border-radius:8px;outline:none}.turn-field small{display:block;text-transform:none;color:#68818b;font-size:9px;margin-top:4px}.dxf-box{margin-top:15px;padding:14px;border:1px dashed #315766;background:#061018}.dxf-title{display:flex;justify-content:space-between;gap:12px;margin-bottom:9px}.dxf-title span{color:#718b95;font-size:10px}.dxf-status{font-size:11px;color:#8da5af;margin-top:9px}.geometry-list{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:10px;max-height:150px;overflow:auto}.geometry-item{border:1px solid #203a46;padding:7px;border-radius:7px;color:#b9d0d8;font:10px monospace}.turn-confirm{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px;color:#9db4bd;font-size:11px}.turn-confirm label{display:flex;gap:7px;align-items:center}.manual-profile{margin-top:14px}.small-editor{min-height:130px!important}.operation-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:12px 0}.op-card{display:block;border:1px solid #294752;padding:11px;border-radius:9px;background:#061018;cursor:pointer}.op-card:has(input:checked){border-color:#38bdf8;background:#0b202c}.op-card input{accent-color:#38bdf8}.op-card b{display:block;font-size:12px;margin:3px 0}.op-card small{color:#708992;font-size:10px}.turn-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.turn-sim-panel{margin-top:18px}.turn-canvas-wrap{margin-top:12px;border:1px solid #203a46;background:#02080d;overflow:auto}.turn-canvas-wrap canvas{display:block;width:100%;min-width:680px;height:auto}.simulation-note,.export-warning{margin-top:12px;padding:12px;border-left:2px solid #38bdf8;background:#07141c;color:#90a8b2;font-size:11px;line-height:1.6}.export-warning{border-left-color:#f0b84b;color:#d5c49c}.live-verify-panel canvas{background:#02080d}.live-verify-panel{overflow:hidden}.turn-editor{min-height:360px!important}.export-panel{margin-top:18px}.export-panel h3{margin:6px 0 10px}
+@media(max-width:900px){.turning-workflow{grid-template-columns:1fr}.turn-grid.params{grid-template-columns:repeat(2,1fr)}.home-cnc-lab-card{align-items:flex-start;flex-direction:column}.geometry-list{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:560px){.home-cnc-lab-card{padding:30px 20px}.home-cnc-lab-card .btn{width:100%;text-align:center}.turn-grid,.turn-grid.params,.operation-grid{grid-template-columns:1fr}.turn-confirm{align-items:flex-start;flex-direction:column}.geometry-list{grid-template-columns:1fr}.cnc-panel-head{flex-direction:column}.turn-canvas-wrap canvas{min-width:620px}}
+
+.manual-sim-panel{margin-top:18px}.manual-sim-panel .turn-canvas-wrap{min-height:360px}.manual-sim-panel h3{margin:4px 0 0}.manual-sim-panel .turn-sim-actions{display:flex;gap:8px;flex-wrap:wrap}.manual-sim-panel canvas{display:block;width:100%;height:auto;background:#02080d}
+</style>
+<style>
+/* Ad placement only. Existing website styles/content remain unchanged. */
+.cnc-ad-top,.cnc-ad-bottom{
+  width:100%;
+  max-width:1220px;
+  margin:0 auto;
+  padding:0;
+  overflow:hidden;
+  line-height:0;
+}
+.cnc-ad-top .adsbygoogle,.cnc-ad-bottom .adsbygoogle{
+  display:block;
+  width:100%;
+  margin:0 auto;
+}
+</style>
+<style id="cnc-drawing-scan-css">.drawing-confidence{margin-top:10px;font:11px monospace;color:#8fa7b1}.drawing-confidence.good{color:#7ee787}.drawing-confidence.warn{color:#f0c674}.drawing-confidence.bad{color:#ff8f8f}.drawing-preview{margin-top:12px;border:1px solid #203a46;background:#02080d;padding:10px}.drawing-preview-head{display:flex;justify-content:space-between;color:#9db4bd;font:10px monospace;margin-bottom:8px}.drawing-preview img{display:block;max-width:100%;max-height:420px;margin:auto;object-fit:contain;background:#fff}.detected-panel{margin-top:12px;border:1px solid #203a46;background:#061018;padding:12px}.detected-dimensions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.detected-item{border:1px solid #294752;border-radius:8px;padding:8px}.detected-item label{display:block;color:#708992;font:9px monospace;text-transform:uppercase}.detected-item input{width:100%;margin-top:5px;padding:8px;background:#02080d;color:#d8edf4;border:1px solid #27424e;border-radius:6px}.drawing-gate{font:9px monospace;color:#d5a94a;border:1px solid #594a27;border-radius:999px;padding:6px 9px}.drawing-gate.ready{color:#7ee787;border-color:#285a35}.export-name-row{display:grid;grid-template-columns:1fr auto;align-items:end;gap:10px;margin-top:12px}.export-exts{display:flex;gap:6px;padding-bottom:1px}.export-exts span{font:10px monospace;color:#8fe4ff;border:1px solid #295262;border-radius:999px;padding:8px 10px}@media(max-width:560px){.detected-dimensions{grid-template-columns:1fr 1fr}.export-name-row{grid-template-columns:1fr}}</style>
+<style id="cnc-thread-generator-css">
+/* CNCVEYRA Thread Generator - additive styles only */
+.thread-page{max-width:1220px;margin:auto;padding:95px 5% 80px;background:linear-gradient(180deg,#07131b,#061018)}
+.thread-hero{border-bottom:1px solid var(--l);padding-bottom:28px;margin-bottom:28px}
+.thread-kicker{font:800 12px monospace;letter-spacing:.16em;color:var(--a)}
+.thread-page h2{margin:12px 0 10px}
+.thread-page .thread-intro{color:var(--m);max-width:850px;line-height:1.7;font-size:14px}
+.thread-layout{display:grid;grid-template-columns:420px 1fr;gap:20px;align-items:start}
+.thread-card{border:1px solid var(--l);background:#07131b;padding:20px}
+.thread-card h3{font-size:14px;margin:0 0 16px;color:#dcebf0}
+.thread-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.thread-field{margin-bottom:11px}
+.thread-field.full{grid-column:1/-1}
+.thread-field label{display:block;font:10px monospace;color:#9ab0b9;text-transform:uppercase;letter-spacing:.06em}
+.thread-field input,.thread-field select{width:100%;margin-top:6px;padding:11px;background:#0a1821;border:1px solid #24404c;color:#fff;outline:0;border-radius:2px}
+.thread-field input:focus,.thread-field select:focus{border-color:var(--a)}
+.thread-help{font-size:10px;color:#718995;line-height:1.5;margin-top:5px}
+.thread-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:12px}
+.thread-btn{padding:13px 10px;border:1px solid #315766;background:#0b1c25;color:#dcebf0;font-weight:900;font-size:10px;letter-spacing:.06em;text-transform:uppercase;cursor:pointer}
+.thread-btn.primary{background:var(--a);color:#031018;border-color:var(--a)}
+.thread-btn:hover{filter:brightness(1.08)}
+.thread-status{margin-top:12px;padding:10px;border:1px solid #294752;background:#061018;color:#8ea9b3;font:11px/1.5 monospace;min-height:38px}
+.thread-status.bad{border-color:#7f3941;color:#ffb4b9}
+.thread-status.good{border-color:#2f6e61;color:#a9e9d5}
+.thread-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
+.thread-stat{border:1px solid var(--l);padding:10px;background:#061018}
+.thread-stat small{display:block;color:#6f8791;font:9px monospace;text-transform:uppercase}
+.thread-stat b{display:block;color:#dff6ff;font-size:14px;margin-top:3px}
+.thread-editor{width:100%;min-height:570px;resize:vertical;background:#02090d;color:#a9e8ff;border:1px solid #294752;padding:16px;font:12px/1.65 "Courier New",monospace;outline:0}
+.thread-download{display:grid;grid-template-columns:1fr auto auto;gap:8px;margin-top:10px}
+.thread-download input{width:100%;padding:11px;background:#0a1821;border:1px solid #24404c;color:#fff;font:11px monospace}
+.thread-note{margin-top:10px;color:#718995;font-size:10px;line-height:1.55}
+.thread-warning{border-left:2px solid #f59e0b;padding-left:10px;margin-top:12px;color:#b9a37b;font-size:10px;line-height:1.55}
+.thread-extra{display:none}
+.thread-extra.show{display:block}
+.thread-chip{display:inline-block;border:1px solid #315766;padding:4px 7px;margin:4px 4px 0 0;color:#8fb6c4;font:9px monospace}
+/* Thread-page inline X/Z simulation */
+.thread-inline-sim{margin-top:20px}.thread-inline-sim .thread-sim-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}.thread-sim-actions{display:flex;gap:8px;flex-wrap:wrap}.thread-sim-canvas-wrap{margin-top:12px;border:1px solid #203a46;background:#02080d;overflow:auto;border-radius:2px}.thread-sim-canvas-wrap canvas{display:block;width:100%;min-width:680px;height:auto}.thread-sim-legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;color:#8fa8b2;font:10px monospace}.thread-sim-legend span{display:inline-flex;align-items:center;gap:6px}.thread-sim-dot{width:9px;height:9px;border-radius:50%;display:inline-block;background:#64748b}.thread-sim-dot.rapid{background:#f59e0b}.thread-sim-dot.cut{background:#38bdf8}.thread-sim-dot.thread{background:#22d3ee}.thread-sim-dot.tool{background:#f43f5e}.thread-sim-position{margin-top:10px;color:#9db4bd;font:11px monospace}.thread-inline-sim .simulation-note{margin-top:12px}
+
+@media(max-width:900px){.thread-layout{grid-template-columns:1fr}.thread-editor{min-height:420px}}
+@media(max-width:560px){.thread-page{padding:70px 20px}.thread-grid,.thread-summary,.thread-download{grid-template-columns:1fr}.thread-actions{grid-template-columns:1fr 1fr}.thread-card{padding:15px}}
+</style></head><body><header><a class="logo" href="#home"><span class="mark">C</span><span>CNCVEYRA<br/><small style="font-size:7px;color:#78909b;letter-spacing:.28em">ENGINEERING</small></span></a><button aria-label="Open menu" class="menu" type="button">☰</button>
+<nav><a href="index.html">Home</a><a href="about.html">About</a><a href="services.html">Services</a><a href="process.html">How We Work</a><a href="portfolio.html">Portfolio</a><a href="cncguide.html">CNC Guide</a><a href="cnclab.html">CNC Calculation</a><a href="cnclab.html">CNC Code Lab</a><a href="career.html">Career</a><a href="contact.html">Contact</a><a class="cta" href="quote.html">GET A QUOTE</a></nav></header><main><section class="page-visible"><div class="section-head"><h1>CNCVEYRA Assistant</h1><p>Ask CNC, G-code, machining and programming questions.</p></div><div id="my-chatbot">
+<button aria-label="Open Manmohan Yadav Assistant" id="my-chat-open"><img alt="Manmohan Yadav" src="assets/assistant-avatar.png"/></button>
+<div id="my-chat-panel">
+<div class="my-chat-head"><img alt="Manmohan Yadav" src="assets/assistant-avatar.png"/><div><div class="my-chat-title">Manmohan Yadav</div><div class="my-chat-sub">CNCVEYRA • CNC • VMC • CAD/CAM</div><div class="my-chat-lang"><button id="lang-hi">Hindi</button><button class="active" id="lang-en">English</button></div></div><button class="my-chat-x" id="my-chat-close">×</button></div>
+<div id="my-chat-messages"></div>
+<div class="my-chat-faq"><div class="faq-title">Quick Questions</div><div class="faq-cats" id="faq-cats"></div><div class="faq-list" id="faq-list"></div><div class="faq-contact"><div class="faq-contact-title">Need direct help?</div><button onclick="window.open('https://wa.me/919592813879','_blank')">WhatsApp CNCVEYRA</button><button onclick="location.href='tel:+919592813879'">Call +91 9592813879</button></div></div>
+<div class="my-chat-input"><input autocomplete="off" id="my-chat-text" placeholder="Type your question..."/><button aria-label="Voice input" id="my-chat-mic" title="Voice input">Voice</button><button id="my-chat-send">➤</button></div>
+</div></div></section></main><script>(function(){const m=document.querySelector('.menu'),n=document.querySelector('header nav');if(m&&n)m.addEventListener('click',()=>n.classList.toggle('open'));})();</script><script>
+(function(){
+const PHONE="+91 9592813879", EMAIL="Mk096063@gmail.com", WA="https://wa.me/919592813879";
+let lastTopic="", lastMaterial="", lastDiameter=null, lastRPM=null, lastFz=null, lastFlutes=null;
+const DATA=[
+['greet',/^(hi+|hello+|hey+|namaste|namaskar|hii+|good morning|good evening|kaise ho|kya haal)/i],
+['about',/(aap kaun|tum kaun|who are you|manmohan|your name|naam kya)/i],
+['services',/(service|services|kya karte|what do you do|kaam kya|help.*kar|madad|offer)/i],
+['contact',/(phone|mobile|number|contact|whatsapp|call|फोन|मोबाइल|नंबर)/i],
+['email',/(email|e-mail|mail|ईमेल)/i],
+['rpm',/(rpm|spindle speed|spindle|rev\/?min)/i],
+['feed',/(feed rate|feedrate|feed|mm\/?min|fz|chip load|feed per tooth)/i],
+['vc',/(cutting speed|surface speed|vc)/i],
+['doc',/(depth of cut|doc|axial depth|ap)/i],
+['ae',/(step.?over|radial engagement|radial depth|ae)/i],
+['drill',/(drill|drilling|hole|boring)/i],
+['tap',/(tap|tapping|thread|pitch)/i],
+['gcode',/(g.?code|g00|g01|g02|g03|g17|g54|g90|g91)/i],
+['mcode',/(m.?code|m03|m04|m05|m08|m09|m30)/i],
+['tool',/(tool|end mill|cutter|carbide|flute|flutes|insert|holder|runout)/i],
+['rough',/(rough|roughing|heavy cut|material removal)/i],
+['finish',/(finish|finishing|surface finish|scallop|cusp)/i],
+['cad',/(cad|design|drawing|3d model|modeling|modelling|surface)/i],
+['cam',/(cam|toolpath|tool path|post processor|postprocessor|simulation|verify|collision)/i],
+['mould',/(mould|mold|die|blow mould|blow mold|injection mould|injection mold)/i],
+['axis',/(3 axis|3-axis|3\+2|4 axis|4-axis|5 axis|5-axis|multi axis)/i],
+['software',/(nx|siemens nx|powermill|mastercam)/i],
+['material',/(aluminium|aluminum|mild steel|ms|steel|stainless|inox|ss|plastic|abs|pp|nylon|peek)/i],
+['price',/(price|cost|rate|charge|quotation|quote|budget|kitna paisa|charges)/i],
+['thanks',/(thanks|thank you|dhanyavad|shukriya|thx|ok thanks)/i],
+['bye',/(bye|good night|see you|milte)/i]
+];
+function clean(s){return s.toLowerCase().replace(/[^a-z0-9ऀ-ॿ+.#=:\/ -]/g,' ').replace(/\s+/g,' ').trim()}
+function num(re,s){const m=s.match(re);return m?parseFloat(m[1]):null}
+function detectMaterial(s){if(/alumin(i|)um|aluminium/i.test(s))return'aluminium';if(/stainless|inox|ss/i.test(s))return'stainless steel';if(/mild steel|ms|steel/i.test(s))return'steel';if(/abs|pp|nylon|peek|plastic/i.test(s))return'plastic';return null}
+function calcRPM(s){const d=num(/(?:dia(?:meter)?|d)\s*[:=]?\s*(\d+(?:\.\d+)?)\s*mm/i,s)||num(/(\d+(?:\.\d+)?)\s*mm\s*(?:cutter|end mill|tool|dia|diameter)/i,s);const vc=num(/(?:vc|cutting speed|speed)\s*[:=]?\s*(\d+(?:\.\d+)?)\s*m\/?min/i,s);if(d)lastDiameter=d;if(vc&&d){lastTopic='rpm';return`RPM ≈ ${Math.round(1000*vc/(Math.PI*d))}
+Formula: RPM = (1000 × Vc) / (π × D)
+D = ${d} mm, Vc = ${vc} m/min.
+Tool maker data aur machine max RPM verify karein.`}return null}
+function calcFeed(s){const fz=num(/(?:fz|chip load|feed per tooth)\s*[:=]?\s*(\d+(?:\.\d+)?)/i,s)||lastFz;const z=num(/(?:flute|flutes|teeth|tooth)\s*[:=]?\s*(\d+)/i,s)||lastFlutes;const rpm=num(/(?:rpm|spindle)\s*[:=]?\s*(\d+)/i,s)||lastRPM;if(fz)lastFz=fz;if(z)lastFlutes=z;if(rpm)lastRPM=rpm;if(fz&&z&&rpm){lastTopic='feed';return`Feed ≈ ${Math.round(fz*z*rpm)} mm/min
+Formula: Vf = fz × z × RPM
+fz=${fz} mm/tooth, teeth=${z}, RPM=${rpm}.`}return null}
+function intent(s){let best=null,score=0;for(const [k,re] of DATA){const m=s.match(re);if(m){let sc=(m[0].length/s.length)+0.15;if(sc>score){score=sc;best=k}}}return best}
+let chatLang='en';
+
+const FAQ=[
+['CNC Basics',[
+['What is CNC?','What is CNC?','CNC is Computer Numerical Control. A controller drives machine axes and functions from programmed instructions.','CNC stands for Computer Numerical Control. A controller moves machine axes and functions according to programmed instructions.'],
+['What is a CNC machine?','What is a CNC machine?','CNC machine computer-controlled machining karta hai, jaise milling, turning, drilling aur routing.','A CNC machine performs machining operations such as milling, turning, drilling and routing under computer control.'],
+['What is VMC?','What is VMC?','VMC yani Vertical Machining Center. Isme spindle vertical orientation mein hota hai aur milling ke liye use hota hai.','VMC means Vertical Machining Center. Its spindle is vertically oriented and it is commonly used for milling.'],
+['CNC aur VMC mein kya difference hai?','What is the difference between CNC and VMC?','CNC ek broad control/machine category hai; VMC specifically vertical machining center ko refer karta hai.','CNC is a broad category of computer-controlled machines; VMC specifically refers to a vertical machining center.'],
+['What is G-code?','What is G-code?','G-code machine motion aur machining functions ko command karta hai, jaise G00, G01, G02/G03.','G-code commands machine motion and machining functions, such as G00, G01 and G02/G03.'],
+['What is M-code?','What is M-code?','M-code auxiliary machine functions control karta hai, jaise spindle, coolant aur program end.','M-code controls auxiliary machine functions such as spindle, coolant and program end.'],
+['G00 kya karta hai?','What does G00 do?','G00 rapid positioning ke liye hota hai. Cutting feed ke liye G01 jaisi command use hoti hai.','G00 is used for rapid positioning. Cutting motion normally uses commands such as G01.'],
+['G01 kya karta hai?','What does G01 do?','G01 linear interpolation ko feed rate ke saath command karta hai.','G01 commands linear interpolation at the programmed feed rate.'],
+['G02 aur G03 kya hain?','What are G02 and G03?','G02 clockwise aur G03 counter-clockwise circular interpolation ke liye common hain.','G02 is commonly clockwise circular interpolation and G03 counter-clockwise circular interpolation.'],
+['G90 aur G91 kya hain?','What are G90 and G91?','G90 absolute programming aur G91 incremental programming ke liye commonly use hote hain.','G90 is commonly absolute programming and G91 incremental programming.'],
+['G54 kya hai?','What is G54?','G54 ek common work coordinate offset hai. Exact offset handling controller par depend kar sakti hai.','G54 is a common work coordinate offset. Exact handling can vary by controller.'],
+['M03 kya hai?','What is M03?','M03 commonly spindle clockwise start karta hai.','M03 commonly starts the spindle clockwise.'],
+['M05 kya hai?','What is M05?','M05 commonly spindle stop karta hai.','M05 commonly stops the spindle.'],
+['M08 aur M09 kya hain?','What are M08 and M09?','M08 coolant ON aur M09 coolant OFF ke liye common hain.','M08 is commonly coolant ON and M09 coolant OFF.'],
+['M30 kya hai?','What is M30?','M30 commonly program end/reset function deta hai; machine builder/controller manual verify karein.','M30 commonly ends/resets a program; verify exact behavior in the machine/controller manual.'],
+['CNC zero point kya hota hai?','What is a CNC zero point?','Zero point reference position hai jiske against coordinates define kiye jate hain.','A zero point is a reference position from which coordinates are defined.'],
+['Work offset kya hota hai?','What is a work offset?','Work offset machine coordinate system aur part datum ke beech relationship set karta hai.','A work offset defines the relationship between the machine coordinate system and the part datum.'],
+['Tool length offset kya hai?','What is tool length offset?','Tool length offset different tool lengths ko compensate karta hai, taaki programmed Z position correct rahe.','Tool length offset compensates for different tool lengths so the programmed Z position is correct.'],
+['CNC mein dry run kya hai?','What is a dry run in CNC?','Dry run program verification ka method hai jisme cutting se pehle motion check kiya jata hai.','Dry run is a program verification method used to check motion before actual cutting.'],
+['Single block kya hai?','What is single block?','Single block mode mein program ek block at a time execute karke verify kiya ja sakta hai.','Single block mode executes one program block at a time for verification.'],
+['CNC simulation kyun karte hain?','Why simulate a CNC program?','Simulation se toolpath, collision, overtravel aur machining sequence ko cutting se pehle check kiya ja sakta hai.','Simulation helps check toolpaths, collisions, overtravel and machining sequence before cutting.'],
+['CNC mein datum kya hota hai?','What is a datum in CNC?','Datum part ka defined reference feature/point hota hai jisse dimensions aur coordinates relate kiye jate hain.','A datum is a defined reference feature or point used to relate dimensions and coordinates.'],
+['CNC program mein comments kyun likhte hain?','Why use comments in CNC programs?','Comments tool number, operation, material ya setup information ko identify karne mein help karte hain.','Comments help identify tool numbers, operations, material and setup information.'],
+['CNC machine mein coolant ka kya role hai?','What is the role of coolant?','Coolant heat control, lubrication aur chip evacuation mein help kar sakta hai; selection material aur process par depend karta hai.','Coolant can help with heat control, lubrication and chip evacuation; selection depends on material and process.'],
+['CNC mein chip kya hai?','What is a chip?','Chip machining ke dauran workpiece se remove hua material hai.','A chip is material removed from the workpiece during machining.']]],
+['VMC',[
+['VMC mein spindle speed kaise set karein?','How do I set VMC spindle speed?','RPM cutting speed, tool diameter, material aur tool maker data se determine hota hai.','RPM is determined from cutting speed, tool diameter, material and tool manufacturer data.'],
+['VMC mein feed rate kya hai?','What is feed rate in VMC?','Feed rate tool/work motion ki speed hai, commonly mm/min mein express ki jati hai.','Feed rate is the tool/work motion speed, commonly expressed in mm/min.'],
+['VMC mein rapid feed kya hai?','What is rapid feed?','Rapid feed non-cutting positioning ke liye high-speed motion hota hai.','Rapid feed is high-speed non-cutting positioning motion.'],
+['3 axis VMC kya hota hai?','What is a 3-axis VMC?','3-axis VMC mein X, Y aur Z linear axes se tool/work motion hota hai.','A 3-axis VMC uses X, Y and Z linear axes for tool/work motion.'],
+['3+2 machining kya hai?','What is 3+2 machining?','3+2 mein rotary axes pehle orient/position kiye jate hain, phir 3 linear axes se cutting hoti hai.','In 3+2 machining, rotary axes orient the tool first, then cutting uses the three linear axes.'],
+['4-axis machining kya hai?','What is 4-axis machining?','4-axis machining mein ek additional rotary axis coordinated ya indexed machining ke liye use ho sakta hai.','4-axis machining adds a rotary axis for indexed or coordinated machining.'],
+['5-axis machining kya hai?','What is 5-axis machining?','5-axis mein tool orientation aur position ko multiple axes se control kiya jata hai; kinematics/post important hain.','5-axis controls tool position and orientation through multiple axes; kinematics and post processing are important.'],
+['VMC mein workholding kaise choose karein?','How should I choose VMC workholding?','Fixture, vise ya clamps rigidity, access, datum repeatability aur part shape ke hisaab se choose karein.','Choose a fixture, vise or clamps based on rigidity, access, datum repeatability and part shape.'],
+['VMC mein workpiece set kaise karein?','How do I set a workpiece on VMC?','Part ko securely clamp karein, datum establish karein, work offset set karein aur probing/edge finding verify karein.','Securely clamp the part, establish the datum, set the work offset and verify with probing or edge finding.'],
+['VMC tool setter kya karta hai?','What does a VMC tool setter do?','Tool setter tool length aur kabhi-kabhi tool diameter information automatically/consistently measure karne mein help karta hai.','A tool setter helps measure tool length and sometimes tool diameter consistently.'],
+['VMC mein probing ka fayda kya hai?','What is the benefit of probing?','Probing setup time aur human error reduce kar sakta hai aur workpiece location/geometry verify kar sakta hai.','Probing can reduce setup time and human error and verify workpiece location or geometry.'],
+['VMC mein tool breakage kyun hota hai?','Why does a VMC tool break?','Common causes excessive engagement, wrong RPM/feed, long stick-out, poor chip evacuation, runout ya unstable workholding hain.','Common causes include excessive engagement, incorrect RPM/feed, long stick-out, poor chip evacuation, runout or unstable workholding.'],
+['Tool runout kya hai?','What is tool runout?','Runout tool ki rotation axis se deviation hai; high runout uneven cutting aur tool life issues create kar sakta hai.','Runout is deviation from the tool rotation axis; high runout can cause uneven cutting and tool-life issues.'],
+['Tool stick-out kya hai?','What is tool stick-out?','Stick-out holder se tool ki unsupported length hai. Excess stick-out deflection badhata hai.','Stick-out is the unsupported tool length from the holder. Excess stick-out increases deflection.'],
+['VMC mein chip evacuation kaise improve karein?','How can chip evacuation be improved?','Suitable flute geometry, coolant/air blast, toolpath strategy aur proper cutting parameters use karein.','Use suitable flute geometry, coolant or air blast, toolpath strategy and appropriate cutting parameters.'],
+['VMC mein facing kya hai?','What is facing?','Facing workpiece ki surface ko flat/level banane ke liye material remove karna hai.','Facing removes material to make a workpiece surface flat or level.'],
+['VMC mein pocket milling kya hai?','What is pocket milling?','Pocket milling enclosed ya open area ke andar material remove karke cavity banata hai.','Pocket milling removes material inside an area to create a cavity.'],
+['VMC mein contour milling kya hai?','What is contour milling?','Contour milling programmed boundary/profile ko follow karke shape machine karta hai.','Contour milling machines a shape by following a programmed boundary or profile.'],
+['VMC mein ramp entry kya hai?','What is ramp entry?','Ramp entry tool ko gradual angle/path se material mein enter karati hai, sudden axial load reduce kar sakti hai.','Ramp entry moves the tool into material gradually and can reduce sudden axial loading.'],
+['Helical interpolation kya hai?','What is helical interpolation?','Helical interpolation circular XY motion ke saath Z movement combine karti hai, often hole milling ke liye.','Helical interpolation combines circular XY motion with Z movement, often for hole milling.'],
+['VMC mein toolpath verification kya hai?','What is toolpath verification?','Verification se programmed motion, gouge, collision aur unwanted movement ko cutting se pehle check karte hain.','Verification checks programmed motion, gouges, collisions and unwanted movement before cutting.'],
+['Machine warm-up kyun karte hain?','Why warm up a VMC?','Warm-up spindle bearings aur machine thermal condition ko stable karne mein help karta hai.','Warm-up helps stabilize spindle bearings and machine thermal condition.'],
+['VMC spindle orientation kya hai?','What is spindle orientation?','Spindle orientation spindle ko defined angular position par place karta hai, commonly tool change ya special operations ke liye.','Spindle orientation places the spindle at a defined angle, often for tool change or special operations.'],
+['VMC mein tool life kaise badhayein?','How can I improve tool life?','Correct parameters, stable workholding, low runout, proper coolant/chip evacuation aur suitable tool geometry use karein.','Use correct parameters, stable workholding, low runout, proper coolant/chip evacuation and suitable tool geometry.'],
+['VMC mein surface finish kaise improve karein?','How can VMC surface finish be improved?','Tool runout/deflection reduce karein, suitable finishing toolpath, step-over, RPM aur feed optimize karein.','Reduce runout and deflection and optimize the finishing toolpath, step-over, RPM and feed.']]],
+['Cutting Parameters',[
+['RPM formula kya hai?','What is the RPM formula?','RPM = (1000 × Vc) / (π × D), jahan Vc m/min aur D mm hai.','RPM = (1000 × Vc) / (π × D), where Vc is m/min and D is in mm.'],
+['Cutting speed Vc kya hai?','What is cutting speed Vc?','Vc tool/work cutting surface ki linear speed hai, commonly m/min mein.','Vc is the linear speed at the cutting surface, commonly expressed in m/min.'],
+['Feed per tooth fz kya hai?','What is feed per tooth fz?','fz har tooth ke engagement par material advance ki distance hai, commonly mm/tooth.','fz is the feed distance per tooth engagement, commonly expressed in mm/tooth.'],
+['Feed rate formula kya hai?','What is the feed-rate formula?','Vf = fz × number of teeth × RPM.','Vf = fz × number of teeth × RPM.'],
+['Chip load kya hai?','What is chip load?','Milling mein chip load ko commonly feed per tooth fz ke roop mein use kiya jata hai.','In milling, chip load is commonly represented by feed per tooth, fz.'],
+['DOC kya hai?','What is DOC?','DOC depth of cut hai; axial DOC tool/work engagement ki depth describe karta hai.','DOC means depth of cut; axial DOC describes the axial engagement depth.'],
+['Step-over kya hai?','What is step-over?','Step-over ae radial engagement hai, yani adjacent passes ke beech lateral distance.','Step-over ae is radial engagement, the lateral distance between adjacent passes.'],
+['WOC kya hai?','What is WOC?','WOC width of cut hai, often radial engagement ke sense mein use hota hai.','WOC means width of cut and is often used for radial engagement.'],
+['Roughing mein kitna DOC rakhein?','How much DOC should I use for roughing?','Ek fixed number safe nahi hai. Tool diameter, material, rigidity, stick-out, machine power aur tool maker recommendations par depend karta hai.','There is no single safe value. It depends on tool diameter, material, rigidity, stick-out, machine power and tool-maker recommendations.'],
+['Finishing mein kitna step-over rakhein?','What step-over should I use for finishing?','Surface finish aur tool geometry ke target par depend karta hai; smaller step-over generally scallop height reduce karta hai.','It depends on the surface-finish target and tool geometry; smaller step-over generally reduces scallop height.'],
+['Aluminium ke liye RPM kaise choose karein?','How do I choose RPM for aluminium?','Tool manufacturer ka recommended Vc use karke RPM calculate karein; tool diameter aur flute geometry bhi matter karte hain.','Use the tool manufacturer recommended Vc to calculate RPM; tool diameter and flute geometry also matter.'],
+['Steel ke liye RPM kaise choose karein?','How do I choose RPM for steel?','Tool grade/coating aur steel grade ke recommended Vc se start karein, phir machine rigidity aur chip load ke hisaab se optimize karein.','Start from recommended Vc for the tool grade/coating and steel grade, then optimize for rigidity and chip load.'],
+['Stainless steel mein feed kaise choose karein?','How should feed be chosen for stainless steel?','Tool maker ke fz data se start karein; work hardening aur heat buildup avoid karne ke liye rubbing se bachein.','Start from tool-maker fz data and avoid rubbing to reduce work hardening and heat buildup.'],
+['Plunge milling kya hai?','What is plunge milling?','Plunge milling axial direction mein cutting karke deep/limited-access areas mein useful ho sakti hai.','Plunge milling cuts mainly in the axial direction and can help in deep or limited-access areas.'],
+['Climb milling kya hai?','What is climb milling?','Climb milling mein chip thickness entry par high se exit par low hoti hai; suitable rigid setup mein finish aur tool life improve ho sakti hai.','In climb milling, chip thickness starts high and decreases toward exit; with a rigid setup it can improve finish and tool life.'],
+['Conventional milling kya hai?','What is conventional milling?','Conventional milling mein chip thickness entry par low aur exit par high hoti hai.','In conventional milling, chip thickness starts low and increases toward exit.'],
+['Trochoidal milling kya hai?','What is trochoidal milling?','Trochoidal toolpath reduced radial engagement ke saath high-speed cutting strategy ho sakti hai, especially difficult materials/slots mein.','Trochoidal toolpaths can use reduced radial engagement with higher cutting speeds, especially in difficult materials or slots.'],
+['Adaptive milling kya hai?','What is adaptive milling?','Adaptive milling tool engagement ko controlled rakhne ke liye dynamic toolpath strategy use karti hai.','Adaptive milling uses dynamic toolpaths to maintain controlled tool engagement.'],
+['Slot milling mein parameters kaise badalte hain?','How do parameters change for slot milling?','Full-width engagement heat/load badha sakta hai; tool maker data, flute count, chip evacuation aur machine rigidity ko consider karein.','Full-width engagement can increase heat and load; consider tool-maker data, flute count, chip evacuation and rigidity.'],
+['Tool diameter badhne par RPM kya hoga?','What happens to RPM when tool diameter increases?','Same Vc par diameter badhne se RPM decrease hota hai, formula RPM = 1000Vc/(πD).','At the same Vc, RPM decreases as tool diameter increases: RPM = 1000Vc/(πD).'],
+['Flute count badhne par feed kya hoga?','What happens to feed when flute count increases?','Same fz aur RPM par feed rate teeth count ke proportional increase hota hai.','At the same fz and RPM, feed rate increases in proportion to tooth count.'],
+['Chip evacuation ke liye kya dekhein?','What should I consider for chip evacuation?','Flute space, coolant/air, cutting direction, toolpath aur material chip behavior dekhein.','Consider flute space, coolant/air, cutting direction, toolpath and the material chip behavior.'],
+['Tool deflection kaise reduce karein?','How can I reduce tool deflection?','Stick-out reduce karein, larger diameter tool use karein where possible, engagement aur parameters optimize karein.','Reduce stick-out, use a larger diameter tool where possible, and optimize engagement and parameters.'],
+['Surface finish mein feed ka effect?','How does feed affect surface finish?','High feed per tooth finishing marks/scallop increase kar sakta hai; tool geometry aur step-over bhi equally important hain.','Higher feed per tooth can increase finishing marks/scallop; tool geometry and step-over are also important.'],
+['RPM zyada hone se kya hota hai?','What happens if RPM is too high?','Excess RPM heat, tool wear, coating failure ya chatter risk badha sakta hai; tool maker limits follow karein.','Excess RPM can increase heat, wear, coating failure or chatter risk; follow tool-maker limits.'],
+['Feed bahut kam ho to kya hota hai?','What happens if feed is too low?','Tool rubbing, heat aur premature wear ho sakta hai, especially unsuitable chip load par.','Too little feed can cause rubbing, heat and premature wear, especially with an unsuitable chip load.'],
+['Feed bahut zyada ho to kya hota hai?','What happens if feed is too high?','Cutting load, deflection, chatter ya tool breakage badh sakta hai.','Excess feed can increase cutting load, deflection, chatter or tool breakage.'],
+['Chatter kya hai?','What is chatter?','Chatter self-excited vibration hai jo poor surface finish, noise aur tool/work damage create kar sakti hai.','Chatter is self-excited vibration that can cause poor finish, noise and tool/work damage.'],
+['Chatter kaise reduce karein?','How can chatter be reduced?','Stick-out reduce, rigidity improve, engagement/parameters change, suitable tool geometry aur stable spindle speed choose karein.','Reduce stick-out, improve rigidity, change engagement/parameters, and use suitable tool geometry and stable spindle speed.'],
+['Drilling RPM formula kya hai?','What is the drilling RPM formula?','RPM = (1000 × Vc)/(π × D). Feed = fn × RPM.','RPM = (1000 × Vc)/(π × D). Feed = fn × RPM.']]],
+['CAD / CAM / Design',[
+['What is CAD?','What is CAD?','CAD yani Computer-Aided Design; parts, assemblies, drawings aur geometry create/modify karne ke liye use hota hai.','CAD means Computer-Aided Design and is used to create or modify parts, assemblies, drawings and geometry.'],
+['What is CAM?','What is CAM?','CAM yani Computer-Aided Manufacturing; CAD geometry se manufacturing toolpaths/programs banane mein help karta hai.','CAM means Computer-Aided Manufacturing and helps create manufacturing toolpaths/programs from CAD geometry.'],
+['NX CAD kya hai?','What is NX CAD?','Siemens NX ek CAD/CAM/CAE platform hai jo modelling, assemblies, manufacturing aur related workflows support karta hai.','Siemens NX is a CAD/CAM/CAE platform supporting modelling, assemblies, manufacturing and related workflows.'],
+['PowerMill kis liye use hota hai?','What is PowerMill used for?','PowerMill high-speed aur complex CNC toolpath programming ke liye widely used CAM software hai.','PowerMill is widely used for CNC CAM programming, including complex and high-speed toolpaths.'],
+['Mastercam kis liye use hota hai?','What is Mastercam used for?','Mastercam milling, turning aur other CNC programming workflows ke liye CAM software hai.','Mastercam is CAM software used for milling, turning and other CNC programming workflows.'],
+['CAD model mein tolerance kya hai?','What is tolerance in a CAD model?','Tolerance dimensional variation ki allowable limit define karti hai; manufacturing process aur function ke hisaab se assign hoti hai.','Tolerance defines allowable dimensional variation and should be assigned based on function and manufacturing capability.'],
+['GD&T kya hai?','What is GD&T?','GD&T geometric dimensioning and tolerancing system hai jo form, orientation, location aur runout jaise requirements define karta hai.','GD&T is a geometric dimensioning and tolerancing system for requirements such as form, orientation, location and runout.'],
+['3D modelling kya hai?','What is 3D modelling?','3D modelling digital solid/surface geometry create karna hai jise design, drawing aur manufacturing mein use kiya ja sakta hai.','3D modelling creates digital solid or surface geometry for design, drawings and manufacturing.'],
+['Solid aur surface modelling mein difference?','What is the difference between solid and surface modelling?','Solid model enclosed volume represent karta hai; surface model primarily faces/surfaces represent karta hai.','A solid model represents enclosed volume; a surface model primarily represents faces or surfaces.'],
+['Drawing se CNC programming ke liye kya chahiye?','What is needed from a drawing for CNC programming?','Dimensions, tolerances, datum, material, surface finish, threads/features aur revision information important hain.','Dimensions, tolerances, datums, material, surface finish, threads/features and revision information are important.'],
+['CAM setup kya hai?','What is a CAM setup?','CAM setup mein machine orientation, stock, work coordinate, tools aur machining context define kiya jata hai.','A CAM setup defines machine orientation, stock, work coordinates, tools and machining context.'],
+['Stock model kya hai?','What is a stock model?','Stock model raw material ki starting geometry represent karta hai jisse toolpath aur remaining material calculate kiya ja sakta hai.','A stock model represents starting material geometry for toolpath and remaining-stock calculations.'],
+['Rest machining kya hai?','What is rest machining?','Rest machining previous operation ke baad bacha material target karke smaller/next tool se machining karta hai.','Rest machining targets material left by previous operations, often with a smaller or subsequent tool.'],
+['Post processor kya hai?','What is a post processor?','Post processor CAM toolpath ko specific CNC controller/machine ke compatible NC code mein convert karta hai.','A post processor converts CAM toolpaths into NC code compatible with a specific controller/machine.'],
+['Post processor verify kyun karna chahiye?','Why verify a post processor?','Wrong post se unsafe motion ya incorrect code aa sakta hai; machine/controller ke against verification zaroori hai.','A wrong post can produce unsafe motion or incorrect code, so verification against the machine/controller is essential.'],
+['Toolpath simulation kya check karti hai?','What does toolpath simulation check?','Simulation tool motion, stock removal, gouge, collision, holder clearance aur sequence check kar sakti hai.','Simulation can check tool motion, stock removal, gouges, collisions, holder clearance and sequence.'],
+['CAD file formats kaun se common hain?','Which CAD file formats are common?','STEP, IGES, Parasolid aur native CAD formats common exchange options hain; exact compatibility software par depend karti hai.','STEP, IGES, Parasolid and native CAD formats are common exchange options; compatibility depends on the software.'],
+['STEP file kya hai?','What is a STEP file?','STEP ek neutral CAD data exchange format hai jo 3D geometry transfer ke liye commonly use hota hai.','STEP is a neutral CAD data exchange format commonly used to transfer 3D geometry.'],
+['IGES kya hai?','What is IGES?','IGES ek older neutral CAD exchange format hai, often surfaces/wireframe transfer ke liye use hota hai.','IGES is an older neutral CAD exchange format often used for surfaces and wireframe data.'],
+['Design for manufacturability kya hai?','What is design for manufacturability?','DFM ka aim design ko manufacturing process, tooling, access, tolerance aur cost ke saath practical banana hai.','DFM aims to make a design practical for manufacturing considering tooling, access, tolerance and cost.'],
+['Mould design mein parting line kya hai?','What is a parting line in mould design?','Parting line woh boundary hai jahan mould ke mating sections separate hote hain aur part release hota hai.','The parting line is the boundary where mating mould sections separate and the part is released.'],
+['Draft angle kya hai?','What is draft angle?','Draft angle moulded part ko mould se safely release karne ke liye wall ko slight taper deta hai.','Draft angle adds slight wall taper to help a moulded part release from the mould.'],
+['Fillet design mein kyun use hota hai?','Why use fillets in design?','Fillets sharp corners ko smooth karte hain, stress concentration aur machining difficulty reduce kar sakte hain.','Fillets smooth sharp corners and can reduce stress concentration and machining difficulty.'],
+['Chamfer kya hai?','What is a chamfer?','Chamfer edge par angled cut hai, deburring, assembly aur edge treatment ke liye use hota hai.','A chamfer is an angled edge cut used for deburring, assembly and edge treatment.'],
+['CAD/CAM mein revision control kyun important hai?','Why is revision control important in CAD/CAM?','Correct revision se wrong geometry ya outdated NC program use hone ka risk reduce hota hai.','Revision control reduces the risk of using incorrect geometry or an outdated NC program.']]],
+['Mould / Manufacturing',[
+['Mould kya hota hai?','What is a mould?','Mould ek tool hai jo molten ya softened material ko desired shape mein form karta hai.','A mould is a tool that forms molten or softened material into a desired shape.'],
+['Blow mould kya hai?','What is a blow mould?','Blow moulding hollow plastic parts banane ka process hai jisme parison/preform ko mould cavity mein expand kiya jata hai.','Blow moulding makes hollow plastic parts by expanding a parison or preform inside a mould cavity.'],
+['Injection mould kya hai?','What is an injection mould?','Injection mould molten polymer ko cavity mein inject karke part form karta hai.','An injection mould forms a part by injecting molten polymer into a cavity.'],
+['Core aur cavity kya hain?','What are core and cavity?','Cavity generally outer shape define karta hai aur core inner features/shape form kar sakta hai.','The cavity generally forms the outer shape and the core can form inner features.'],
+['Mould venting kyun important hai?','Why is mould venting important?','Venting trapped air/gas ko escape path deta hai aur burn marks, short fill jaise defects reduce karne mein help karta hai.','Venting provides an escape path for trapped air/gas and can reduce defects such as burn marks and short fills.'],
+['Mould cooling ka role kya hai?','What is the role of mould cooling?','Cooling part solidification/cycle time aur dimensional consistency ko affect karti hai.','Cooling affects part solidification, cycle time and dimensional consistency.'],
+['Ejection system kya hai?','What is an ejection system?','Ejection system mould se solidified part ko safely remove karta hai, often ejector pins/plates se.','An ejection system safely removes the solidified part, often using ejector pins or plates.'],
+['Shrinkage kya hai moulding mein?','What is shrinkage in moulding?','Material cooling/solidification ke dauran dimension reduce kar sakta hai; mould dimensions mein compensation design data se decide hoti hai.','Material can reduce in dimension during cooling/solidification; mould compensation is determined from material and process data.'],
+['Mould steel selection kaise hota hai?','How is mould steel selected?','Part volume, wear, corrosion, polishing, hardness, production quantity aur process requirements consider kiye jate hain.','Consider production volume, wear, corrosion, polishing, hardness and process requirements.'],
+['EDM mould making mein kyun use hota hai?','Why is EDM used in mould making?','EDM hard conductive materials aur complex internal features ko machine karne ke liye useful hai.','EDM is useful for machining hard conductive materials and complex internal features.'],
+['Wire EDM kya hai?','What is wire EDM?','Wire EDM moving wire electrode se conductive material ko accurately cut karta hai.','Wire EDM accurately cuts conductive material using a moving wire electrode.'],
+['Mould polishing kyun hoti hai?','Why is mould polishing done?','Polishing surface finish, appearance aur part release requirements ko meet karne mein help karti hai.','Polishing helps meet surface-finish, appearance and part-release requirements.'],
+['Mould texture kya hai?','What is mould texture?','Texture mould surface par controlled pattern/roughness hai jo final part appearance aur grip ko affect karti hai.','Mould texture is a controlled surface pattern/roughness affecting final part appearance and grip.'],
+['Parting surface kya hai?','What is a parting surface?','Parting surface mould sections ke mating area ki designed surface hai jo part separation aur sealing support karti hai.','A parting surface is the designed mating surface between mould sections supporting separation and sealing.'],
+['Undercut kya hai?','What is an undercut?','Undercut feature aisa geometry area hai jo straight mould opening direction se directly release nahi hota.','An undercut is a feature that cannot release directly along the normal mould opening direction.'],
+['Slider kya karta hai mould mein?','What does a slider do in a mould?','Slider lateral/side movement provide karke undercut features ko form/release karne mein help karta hai.','A slider provides lateral movement to form and release undercut features.'],
+['Lifter kya karta hai?','What does a lifter do in a mould?','Lifter angled movement ke through certain internal undercuts/features ko release karne mein help kar sakta hai.','A lifter can help release certain internal undercuts/features through angled movement.'],
+['Mould design mein cooling channel placement kyun important hai?','Why is cooling-channel placement important?','Uniform cooling warpage, cycle time aur dimensional variation ko control karne mein help karti hai.','Uniform cooling helps control warpage, cycle time and dimensional variation.'],
+['Mould manufacturing mein CAM ka role kya hai?','What is the role of CAM in mould manufacturing?','CAM roughing, rest machining, finishing, drilling aur complex 3D surface toolpaths generate karne mein help karta hai.','CAM helps generate roughing, rest machining, finishing, drilling and complex 3D surface toolpaths.'],
+['Mould design ke liye client se kya data chahiye?','What data is needed for mould design?','3D part model, 2D drawing, material, shrinkage/process information, machine constraints aur parting/ejection requirements useful hain.','A 3D part model, 2D drawing, material, shrinkage/process data, machine constraints and parting/ejection requirements are useful.']]],
+['Contact / CNCVEYRA',[
+['CNCVEYRA kya services deta hai?','What services does CNCVEYRA provide?','CNC/VMC programming, NX CAD/CAM, PowerMill, Mastercam, mould & die, blow mould design aur manufacturing support.','CNCVEYRA provides CNC/VMC programming, NX CAD/CAM, PowerMill, Mastercam, mould & die, blow mould design and manufacturing support.'],
+['CNCVEYRA ko WhatsApp kaise karein?','How can I contact CNCVEYRA on WhatsApp?','Aap direct WhatsApp par +91 9592813879 par message kar sakte hain.','You can message CNCVEYRA directly on WhatsApp at +91 9592813879.'],
+['CNCVEYRA ka phone number kya hai?','What is the CNCVEYRA phone number?','Phone: +91 9592813879','Phone: +91 9592813879'],
+['CNCVEYRA ka email kya hai?','What is the CNCVEYRA email?','Email: Mk096063@gmail.com','Email: Mk096063@gmail.com'],
+['Quotation kaise milega?','How can I get a quotation?','Drawing/3D file, material, quantity, machine/process aur requirement WhatsApp ya email par bhej dein.','Send the drawing/3D file, material, quantity, machine/process and requirement by WhatsApp or email.'],
+['Kya main drawing bhej sakta hoon?','Can I send a drawing?','Haan, drawing/3D requirement WhatsApp par bhej sakte hain.','Yes, you can send the drawing/3D requirement on WhatsApp.'],
+['Kya aap CNC programming karte hain?','Do you provide CNC programming?','Haan, CNC/VMC programming aur CAM toolpath support available hai.','Yes, CNC/VMC programming and CAM toolpath support are available.'],
+['Kya aap CAD design karte hain?','Do you provide CAD design?','Haan, CAD modelling/design aur manufacturing-oriented geometry support kiya ja sakta hai.','Yes, CAD modelling/design and manufacturing-oriented geometry support can be provided.'],
+['Kya aap mould design karte hain?','Do you provide mould design?','Haan, mould & die aur blow mould design related support available hai.','Yes, mould & die and blow mould design support is available.'],
+['Main direct Manmohan Yadav se baat kaise karun?','How can I speak directly with Manmohan Yadav?','WhatsApp ya call karein: +91 9592813879.','Please WhatsApp or call +91 9592813879.']]]
+];
+const FAQ_ITEMS=FAQ.flatMap(([cat,items])=>items.map(x=>({cat,hi:x[0],en:x[1],ahi:x[2],aen:x[3]})));
+function renderFAQ(){const cats=document.getElementById('faq-cats'),list=document.getElementById('faq-list');let active=localStorage.getItem('cncveyraFaqCat')||FAQ[0][0];cats.innerHTML='';FAQ.forEach(([cat])=>{const b=document.createElement('button');b.textContent=cat;b.className=cat===active?'active':'';b.onclick=()=>{active=cat;localStorage.setItem('cncveyraFaqCat',cat);renderFAQ()};cats.appendChild(b)});list.innerHTML='';const items=FAQ_ITEMS.filter(x=>x.cat===active);items.forEach(x=>{const b=document.createElement('button');b.textContent=chatLang==='hi'?x.hi:x.en;b.onclick=()=>askFAQ(x);list.appendChild(b)});}
+function askFAQ(x){add(chatLang==='hi'?x.hi:x.en,'user');setTimeout(()=>add(chatLang==='hi'?x.ahi:x.aen,'bot'),180)}
+function T(hi,en){return chatLang==='hi'?hi:en}
+function answer(raw){
+ const s=clean(raw); if(!s)return '';
+ const exact=FAQ_ITEMS.find(x=>clean(chatLang==='hi'?x.hi:x.en)===s || clean(chatLang==='hi'?x.ahi:x.aen)===s); if(exact) return chatLang==='hi'?exact.ahi:exact.aen;
+ if(/^(ok|okay|theek|thik|acha|achha|hmm|hmmm|haan|yes|yep|ji)$/i.test(s)) return T('Bilkul. Aap apna next sawal poochhiye.','Sure. Please ask your next question.');
+ const d=detectMaterial(s); if(d) lastMaterial=d;
+ let dcalc=calcRPM(s); if(dcalc) return chatLang==='en' ? dcalc.replace('Tool maker data aur machine max RPM verify karein.','Please verify the tool manufacturer data and machine maximum RPM.') : dcalc;
+ let fcalc=calcFeed(s); if(fcalc) return chatLang==='en' ? fcalc.replace('Feed ≈','Feed ≈').replace('Formula: Vf = fz × z × RPM','Formula: Vf = fz × z × RPM') : fcalc;
+ if(/(?:rpm|spindle).*?(?:nikal|calculate|bata|calculate|tell).*(?:\d+).*mm/i.test(s)||/\d+\s*mm.*(?:rpm|spindle)/i.test(s)) return T('RPM calculate karne ke liye cutter diameter aur cutting speed Vc chahiye. Example: “10 mm cutter, Vc 120 m/min”.','To calculate RPM, I need the cutter diameter and cutting speed Vc. Example: “10 mm cutter, Vc 120 m/min”.');
+ if(/(?:feed|feed rate).*?(?:nikal|calculate|bata|tell)/i.test(s)&&!(lastFz&&lastFlutes&&lastRPM)) return T('Feed calculate karne ke liye fz (chip load), flute count aur RPM chahiye. Example: “fz 0.05, 4 flute, 3000 RPM”.','To calculate feed rate, I need fz (chip load), flute count and RPM. Example: “fz 0.05, 4 flute, 3000 RPM”.');
+ const it=intent(s);
+ switch(it){
+ case'greet':return T('Namaste. Main Manmohan Yadav hoon, CNCVEYRA ka virtual assistant. Aap Hindi mein baat kar sakte hain.','Hello. I am Manmohan Yadav, the virtual assistant for CNCVEYRA. You can continue in English.');
+ case'about':return T('Mera naam Manmohan Yadav hai. Main CNCVEYRA ka virtual assistant hoon. Main CNC/VMC, CAD/CAM aur mould/design related guidance ke liye yahan hoon.','My name is Manmohan Yadav. I am the virtual assistant for CNCVEYRA. I can help with CNC/VMC, CAD/CAM, mould and design-related questions.');
+ case'contact':return `Phone: ${PHONE}\nWhatsApp: ${WA}`;
+ case'email':return `Email: ${EMAIL}`;
+ case'services':return T('CNCVEYRA CNC/VMC programming, NX CAD/CAM, PowerMill, Mastercam, mould & die, blow mould design aur manufacturing-focused support deta hai.','CNCVEYRA provides CNC/VMC programming, NX CAD/CAM, PowerMill, Mastercam, mould & die, blow mould design and manufacturing-focused support.');
+ case'price':return T('Quotation project ki complexity, drawing/3D data, machine, software aur required work par depend karega. Requirement/drawing WhatsApp par bhej sakte hain: '+PHONE,'The quotation depends on project complexity, drawing/3D data, machine, software and scope of work. You can send the requirement/drawing on WhatsApp: '+PHONE);
+ case'rpm':return lastDiameter?T(`Aapne ${lastDiameter} mm tool mention kiya hai. RPM nikalne ke liye Vc (m/min) bhi chahiye. Example: “Vc 120 m/min”.`,`You mentioned a ${lastDiameter} mm tool. I also need Vc (m/min) to calculate RPM. Example: “Vc 120 m/min”.`):T('RPM = (1000 × Vc) / (π × D). Tool diameter aur material/operation bata dein, main starting RPM calculate kar dunga.','RPM = (1000 × Vc) / (π × D). Tell me the tool diameter and material/operation and I can calculate a starting RPM.');
+ case'vc':return T('Cutting speed Vc = (π × D × RPM) / 1000 m/min. Exact Vc tool geometry, material aur operation par depend karta hai; manufacturer data ko priority dein.','Cutting speed Vc = (π × D × RPM) / 1000 m/min. The exact Vc depends on tool geometry, material and operation; follow the tool manufacturer data first.');
+ case'feed':return T('Feed rate Vf = fz × number of teeth × RPM. Cutter diameter, flute count, material aur RPM/fz bata dein to main calculation kar dunga.','Feed rate Vf = fz × number of teeth × RPM. Give me cutter diameter, flute count, material and RPM/fz and I can calculate it.');
+ case'doc':return T('Depth of cut tool diameter, material, machine rigidity, stick-out aur roughing/finishing strategy par depend karta hai.','Depth of cut depends on tool diameter, material, machine rigidity, stick-out and the roughing/finishing strategy.');
+ case'ae':return T('Step-over (ae) radial engagement hota hai. Roughing aur finishing mein value operation, tool aur material ke hisaab se choose hoti hai.','Step-over (ae) is radial engagement. The value for roughing or finishing depends on the operation, tool and material.');
+ case'drill':return T('Drilling RPM = (1000 × Vc)/(π × D). Feed (mm/min) = fn × RPM. Starting values drill manufacturer ke Vc/fn data se lena best hai.','Drilling RPM = (1000 × Vc)/(π × D). Feed (mm/min) = fn × RPM. Start from the drill manufacturer’s recommended Vc/fn data.');
+ case'tap':return T('Tapping mein basic feed = RPM × thread pitch (mm/rev) for a single-start thread. Example M10×1.5 at 500 RPM = 750 mm/min.','For a single-start thread, basic tapping feed = RPM × thread pitch (mm/rev). Example: M10×1.5 at 500 RPM = 750 mm/min.');
+ case'gcode':return T('Common VMC G-codes: G00 rapid, G01 linear feed, G02/G03 circular interpolation, G17 XY plane, G90 absolute, G91 incremental, G54 work offset. Controller ke hisaab se differences ho sakte hain.','Common VMC G-codes: G00 rapid, G01 linear feed, G02/G03 circular interpolation, G17 XY plane, G90 absolute, G91 incremental, G54 work offset. Controller-specific differences may apply.');
+ case'mcode':return T('Common M-codes: M03 spindle CW, M04 CCW, M05 stop, M08 coolant ON, M09 OFF, M30 program end/reset. Exact meaning controller/machine builder se verify karein.','Common M-codes: M03 spindle CW, M04 CCW, M05 stop, M08 coolant ON, M09 OFF, M30 program end/reset. Verify exact meanings for the machine/controller.');
+ case'tool':return T('Tool selection material, operation, diameter, flute count, coating, holder/runout aur stick-out par depend karta hai.','Tool selection depends on material, operation, diameter, flute count, coating, holder/runout and stick-out.');
+ case'rough':return T('Roughing mein stable tool engagement, chip evacuation aur material removal important hain. Adaptive/trochoidal toolpaths bhi useful ho sakte hain.','For roughing, stable tool engagement, chip evacuation and material removal are important. Adaptive/trochoidal toolpaths can also be useful.');
+ case'finish':return T('Finishing mein tool deflection, stepover, feed aur RPM surface finish ko affect karte hain.','In finishing, tool deflection, stepover, feed and RPM affect surface finish.');
+ case'cad':return T('CAD side par part modelling, drawing interpretation, design modification, surface/solid preparation aur manufacturing-oriented geometry support kiya ja sakta hai.','CAD support can include part modelling, drawing interpretation, design modification, surface/solid preparation and manufacturing-oriented geometry.');
+ case'cam':return T('CAM mein setup, stock, toolpath, simulation/verification, holder collision checking aur post-processing important hain.','CAM involves setup, stock, toolpaths, simulation/verification, holder collision checking and post-processing.');
+ case'mould':return T('CNCVEYRA mould & die focused work karta hai, including blow mould design aur CAM programming support.','CNCVEYRA focuses on mould & die work, including blow mould design and CAM programming support.');
+ case'axis':return T('3-axis mein X/Y/Z cutting hoti hai. 3+2 mein rotary axes positioning ke liye use hote hain. 4/5-axis strategy machine, kinematics aur post-processor par depend karti hai.','3-axis uses X/Y/Z cutting. In 3+2, rotary axes are used for positioning. 4/5-axis strategy depends on the machine, kinematics and post-processor.');
+ case'software':return T('CNCVEYRA ki website par NX CAD/CAM, PowerMill aur Mastercam listed hain.','The CNCVEYRA website lists NX CAD/CAM, PowerMill and Mastercam.');
+ case'material':return T(`${lastMaterial||'Material'} machining mein parameters tool geometry, hardness, diameter aur operation ke hisaab se change hote hain.`,`Machining parameters for ${lastMaterial||'the material'} change with tool geometry, hardness, diameter and operation.`);
+ case'thanks':return T('Aapka swagat hai.','You are welcome.');
+ case'bye':return T('Theek hai. Jab zarurat ho wapas pooch lena. — Manmohan Yadav','Sure. Feel free to ask again whenever you need help. — Manmohan Yadav');
+ }
+ return T('Main aapki baat samajhne ki koshish karunga. CNC/VMC, CAD/CAM, mould ya machining ke sawal ko normal language mein likhiye.','I will try to understand your question. You can ask normally about CNC/VMC, CAD/CAM, moulds or machining.');
+}
+function add(t,w){const b=document.getElementById('my-chat-messages'),d=document.createElement('div');d.className='my-msg '+(w==='user'?'my-user':'my-bot');d.textContent=t;b.appendChild(d);b.scrollTop=b.scrollHeight}
+function ask(q){q=q.trim();if(!q)return;add(q,'user');setTimeout(()=>add(answer(q),'bot'),220)}
+const panel=document.getElementById('my-chat-panel');
+document.getElementById('my-chat-open').onclick=()=>{panel.classList.add('show');if(!panel.dataset.started){panel.dataset.started='1';add('Namaste. I am Manmohan Yadav. Please choose Hindi or English and continue the conversation.','bot')}};
+document.getElementById('my-chat-close').onclick=()=>panel.classList.remove('show');
+document.getElementById('my-chat-send').onclick=()=>{const i=document.getElementById('my-chat-text');ask(i.value);i.value='';i.focus()};
+document.getElementById('my-chat-text').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('my-chat-send').click()});
+document.querySelectorAll('.my-chat-quick button').forEach(b=>b.onclick=()=>ask(b.dataset.q));
+// Browser voice. Select a male-sounding voice when the browser provides one.
+function pickVoice(lang){
+ const voices=window.speechSynthesis.getVoices();
+ const male=/male|david|daniel|mark|james|alex|microsoft.*(guy|david|mark)|google.*male/i;
+ return voices.find(v=>v.lang.toLowerCase().startsWith(lang) && male.test(v.name)) || voices.find(v=>v.lang.toLowerCase().startsWith(lang)) || voices.find(v=>v.lang.toLowerCase().startsWith('en'));
+}
+function speakReply(text){
+ if(!('speechSynthesis' in window)) return;
+ window.speechSynthesis.cancel();
+ const u=new SpeechSynthesisUtterance(text.replace(/[•—]/g,' '));
+ u.lang=chatLang==='hi'?'hi-IN':'en-IN';
+ const v=pickVoice(chatLang==='hi'?'hi':'en'); if(v) u.voice=v;
+ u.rate=.92; u.pitch=.72; u.volume=1;
+ window.speechSynthesis.speak(u);
+}
+window.speechSynthesis && window.speechSynthesis.onvoiceschanged && window.speechSynthesis.getVoices();
+const mic=document.getElementById('my-chat-mic');
+const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
+if(SpeechRecognition){
+ const rec=new SpeechRecognition(); rec.interimResults=false; rec.continuous=false;
+ mic.onclick=()=>{try{rec.lang=chatLang==='hi'?'hi-IN':'en-IN';rec.start();mic.classList.add('listening');}catch(e){}};
+ rec.onresult=e=>{const text=e.results[0][0].transcript;document.getElementById('my-chat-text').value=text;ask(text);document.getElementById('my-chat-text').value='';};
+ rec.onend=()=>mic.classList.remove('listening'); rec.onerror=()=>mic.classList.remove('listening');
+}else{mic.style.display='none';}
+const originalAdd=add;
+add=function(t,w){originalAdd(t,w);if(w==='bot'&&t)speakReply(t);};
+function setLang(l){chatLang=l;document.getElementById('lang-hi').classList.toggle('active',l==='hi');document.getElementById('lang-en').classList.toggle('active',l==='en');document.getElementById('my-chat-text').placeholder=l==='hi'?'Apna sawal likhiye...':'Type your question...';}
+document.getElementById('lang-hi').onclick=()=>{setLang('hi');renderFAQ()};
+document.getElementById('lang-en').onclick=()=>{setLang('en');renderFAQ()};
+renderFAQ();
+})();
+
+</script></body></html>
