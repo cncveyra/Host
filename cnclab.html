@@ -516,7 +516,7 @@ footer#contact .founder-role{
 <div><span class="cnc-kicker">X/Z TOOLPATH SIMULATION</span><h3>Turning Toolpath — X / Z axes</h3></div>
 <div class="turn-sim-actions"><button class="cnc-btn" id="turnPlay" type="button">▶ PLAY</button><button class="cnc-btn" id="turnStepBtn" type="button">STEP</button><button class="cnc-btn" id="turnReset" type="button">RESET</button></div>
 </div>
-<div class="turn-canvas-wrap"><canvas height="620" id="turnCanvas" width="1100"></canvas></div>
+<div class="turn-canvas-wrap"><canvas height="620" id="turnCanvas" width="1100"></canvas></div><div class="cnc-mini">DATUM: <b>Z0 = front face (RIGHT)</b> • negative Z runs <b>RIGHT → LEFT</b> • X0 = spindle centerline at the bottom. Program and simulation follow the same X/Z order.</div>
 <div class="cnc-legend"><span><i class="cnc-dot rapid"></i>Rapid / approach</span><span><i class="cnc-dot cut"></i>Cutting move</span><span><i class="cnc-dot arc"></i>Arc/profile</span><span><i class="cnc-dot tool"></i>Current tool</span></div>
 <div class="cnc-mini" id="turnPosition">Position: X0.000 Z0.000 • Line: —</div>
 <div class="simulation-note">Simulation shows the programmed X/Z path and basic checks. It does not account for every controller mode, tool geometry, chuck/workholding condition, offsets, collision, machine limit or cutting force.</div>
@@ -1019,14 +1019,15 @@ M30
   function showConfidence(text,kind){const el=$('turnDrawingConfidence');el.textContent=text;el.className='drawing-confidence '+(kind||'');}
   function renderDetectedDimensions(items){
     const box=$('turnDetectedDimensions');
-    const data=(items&&items.__structured)?items:classifyDrawingDimensions(items,'');
-    const section=(title,rows,cls='')=>rows.length?`<div class="detected-group ${cls}"><div class="detected-group-title">${title}</div>${rows.map((r,i)=>`<div class="detected-item"><label>${esc(r.label||'Value')}</label><input class="detected-value structured-value" data-kind="${esc(r.kind||'other')}" data-index="${i}" value="${esc(String(r.value))}"></div>`).join('')}</div>`:'';
+    const data=(items&&items.__structured)?items:((items&&items.__live)?items:classifyDrawingDimensions(items,''));
+    const section=(title,rows,cls='',readonly=false)=>rows.length?`<div class="detected-group ${cls}"><div class="detected-group-title">${title}</div>${rows.map((r,i)=>`<div class="detected-item"><label>${esc(r.label||'Value')}</label><input class="detected-value ${r.structured?'structured-value':''}" data-kind="${esc(r.kind||'other')}" data-index="${i}" value="${esc(String(r.value))}" ${readonly?'readonly':''}></div>`).join('')}</div>`:'';
     box.innerHTML=[
-      section('DIAMETER / OD',data.diameters.map((v,i)=>({label:`Diameter ${i+1}`,value:v,kind:'diameter'})),'diameter-group'),
-      section('AXIAL / Z LENGTH',data.lengths.map((v,i)=>({label:`Length ${i+1}`,value:v,kind:'length'})),'length-group'),
-      section('TAPER',data.tapers.map((v,i)=>({label:v.label||`Taper ${i+1}`,value:v.value,kind:'taper'})),'taper-group'),
-      section('RADIUS',data.radii.map((v,i)=>({label:`Radius R${i+1}`,value:v,kind:'radius'})),'radius-group'),
-      section('CHAMFER',data.chamfers.map((v,i)=>({label:v.label||`Chamfer ${i+1}`,value:v.value,kind:'chamfer'})),'chamfer-group'),
+      section('DIAMETER / OD',data.diameters.map((v,i)=>({label:`Diameter ${i+1}`,value:v,kind:'diameter',structured:true})),'diameter-group'),
+      section('AXIAL / Z LENGTH',data.lengths.map((v,i)=>({label:`Length ${i+1}`,value:v,kind:'length',structured:true})),'length-group'),
+      section('LIVE Z VALUES',(data.zValues||[]).map((v,i)=>({label:`Z${i+1}`,value:Number(v).toFixed(3).replace(/\.?0+$/,''),kind:'live-z'})),'z-value-group',true),
+      section('TAPER',data.tapers.map((v,i)=>({label:v.label||`Taper ${i+1}`,value:v.value,kind:'taper',structured:true})),'taper-group'),
+      section('RADIUS',data.radii.map((v,i)=>({label:`Radius R${i+1}`,value:v,kind:'radius',structured:true})),'radius-group'),
+      section('CHAMFER',data.chamfers.map((v,i)=>({label:v.label||`Chamfer ${i+1}`,value:v.value,kind:'chamfer',structured:true})),'chamfer-group'),
       !data.diameters.length&&!data.lengths.length&&!data.tapers.length&&!data.radii.length&&!data.chamfers.length?'<div class="cnc-mini">No usable drawing dimensions detected. The visible contour will be used as a fallback and remains editable.</div>':''
     ].join('');
     $('turnDetectedPanel').hidden=false;
@@ -1558,7 +1559,7 @@ M30
         // state. The user still has the explicit confirmation checkbox before code generation.
         drawingScanState.valid=!!inferred&&currentVisualProfile().length>=2;
         drawingScanState.scanned=true;renderEditableProfile();
-        document.querySelectorAll('.structured-value').forEach(el=>el.addEventListener('input',refreshDimensionDrivenProfile));
+        if(drawingScanState.profileSource!=='live-dwg')document.querySelectorAll('.structured-value').forEach(el=>el.addEventListener('input',refreshDimensionDrivenProfile));
         showConfidence(drawingScanState.valid
           ?`Technical drawing scanned ✓ Profile ready • Confidence ${Math.round(score)}%`
           :`Technical drawing scanned ✓ Dimensions ready • Profile needs editing`,drawingScanState.valid?'good':'warn');
@@ -1588,7 +1589,9 @@ M30
     }).filter(p=>Number.isFinite(p.x)&&Number.isFinite(p.z));
   }
   function getProfile(){
-    let p=profileFromGeometry();
+    // Live DWG profile is the single source of truth for generation.  The editable
+    // X/Z contour shown in the UI is the same contour that must feed the generator.
+    let p=(drawingScanState.profileSource==='live-dwg')?manualProfile():profileFromGeometry();
     if(!p.length)p=manualProfile();
     if(p.length<2)throw new Error('At least two turning profile points are required.');
     return p;
@@ -1654,7 +1657,7 @@ M30
   // FINISH: repeated profile passes; each pass is offset in X by the configured
   // finish-pass step, matching the supplied multi-pass finish style.
   function buildCode(){
-    const p=getProfile().slice().sort((a,b)=>b.z-a.z);
+    const p=getProfile().slice().sort((a,b)=>a.z-b.z);
     const Frough=n('turnRoughFeed',n('turnFeed',.3));
     const Ffinish=n('turnFinishFeed',n('turnFeed',.1));
     const S=n('turnRPM',800), C=n('turnClear',2);
@@ -1683,13 +1686,10 @@ M30
     }
     function emitProfileMoves(profile,feed,includeFront=true){
       const first=profile[0];
-      if(includeFront) lines.push(`G0 Z${fmt(entryZ)}`,`X${fmt(first.x)}`,`G1 Z${fmt(frontZ)} F${fmt(feed)}`);
-      for(let i=0;i<profile.length;i++){
-        const q=profile[i];
-        // Keep the same compact controller style as the supplied programs:
-        // omit repeated axis words when only Z changes.
-        const prev=i?profile[i-1]:null;
-        if(prev && Math.abs(q.x-prev.x)<1e-9) lines.push(`Z${fmt(q.z)}`);
+      if(includeFront) lines.push(`G0 Z${fmt(entryZ)}`,`X${fmt(first.x)}`,`G0 Z${fmt(backZ)}`,`G1 X${fmt(first.x)} F${fmt(feed)}`);
+      for(let i=1;i<profile.length;i++){
+        const q=profile[i], prev=profile[i-1];
+        if(Math.abs(q.x-prev.x)<1e-9) lines.push(`Z${fmt(q.z)}`);
         else lines.push(`X${fmt(q.x)} Z${fmt(q.z)}`);
       }
     }
@@ -1754,26 +1754,26 @@ M30
 
         if(passIndex===0){
           // Initial pass: full length, matching the verified reference style.
-          path.push({x:passX,z:frontZ},{x:passX,z:backZ});
+          path.push({x:passX,z:backZ},{x:passX,z:frontZ});
           path.push({x:Math.max(passX+C*.7,minPX+C*.7),z:backZ+Math.max(.001,C*.4)});
         }else{
           const segs=bandSegments(low,high);
           if(segs.length){
             // Merge contiguous/overlapping band segments in Z order.
-            segs.sort((a,b)=>b.z1-a.z1);
+            segs.sort((a,b)=>a.z1-b.z1);
             let groups=[];
             for(const sg of segs){
               const zHi=Math.max(sg.z1,sg.z2), zLo=Math.min(sg.z1,sg.z2);
               const last=groups[groups.length-1];
-              if(last && zLo>=last.zLo-eps){
+              if(last && zLo<=last.zHi+eps){
                 last.zLo=Math.min(last.zLo,zLo);
                 last.zHi=Math.max(last.zHi,zHi);
               }else groups.push({zHi,zLo});
             }
             for(const g of groups){
               // Entry at the front of each remaining material pocket.
-              path.push({x:passX,z:g.zHi});
               path.push({x:passX,z:g.zLo});
+              path.push({x:passX,z:g.zHi});
             }
             const last=path[path.length-1];
             path.push({x:Math.max(passX+C*.7,minPX+C*.7),z:last.z+Math.max(.001,C*.4)});
@@ -1783,16 +1783,17 @@ M30
         const finalPath=clean(path);
         if(finalPath.length>=2){
           const first=finalPath[0];
-          lines.push(`G0 Z${fmt(entryZ)}`,`X${fmt(passX)}`,`G1 Z${fmt(frontZ)} F${fmt(Frough)}`);
+          lines.push(`G0 Z${fmt(entryZ)}`,`X${fmt(passX)}`,`G0 Z${fmt(backZ)}`,`G1 Z${fmt(frontZ)} F${fmt(Frough)}`);
           // For subsequent passes, move to the actual remaining Z pocket before
           // cutting; this avoids the old unconditional Z-27 travel.
           if(passIndex===0){
             lines.push(`Z${fmt(backZ)}`);
           }else{
-            for(let i=0;i<finalPath.length;i++){
+            const q0=finalPath[0];
+            lines.push(`G0 Z${fmt(q0.z)}`,`G1 Z${fmt(q0.z)} F${fmt(Frough)}`);
+            for(let i=1;i<finalPath.length;i++){
               const q=finalPath[i];
-              if(i===0)lines.push(`Z${fmt(q.z)}`);
-              else if(Math.abs(q.x-passX)<eps)lines.push(`Z${fmt(q.z)}`);
+              if(Math.abs(q.x-passX)<eps)lines.push(`Z${fmt(q.z)}`);
               else lines.push(`X${fmt(q.x)} Z${fmt(q.z)}`);
             }
           }
@@ -1815,10 +1816,10 @@ M30
         const offset=pass*finishStep;
         const profile=linearProfileOffset(offset);
         const first=profile[0];
-        lines.push(`G0 Z${fmt(entryZ)}`,`X${fmt(first.x)}`,`G1 Z${fmt(frontZ)} F${fmt(Ffinish)}`);
-        for(let i=0;i<profile.length;i++){
-          const q=profile[i], prev=i?profile[i-1]:null;
-          if(prev && Math.abs(q.x-prev.x)<1e-9) lines.push(`Z${fmt(q.z)}`);
+        lines.push(`G0 Z${fmt(entryZ)}`,`X${fmt(first.x)}`,`G0 Z${fmt(backZ)}`,`G1 X${fmt(first.x)} F${fmt(Ffinish)}`);
+        for(let i=1;i<profile.length;i++){
+          const q=profile[i], prev=profile[i-1];
+          if(Math.abs(q.x-prev.x)<1e-9) lines.push(`Z${fmt(q.z)}`);
           else lines.push(`X${fmt(q.x)} Z${fmt(q.z)}`);
         }
         lines.push(`G0 Z${fmt(safeZ)}`);
@@ -1844,8 +1845,9 @@ M30
       lines=header(t);
       const offset=opn==='id-finish'?0:finR;
       const profile=opn==='id-finish'?linearProfileOffset(-offset):p.map(q=>({x:q.x+offset,z:q.z}));
-      lines.push(`G0 Z${fmt(entryZ)}`,`X${fmt(Math.max(.001,minX+C))}`,`G1 Z${fmt(frontZ)} F${fmt(f)}`);
-      profile.forEach(q=>lines.push(`X${fmt(q.x)} Z${fmt(q.z)}`));
+      const first=profile[0];
+      lines.push(`G0 Z${fmt(entryZ)}`,`X${fmt(Math.max(.001,minX+C))}`,`G0 Z${fmt(backZ)}`,`G1 X${fmt(first.x)} F${fmt(f)}`);
+      for(let i=1;i<profile.length;i++)lines.push(`X${fmt(profile[i].x)} Z${fmt(profile[i].z)}`);
       lines.push(`G0 Z${fmt(safeZ)}`,...footer);
       generatedCode=lines.join('\n');
     } else {
@@ -1902,7 +1904,7 @@ M30
 
   function fitAndDraw(){
     const xs=simPaths.flatMap(p=>[p.from.x,p.to.x]), zs=simPaths.flatMap(p=>[p.from.z,p.to.z]);
-    const minX=Math.min(0,...xs),maxX=Math.max(1,...xs),minZ=Math.min(0,...zs),maxZ=Math.max(1,...zs);
+    const minX=Math.min(0,...xs),maxX=Math.max(1,...xs),minZ=Math.min(0,...zs),maxZ=Math.max(0,...zs);
     const pad=70, sx=(canvas.width-pad*2)/(Math.max(1,maxZ-minZ)), sy=(canvas.height-pad*2)/(Math.max(1,maxX-minX)), sc=Math.min(sx,sy);
     const px=z=>pad+(maxZ-z)*sc, py=x=>canvas.height-pad-(x-minX)*sc;
     ctx.clearRect(0,0,canvas.width,canvas.height);ctx.fillStyle='#02080d';ctx.fillRect(0,0,canvas.width,canvas.height);
@@ -2062,9 +2064,10 @@ M30
       if(g.type==='LINE'){if(idx===0)push({x:g.x1,y:g.y1});push({x:g.x2,y:g.y2});}
       else{const span=arcSpan(g.a1,g.a2),steps=Math.max(8,Math.min(64,Math.ceil(span*g.r/0.6)));for(let k=0;k<=steps;k++){if(idx>0&&k===0)continue;push(arcPoint(g,g.a1+span*k/steps));}}
     });
-    // Always program from the front toward negative Z.
+    // CNC turning datum: actual front/end of received Live DWG profile is Z0.
     if(pts.length>1&&pts[0].z<pts[pts.length-1].z)pts.reverse();
-    return pts;
+    const frontZ=Math.max(...pts.map(q=>q.z));
+    return pts.map(q=>({x:q.x,z:q.z-frontZ}));
   }
   function liveValues(payload){
     const vals=[];
@@ -2086,9 +2089,13 @@ M30
           ta.value=prof.map(q=>`${q.x.toFixed(3).replace(/\.?0+$/,'')},${q.z.toFixed(3).replace(/\.?0+$/,'')}`).join('\n');
           drawingScanState.profileSource='live-dwg';drawingScanState.profileConfidence=99;
         }
-        drawingScanState.file={name:'CNCVEYRA Live Drawing'};drawingScanState.kind='live-dwg';drawingScanState.scanned=true;drawingScanState.valid=prof.length>=2;drawingScanState.confidence=99;drawingScanState.dimensions=vals;
+        const liveXs=[...new Set(prof.map(q=>Number(q.x)).filter(Number.isFinite))].sort((a,b)=>b-a);
+        const liveZs=[...new Set(prof.map(q=>Number(q.z)).filter(Number.isFinite))].sort((a,b)=>b-a);
+        const liveLengths=[];for(let i=1;i<prof.length;i++){const dz=Math.abs(prof[i].z-prof[i-1].z);if(dz>1e-9&&!liveLengths.some(v=>Math.abs(v-dz)<1e-9))liveLengths.push(dz);}
+        const liveData={__live:true,__structured:true,diameters:liveXs,lengths:liveLengths.sort((a,b)=>a-b),zValues:liveZs,tapers:[],radii:[],chamfers:[],sourceValues:vals};
+        drawingScanState.file={name:'CNCVEYRA Live Drawing'};drawingScanState.kind='live-dwg';drawingScanState.scanned=true;drawingScanState.valid=prof.length>=2;drawingScanState.confidence=99;drawingScanState.dimensions=liveData;
         renderGeometry();renderEditableProfile();
-        if(vals.length&&typeof renderDetectedDimensions==='function')renderDetectedDimensions(vals);
+        if(typeof renderDetectedDimensions==='function')renderDetectedDimensions(liveData);
         const check=document.getElementById('turnConfirmGeometry');if(check)check.checked=true;
         const note=document.getElementById('turnDxfStatus');if(note)note.textContent=`LIVE DWG RECEIVED ✓ ${gs.length} geometry entities • ${prof.length} profile points${vals.length?' • '+vals.length+' values':''}`;
         if(typeof showConfidence==='function')showConfidence(`Live DWG profile received ✓ ${gs.length} entities • complete X/Z contour ready`,'good');
@@ -2096,9 +2103,16 @@ M30
         return true;
       }
       if(Array.isArray(payload.profile)&&payload.profile.length>=2){
-        ta.value=payload.profile.map(q=>`${Number(q.x).toFixed(3)},${Number(q.z).toFixed(3)}`).join('\n');
-        drawingScanState.file={name:'CNCVEYRA Live Drawing'};drawingScanState.kind='live-dwg';drawingScanState.scanned=true;drawingScanState.valid=true;drawingScanState.confidence=99;drawingScanState.dimensions=vals;
-        renderEditableProfile();if(vals.length&&typeof renderDetectedDimensions==='function')renderDetectedDimensions(vals);if(typeof setDrawingGate==='function')setDrawingGate(true);return true;
+        const pp=payload.profile.map(q=>({x:Number(q.x),z:Number(q.z??q.y)})).filter(q=>Number.isFinite(q.x)&&Number.isFinite(q.z));
+        const front=pp.length?Math.max(...pp.map(q=>q.z)):0;
+        const norm=pp.map(q=>({x:q.x,z:q.z-front}));
+        if(norm.length>=2)ta.value=norm.map(q=>`${q.x.toFixed(3).replace(/\.?0+$/,'')},${q.z.toFixed(3).replace(/\.?0+$/,'')}`).join('\n');
+        const liveXs=[...new Set(norm.map(q=>q.x))].sort((a,b)=>b-a);
+        const liveZs=[...new Set(norm.map(q=>q.z))].sort((a,b)=>b-a);
+        const liveLengths=[];for(let i=1;i<norm.length;i++){const dz=Math.abs(norm[i].z-norm[i-1].z);if(dz>1e-9&&!liveLengths.some(v=>Math.abs(v-dz)<1e-9))liveLengths.push(dz);}
+        const liveData={__live:true,__structured:true,diameters:liveXs,lengths:liveLengths.sort((a,b)=>a-b),zValues:liveZs,tapers:[],radii:[],chamfers:[],sourceValues:vals};
+        drawingScanState.file={name:'CNCVEYRA Live Drawing'};drawingScanState.kind='live-dwg';drawingScanState.profileSource='live-dwg';drawingScanState.scanned=true;drawingScanState.valid=norm.length>=2;drawingScanState.confidence=99;drawingScanState.dimensions=liveData;
+        renderEditableProfile();if(typeof renderDetectedDimensions==='function')renderDetectedDimensions(liveData);if(typeof setDrawingGate==='function')setDrawingGate(norm.length>=2);return norm.length>=2;
       }
     }catch(e){console.error('CNCVEYRA Live DWG bridge:',e);}
     return false;
