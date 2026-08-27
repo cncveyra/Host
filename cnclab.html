@@ -2215,4 +2215,19 @@ M30
   load();
 })();
 </script>
-</body></html>
+<script id="cncveyra-live-lab-bridge">
+(function(){
+  const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  function decodePayload(){try{const h=location.hash||'';const m=h.match(/^#live=([A-Za-z0-9_-]+)$/);if(m){let b=m[1].replace(/-/g,'+').replace(/_/g,'/');while(b.length%4)b+='=';const raw=decodeURIComponent(escape(atob(b)));return JSON.parse(raw);}const raw=localStorage.getItem('cncveyraLiveProfile');return raw?JSON.parse(raw):null;}catch(e){return null;}}
+  function pointKey(p){return `${Number(p.x).toFixed(5)},${Number(p.y).toFixed(5)}`;}
+  function dist(a,b){return Math.hypot(a.x-b.x,a.y-b.y);}
+  function addLineSegments(objs){const segs=[];for(const o of objs||[]){if(o.reference)continue;if(o.type==='line'&&o.a&&o.b){segs.push([{x:+o.a.x,y:+o.a.y},{x:+o.b.x,y:+o.b.y}]);}else if(o.type==='rectangle'&&o.a&&o.b){const a=o.a,b=o.b;segs.push([{x:a.x,y:a.y},{x:b.x,y:a.y}],[{x:b.x,y:a.y},{x:b.x,y:b.y}],[{x:b.x,y:b.y},{x:a.x,y:b.y}],[{x:a.x,y:b.y},{x:a.x,y:a.y}]);}else if(o.type==='arc'&&o.c&&Number.isFinite(+o.r)){const n=32,a1=Number(o.a1||0)*Math.PI/180,a2=Number(o.a2||0)*Math.PI/180;let d=a2-a1;if(d>Math.PI*2)d-=Math.PI*2;if(d<-Math.PI*2)d+=Math.PI*2;const pts=[];for(let i=0;i<=n;i++){const a=a1+d*i/n;pts.push({x:o.c.x+o.r*Math.cos(a),y:o.c.y+o.r*Math.sin(a)});}for(let i=0;i<n;i++)segs.push([pts[i],pts[i+1]]);}}return segs;}
+  function orderSegments(segs){if(!segs.length)return[];const used=new Uint8Array(segs.length);let best=0;for(let i=1;i<segs.length;i++){const mi=Math.max(segs[i][0].x,segs[i][1].x),mb=Math.max(segs[best][0].x,segs[best][1].x);if(mi>mb)best=i;}let chain=[segs[best][0],segs[best][1]];used[best]=1;for(let k=1;k<segs.length;k++){let bi=-1,rev=false,bd=1e9;const end=chain[chain.length-1];for(let i=0;i<segs.length;i++)if(!used[i]){let d=dist(end,segs[i][0]);if(d<bd){bd=d;bi=i;rev=false;}d=dist(end,segs[i][1]);if(d<bd){bd=d;bi=i;rev=true;}}if(bi<0||bd>0.5)break;const s=segs[bi];chain.push(rev?s[0]:s[1]);used[bi]=1;}return chain;}
+  function showLiveProfile(payload){const objs=(payload&&payload.cncObjects)||[];if(!objs.length)return false;const pts=orderSegments(addLineSegments(objs));if(pts.length<2)return false;const ta=document.getElementById('turnProfile');if(ta){ta.value=pts.map(p=>`${Number(p.x).toFixed(3).replace(/\.?0+$/,'')},${Number(p.y).toFixed(3).replace(/\.?0+$/,'')}`).join('\n');ta.dispatchEvent(new Event('input',{bubbles:true}));}
+    let panel=document.getElementById('liveProfileBridge');if(!panel){panel=document.createElement('div');panel.id='liveProfileBridge';panel.className='cnc-card';const c=document.getElementById('turnProfile')?.closest('.cnc-card')||document.getElementById('cncSimulator')||document.getElementById('cnc-simulator');if(c)c.prepend(panel);}
+    panel.innerHTML=`<div style="padding:10px;border:1px solid rgba(80,210,255,.35);border-radius:10px;background:#061018;color:#dff6ff"><b style="color:#75ddff">LIVE DWG RECEIVED ✓</b><div style="margin-top:5px;font:12px monospace">Pink X/Z origin → CNC X0 / Z0<br>Profile entities received: ${objs.length}<br>Profile transferred without drawing-image conversion.</div></div>`;
+    return true;}
+  function boot(){if(typeof showPage==='function')showPage('cnc-simulator',false);const p=decodePayload();if(p){showLiveProfile(p);try{localStorage.setItem('cncveyraLiveProfile',JSON.stringify(p));}catch(e){}}if(location.hash.startsWith('#live='))history.replaceState(null,'','#cnc-simulator');}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(boot,80));else setTimeout(boot,80);
+})();
+</script></body></html>
