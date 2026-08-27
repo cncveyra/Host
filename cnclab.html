@@ -1087,8 +1087,24 @@ M30
     const zSpan=Math.max(1,maxZ-minZ),xSpan=Math.max(1,maxX-minX);
     const sx=(W-padL-padR)/zSpan,sy=(H-padT-padB)/xSpan,sc=Math.min(sx,sy);
     const usedW=zSpan*sc,usedH=xSpan*sc,x0=padL+(W-padL-padR-usedW)/2,y0=padT+(H-padT-padB-usedH)/2;
-    const X=q=>x0+(q.z-minZ)*sc, Y=q=>H-padB-(q.x-minX)*sc;
+    const X=q=>x0+(maxZ-q.z)*sc, Y=q=>H-padB-(q.x-minX)*sc;
     let out=`<line class="ep-axis" x1="${x0}" y1="${H-padB+15}" x2="${x0+usedW}" y2="${H-padB+15}"/><line class="ep-axis" x1="${x0-15}" y1="${H-padB}" x2="${x0-15}" y2="${H-padB-usedH}"/>`;
+    // When Live Drawing geometry is available, show the actual imported DWG/CAD geometry in the same 2D view.
+    if(Array.isArray(geometry)&&geometry.length){
+      const gzMin=Math.min(0,...geometry.flatMap(g=>g.type==='LINE'?[g.y1,g.y2]:g.type==='ARC'?[g.cy-g.r,g.cy+g.r]:g.type==='CIRCLE'?[g.cy-g.r,g.cy+g.r]:[]));
+      const gzMax=Math.max(0,...geometry.flatMap(g=>g.type==='LINE'?[g.y1,g.y2]:g.type==='ARC'?[g.cy-g.r,g.cy+g.r]:g.type==='CIRCLE'?[g.cy-g.r,g.cy+g.r]:[]));
+      const gxMin=Math.min(0,...geometry.flatMap(g=>g.type==='LINE'?[g.x1,g.x2]:g.type==='ARC'?[g.cx-g.r,g.cx+g.r]:g.type==='CIRCLE'?[g.cx-g.r,g.cx+g.r]:[]));
+      const gxMax=Math.max(1,...geometry.flatMap(g=>g.type==='LINE'?[g.x1,g.x2]:g.type==='ARC'?[g.cx-g.r,g.cx+g.r]:g.type==='CIRCLE'?[g.cx-g.r,g.cx+g.r]:[]));
+      const gsz=Math.min((W-padL-padR)/Math.max(1,gzMax-gzMin),(H-padT-padB)/Math.max(1,gxMax-gxMin));
+      const gX=z=>x0+(maxZ-z)*sc; const gY=x=>H-padB-(x-minX)*sc;
+      out+=`<g class="ep-live-geometry" opacity="0.28">`;
+      geometry.forEach(g=>{
+        if(g.type==='LINE') out+=`<line x1="${gX(g.y1).toFixed(1)}" y1="${gY(g.x1).toFixed(1)}" x2="${gX(g.y2).toFixed(1)}" y2="${gY(g.x2).toFixed(1)}"/>`;
+        else if(g.type==='ARC'){const span=arcSpan(g.a1,g.a2),steps=Math.max(10,Math.min(60,Math.ceil(span*g.r/.6)));let d='';for(let k=0;k<=steps;k++){const a=g.a1+span*k/steps,q=arcPoint(g,a);d+=(k?'L':'M')+gX(q.y).toFixed(1)+' '+gY(q.x).toFixed(1)+' ';}out+=`<path d="${d}"/>`;}
+        else if(g.type==='CIRCLE') out+=`<circle cx="${gX(g.cy).toFixed(1)}" cy="${gY(g.cx).toFixed(1)}" r="${(g.r*sc).toFixed(1)}"/>`;
+      });
+      out+=`</g>`;
+    }
     out+=`<text class="ep-sub" x="${x0+usedW-35}" y="${H-12}">Z</text><text class="ep-sub" x="18" y="${padT+5}">X</text>`;
     const pts=p.map(q=>`${X(q).toFixed(1)},${Y(q).toFixed(1)}`).join(' '); out+=`<polyline class="ep-line" points="${pts}"/>`;
     p.forEach((q,i)=>{const x=X(q),y=Y(q);out+=`<circle class="ep-point" cx="${x}" cy="${y}" r="5" data-ep-point="${i}"/>`;out+=`<text class="ep-dim" x="${x+8}" y="${y-8}" data-ep-x="${i}">Ø${Number(q.x).toFixed(3).replace(/\.?0+$/,'')}</text>`;});
@@ -1904,7 +1920,7 @@ M30
     const xs=simPaths.flatMap(p=>[p.from.x,p.to.x]), zs=simPaths.flatMap(p=>[p.from.z,p.to.z]);
     const minX=Math.min(0,...xs),maxX=Math.max(1,...xs),minZ=Math.min(0,...zs),maxZ=Math.max(1,...zs);
     const pad=70, sx=(canvas.width-pad*2)/(Math.max(1,maxZ-minZ)), sy=(canvas.height-pad*2)/(Math.max(1,maxX-minX)), sc=Math.min(sx,sy);
-    const px=z=>pad+(z-minZ)*sc, py=x=>canvas.height-pad-(x-minX)*sc;
+    const px=z=>pad+((-z)-(-maxZ))*sc, py=x=>canvas.height-pad-(x-minX)*sc;
     ctx.clearRect(0,0,canvas.width,canvas.height);ctx.fillStyle='#02080d';ctx.fillRect(0,0,canvas.width,canvas.height);
     ctx.strokeStyle='rgba(90,130,145,.14)';ctx.lineWidth=1;
     for(let z=Math.ceil(minZ/10)*10;z<=maxZ;z+=10){ctx.beginPath();ctx.moveTo(px(z),0);ctx.lineTo(px(z),canvas.height);ctx.stroke();}
@@ -2081,12 +2097,29 @@ M30
     if(!payload)return;
     try{localStorage.setItem('cncveyra_live_dwg',JSON.stringify(payload));localStorage.setItem('cncveyraLiveProfile',JSON.stringify(payload));}catch(e){}
     try{
-      const gs=liveToGeometry(payload);
+      let gs=liveToGeometry(payload);
       if(!gs.length){
         const ta=document.getElementById('turnProfile');
-        if(payload.profile&&ta){ta.value=payload.profile.map(p=>`${p.x},${p.z}`).join('\n');}
-        if(typeof renderEditableProfile==='function')renderEditableProfile();
+        if(Array.isArray(payload.profile)&&ta){
+          ta.value=payload.profile.map(p=>`${Number(p.x)},${Number.isFinite(+p.z)?Number(p.z):Number(p.y)}`).join('\n');
+          drawingScanState.profileSource='live-dwg'; drawingScanState.profileConfidence=99; drawingScanState.scanned=true; drawingScanState.valid=payload.profile.length>=2; drawingScanState.confidence=99;
+          renderEditableProfile();
+        }
         return;
+      }
+      // Live Drawing stores real X/Z coordinates relative to its pink X0/Z0.
+      // CNC turning uses Z- into the part. If the Live Drawing contour was drawn
+      // on the positive-Z side, mirror only the imported machine geometry once so
+      // the generated CNC program keeps the standard front-face convention.
+      const liveYs=gs.flatMap(g=>g.type==='LINE'?[g.y1,g.y2]:g.type==='ARC'?[g.cy-g.r,g.cy+g.r]:[]);
+      const hasPositiveSide=liveYs.some(v=>v>1e-9) && !liveYs.some(v=>v<-1e-9);
+      if(hasPositiveSide){
+        gs=gs.map(g=>{const q=JSON.parse(JSON.stringify(g));
+          if(q.type==='LINE'){q.y1=-q.y1;q.y2=-q.y2;}
+          else if(q.type==='ARC'){q.cy=-q.cy;[q.a1,q.a2]=[q.a2,q.a1];}
+          else if(q.type==='CIRCLE'){q.cy=-q.cy;}
+          return q;
+        });
       }
       geometry=gs;
       const prof=orderedProfile(gs);
@@ -2115,4 +2148,7 @@ M30
   const hashPayload=decodeHash();
   if(hashPayload)setTimeout(()=>apply(hashPayload),80);
   try{const p=JSON.parse(localStorage.getItem('cncveyraLiveProfile')||localStorage.getItem('cncveyra_live_dwg')||'null');if(p)setTimeout(()=>apply(p),120);}catch(e){}
+  window.addEventListener('storage',e=>{if((e.key==='cncveyraLiveProfile'||e.key==='cncveyra_live_dwg')&&e.newValue){try{apply(JSON.parse(e.newValue));}catch(err){console.error('CNCVEYRA Live DWG storage bridge:',err);}}});
+  let lastLiveStamp='';
+  setInterval(()=>{try{const raw=localStorage.getItem('cncveyraLiveProfile')||localStorage.getItem('cncveyra_live_dwg')||'';if(raw&&raw!==lastLiveStamp){lastLiveStamp=raw;apply(JSON.parse(raw));}}catch(e){}},800);
 })();</script></body></html>
