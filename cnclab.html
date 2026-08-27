@@ -2010,24 +2010,30 @@ M30
     if(!o||o.reference)return;
     const t=String(o.type||'').toLowerCase();
     const rel=p=>{const q=point(p);if(!q)return null;return relativeOrigin?{x:q.x-relativeOrigin.x,y:q.y-relativeOrigin.y}:q;};
-    if(t==='line'){
-      const a=rel(o.a),b=rel(o.b);if(a&&b)out.push({type:'LINE',x1:a.x,y1:a.y,x2:b.x,y2:b.y});
+    const P=v=>{if(Array.isArray(v)&&v.length>=2)return rel({x:v[0],y:v[1]});return rel(v);};
+    if(t==='line'||t==='segment'){
+      const a=P(o.a||o.p1||o.start||{x:o.x1,y:o.y1}), b=P(o.b||o.p2||o.end||{x:o.x2,y:o.y2});
+      if(a&&b)out.push({type:'LINE',x1:a.x,y1:a.y,x2:b.x,y2:b.y});
     }else if(t==='arc'){
-      const c=rel(o.c),r=finite(o.r),a1=finite(o.a1),a2=finite(o.a2);
-      if(c&&r!=null&&r>0&&a1!=null&&a2!=null)out.push({type:'ARC',cx:c.x,cy:c.y,r,a1:a1,a2:a2});
+      const c=P(o.c||o.center||{x:o.cx,y:o.cy}),r=finite(o.r??o.radius),a1=finite(o.a1??o.startAngle??o.start),a2=finite(o.a2??o.endAngle??o.end);
+      if(c&&r!=null&&r>0&&a1!=null&&a2!=null)out.push({type:'ARC',cx:c.x,cy:c.y,r,a1,a2});
     }else if(t==='circle'){
-      const c=rel(o.c),r=finite(o.r);if(c&&r!=null&&r>0)out.push({type:'CIRCLE',cx:c.x,cy:c.y,r});
+      const c=P(o.c||o.center||{x:o.cx,y:o.cy}),r=finite(o.r??o.radius);if(c&&r!=null&&r>0)out.push({type:'CIRCLE',cx:c.x,cy:c.y,r});
     }else if(t==='rectangle'){
-      const a=rel(o.a),b=rel(o.b);
+      const a=P(o.a||o.p1||o.start),b=P(o.b||o.p2||o.end||{x:o.x2,y:o.y2});
       if(a&&b){out.push({type:'LINE',x1:a.x,y1:a.y,x2:b.x,y2:a.y},{type:'LINE',x1:b.x,y1:a.y,x2:b.x,y2:b.y},{type:'LINE',x1:b.x,y1:b.y,x2:a.x,y2:b.y},{type:'LINE',x1:a.x,y1:b.y,x2:a.x,y2:a.y});}
     }
   }
   function liveToGeometry(payload){
-    const machine=Array.isArray(payload&&payload.cncObjects)&&payload.cncObjects.length?payload.cncObjects:null;
-    const raw=Array.isArray(payload&&payload.objects)?payload.objects:null;
-    const origin=raw&&payload&&payload.origin&&Number.isFinite(+payload.origin.x)&&Number.isFinite(+payload.origin.y)?{x:+payload.origin.x,y:+payload.origin.y}:null;
-    const src=machine||raw||[]; const out=[]; src.forEach(o=>addObject(out,o,machine?null:origin));
-    if(!out.length&&Array.isArray(payload&&payload.geometry))payload.geometry.forEach(o=>addObject(out,o,origin));
+    const unwrap=(p)=>{let q=p;for(let i=0;i<4&&q&&typeof q==='object'&&!Array.isArray(q);i++){if(Array.isArray(q.cncObjects)||Array.isArray(q.objects)||Array.isArray(q.geometry)||Array.isArray(q.entities)||Array.isArray(q.profile))break;q=q.payload||q.data||q.dwg||q.drawing||q; if(q===p)break;}return q;};
+    payload=unwrap(payload)||{};
+    const origin=payload&&payload.origin&&Number.isFinite(+payload.origin.x)&&Number.isFinite(+payload.origin.y)?{x:+payload.origin.x,y:+payload.origin.y}:null;
+    const lists=['cncObjects','objects','geometry','entities','elements']; const out=[];
+    for(const k of lists){if(Array.isArray(payload[k]))payload[k].forEach(o=>addObject(out,o, k==='cncObjects'?null:origin)); if(out.length)break;}
+    if(!out.length&&Array.isArray(payload.profile)&&payload.profile.length>=2){
+      const pts=payload.profile.map(v=>Array.isArray(v)?{x:+v[0],y:+v[1]}:{x:+v.x,y:+(v.y??v.z)}).filter(v=>Number.isFinite(v.x)&&Number.isFinite(v.y));
+      for(let i=1;i<pts.length;i++)out.push({type:'LINE',x1:pts[i-1].x,y1:pts[i-1].y,x2:pts[i].x,y2:pts[i].y});
+    }
     return out;
   }
   function endpoints(g){
@@ -2098,8 +2104,13 @@ M30
     return false;
   }
   function readStored(){
-    const keys=['cncveyraLiveProfile','cncveyra_live_dwg'];
-    for(const k of keys){try{const p=JSON.parse(localStorage.getItem(k)||'null');if(p&&(p.cncObjects||p.objects||p.profile||p.geometry))return p;}catch(e){}}
+    const stores=[];
+    try{stores.push(localStorage);}catch(e){}
+    try{if(window.opener&&!window.opener.closed)stores.push(window.opener.localStorage);}catch(e){}
+    try{stores.push(sessionStorage);}catch(e){}
+    try{if(window.opener&&!window.opener.closed)stores.push(window.opener.sessionStorage);}catch(e){}
+    const keys=['cncveyraLiveProfile','cncveyra_live_dwg','cncveyra_dwg_payload'];
+    for(const st of stores)for(const k of keys){try{const p=JSON.parse(st.getItem(k)||'null');if(p)return p;}catch(e){}}
     return null;
   }
   window.addEventListener('message',e=>{const d=e&&e.data;if(!d)return;const p=d.payload||d;if(d.type==='cncveyra-dwg'||d.type==='cncveyra-live-dwg'||p.cncObjects||p.objects||p.profile||p.geometry)apply(p);});
@@ -2108,6 +2119,6 @@ M30
   const hp=decodeHash();if(hp)setTimeout(()=>apply(hp),80);
   const stored=readStored();if(stored)setTimeout(()=>apply(stored),100);
   if(location.hash==='#live-dwg'){
-    let tries=0;const poll=setInterval(()=>{const p=readStored();if(p)apply(p);if(++tries>=30)clearInterval(poll);},250);
+    let tries=0;const poll=setInterval(()=>{const p=readStored();if(p)apply(p);if(++tries>=120)clearInterval(poll);},250);
   }
 })();</script></body></html>
