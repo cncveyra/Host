@@ -72,7 +72,7 @@
   <button class="leftTool" data-tool="setzero"><span class="ico">⌾</span>SET X/Z ZERO</button>
 </aside>
 <div class="canvasWrap"><canvas id="c"></canvas><div class="cmd"><b id="cmdTitle">SELECT</b><span id="cmdText">Click an object to select it</span></div><div id="status" class="status">Ready. Origin fixed.</div><div id="cursorPos" class="cursorPos">X 0.000 | Z 0.000</div><div id="dimPopupBackdrop"></div><div class="dimPopup" id="dimPopup"><label id="dimPopupLabel">Edit Length (mm)</label><input id="dimPopupInput" type="number" step="0.001" min="0.001"><div class="dimPopupBtns"><button id="dimPopupApply">Apply</button><button id="dimPopupCancel">Cancel</button></div></div><div class="dimPopup" id="cornerPopup"><label id="cornerPopupLabel">Fillet Radius (mm)</label><input id="cornerPopupInput" type="number" step="0.01" min="0.001" style="min-width:180px;min-height:45px;font-size:16px"><div class="dimPopupBtns"><button id="cornerPopupApply">Apply</button><button id="cornerPopupCancel">Cancel</button></div></div><div class="bottom"><span>UCS: <b>World</b></span><span>Grid: <b id="gridState">ON</b></span><span>Snap: <b id="snapState">OFF</b></span><span>Ortho: <b id="orthoState">ON</b></span><span>Polar: <b id="polarState">OFF</b></span><span>X: <b id="botX">0.000</b></span><span>Z: <b id="botZ">0.000</b></span></div></div>
-<aside class="right"><div class="tabs"><div class="tab active">PROPERTIES</div><div class="tab">MEASUREMENTS</div></div><div class="panel"><div class="panelTitle">Distance / Length</div><div class="value">Total Length: <b id="totalLen">0.000 mm</b></div><div class="panelTitle">Selection Info</div><div class="value">Selected: <b id="selCount">0</b><br><br>Type: <b id="selType">None</b></div><div class="value" id="selDetail" style="white-space:pre-line"></div></div><div class="panel"><div class="panelTitle">Object Snap</div><label class="check"><input id="snapEndpoint" type="checkbox" checked> Endpoint</label><label class="check"><input id="snapMid" type="checkbox" checked> Midpoint</label><label class="check"><input id="snapCenter" type="checkbox" checked> Center</label><label class="check"><input id="snapIntersect" type="checkbox" checked> Intersection</label><label class="check"><input id="snapPerp" type="checkbox"> Perpendicular</label><label class="check"><input id="snapTangent" type="checkbox"> Tangent</label><label class="check"><input id="snapNearest" type="checkbox" checked> Nearest</label></div><div class="panel"><div class="panelTitle">Snap Size</div><input id="snapSize" class="range" type="range" min="1" max="20" value="5"></div><div class="panel"><div class="panelTitle">Zoom: <span id="zoomPct">100</span>%</div><input id="zoom" class="range" type="range" min="0.25" max="3" value="1" step="0.01"></div><div class="panel dimEdit" id="dimEditPanel"><div class="panelTitle">EDIT SELECTED GEOMETRY</div><div id="lineEditBox"><label>Length (mm)</label><div class="row"><input id="editLength" type="number" step="0.001" min="0.001"><button id="applyLength">Apply</button></div></div><div id="circleEditBox" style="display:none"><label>Diameter (mm)</label><div class="row"><input id="editDiameter" type="number" step="0.001" min="0.001"><button id="applyDiameter">Apply</button></div></div><div id="arcEditBox" style="display:none"><label>Radius (mm)</label><div class="row"><input id="editRadius" type="number" step="0.001" min="0.001"><button id="applyRadius">Apply</button></div></div><div class="mini" style="margin-top:7px">Change the dimension and press Apply. Geometry updates immediately.</div></div><div class="panel"><div class="panelTitle">Fillet / Chamfer Size</div><input id="size" type="number" value="2" step=".1"><button id="applyAction">Apply Selected Tool</button></div><div class="panel dimEdit" id="unjoinPanel"><div class="panelTitle">Endpoint Join</div><div class="mini">This endpoint is joined to another geometry's endpoint at the exact same coordinate.</div><button id="unjoinBtn">Unjoin Endpoint</button></div><div class="panel dimEdit" id="measureEditPanel"><div class="panelTitle">MEASURE REFERENCE</div><div class="mini" id="measureInfo" style="white-space:pre-line">No measurement yet.</div><label style="display:block;font-size:11px;color:#aaa;margin-top:8px;margin-bottom:5px">Point-to-Point Distance (mm)</label><div class="row"><input id="measureEditDistance" type="number" step="0.001" min="0.001"><button id="applyMeasureDistance">Apply</button></div><div class="mini" style="margin-top:7px">Changing the value moves the second-point geometry toward/away from the first point. The first point stays fixed.</div><button id="deleteMeasure" style="margin-top:8px;background:#3a1414;border-color:#ff5050;color:#ff9d9d">Delete Measurement</button></div><div class="panel"><div class="panelTitle">CNC X/Z Origin</div><div class="value" id="originInfo">Not set</div><button id="clearZero">Clear X/Z Zero</button></div><div class="panel" id="cadImportInfoPanel" hidden><div class="panelTitle">IMPORTED DXF DATA</div><div class="mini" id="cadImportInfo">No DXF imported.</div></div><div class="panel"><div class="panelTitle">Drawing File</div><div class="mini">Save creates an editable CNCVEYRA JSON drawing. Open restores the exact geometry, nodes and X/Z zero.</div><button id="saveDrawingPanel">Save Drawing</button><button id="openDrawingPanel">Open Drawing</button><button id="importCadPanel">Import DWG / DXF</button><a href="cnclab.html" style="display:block;text-align:center;margin-top:7px;color:#4cc8ff;font-size:11px;text-decoration:none">Back to CNC LAB →</a></div></aside>
+<aside class="right"><div class="tabs"><div class="tab active">PROPERTIES</div><div class="tab">MEASUREMENTS</div></div><div class="panel"><div class="panelTitle">Distance / Length</div><div class="value">Total Length: <b id="totalLen">0.000 mm</b></div><div class="panelTitle">Selection Info</div><div class="value">Selected: <b id="selCount">0</b><br><br>Type: <b id="selType">None</b></div><div class="value" id="selDetail" style="white-space:pre-line"></div></div><div class="panel"><div class="panelTitle">Object Snap</div><label class="check"><input id="snapEndpoint" type="checkbox" checked> Endpoint</label><label class="check"><input id="snapMid" type="checkbox" checked> Midpoint</label><label class="check"><input id="snapCenter" type="checkbox" checked> Center</label><label class="check"><input id="snapIntersect" type="checkbox" checked> Intersection</label><label class="check"><input id="snapPerp" type="checkbox"> Perpendicular</label><label class="check"><input id="snapTangent" type="checkbox"> Tangent</label><label class="check"><input id="snapNearest" type="checkbox" checked> Nearest</label></div><div class="panel"><div class="panelTitle">Snap Size</div><input id="snapSize" class="range" type="range" min="1" max="20" value="5"></div><div class="panel"><div class="panelTitle">Zoom: <span id="zoomPct">100</span>%</div><input id="zoom" class="range" type="range" min="0.25" max="3" value="1" step="0.01"></div><div class="panel dimEdit" id="dimEditPanel"><div class="panelTitle">EDIT SELECTED GEOMETRY</div><div id="lineEditBox"><label>Length (mm)</label><div class="row"><input id="editLength" type="number" step="0.001" min="0.001"><button id="applyLength">Apply</button></div></div><div id="circleEditBox" style="display:none"><label>Diameter (mm)</label><div class="row"><input id="editDiameter" type="number" step="0.001" min="0.001"><button id="applyDiameter">Apply</button></div></div><div id="arcEditBox" style="display:none"><label>Radius (mm)</label><div class="row"><input id="editRadius" type="number" step="0.001" min="0.001"><button id="applyRadius">Apply</button></div></div><div class="mini" style="margin-top:7px">Change the dimension and press Apply. Geometry updates immediately.</div></div><div class="panel"><div class="panelTitle">Fillet / Chamfer Size</div><input id="size" type="number" value="2" step=".1"><button id="applyAction">Apply Selected Tool</button></div><div class="panel dimEdit" id="unjoinPanel"><div class="panelTitle">Endpoint Join</div><div class="mini">This endpoint is joined to another geometry's endpoint at the exact same coordinate.</div><button id="unjoinBtn">Unjoin Endpoint</button></div><div class="panel dimEdit" id="measureEditPanel"><div class="panelTitle">MEASURE REFERENCE</div><div class="mini" id="measureInfo" style="white-space:pre-line">No measurement yet.</div><label style="display:block;font-size:11px;color:#aaa;margin-top:8px;margin-bottom:5px">Point-to-Point Distance (mm)</label><div class="row"><input id="measureEditDistance" type="number" step="0.001" min="0.001"><button id="applyMeasureDistance">Apply</button></div><div class="mini" style="margin-top:7px">Changing the value moves the second-point geometry toward/away from the first point. The first point stays fixed.</div><button id="deleteMeasure" style="margin-top:8px;background:#3a1414;border-color:#ff5050;color:#ff9d9d">Delete Measurement</button></div><div class="panel"><div class="panelTitle">CNC X/Z Origin</div><div class="value" id="originInfo">Not set</div><button id="clearZero">Clear X/Z Zero</button></div><div class="panel" id="cadImportInfoPanel" hidden><div class="panelTitle">IMPORTED CAD DATA</div><div class="mini" id="cadImportInfo">No DXF imported.</div></div><div class="panel"><div class="panelTitle">Drawing File</div><div class="mini">Save creates an editable CNCVEYRA JSON drawing. Open restores the exact geometry, nodes and X/Z zero.</div><button id="saveDrawingPanel">Save Drawing</button><button id="openDrawingPanel">Open Drawing</button><button id="importCadPanel">Import DWG / DXF</button><a href="cnclab.html" style="display:block;text-align:center;margin-top:7px;color:#4cc8ff;font-size:11px;text-decoration:none">Back to CNC LAB →</a></div></aside>
 </div>
 <script>
 const canvas=document.getElementById('c'),ctx=canvas.getContext('2d');let W=0,H=0,dpr=1;
@@ -128,7 +128,13 @@ function drawingPayload(){
   // ALWAYS translated from the pink X0/Z0 origin before it is sent to CNC LAB.
   const rawObjects=JSON.parse(JSON.stringify(objects));
   const machineObjects=objects.filter(o=>!o.reference).map(transformForCnc);
-  return {schema:'CNCVEYRA-LIVE-DRAWING',version:2,name:'CNCVEYRA Live Drawing',units:'mm',objects:rawObjects,origin:originPt?{x:originPt.x,y:originPt.y}:null,cncObjects:machineObjects,coordinateSystem:'X/Z diameter mode; origin is pink X0/Z0',savedAt:new Date().toISOString()};
+  // Include both the editable CAD entities and the exact machine-coordinate
+  // entities. CNC LAB uses cncObjects first so the received X/Z values are not
+  // re-zeroed, mirrored or otherwise changed during the hand-off.
+  const machinePoints=[];
+  const pushMachinePoint=p=>{if(!p||!Number.isFinite(+p.x)||!Number.isFinite(+p.y))return;const q={x:+p.x,z:+p.y};const last=machinePoints[machinePoints.length-1];if(!last||Math.hypot(last.x-q.x,last.z-q.z)>1e-7)machinePoints.push(q);};
+  machineObjects.forEach(o=>{if(!o||o.reference)return;if(o.type==='line'){pushMachinePoint(o.a);pushMachinePoint(o.b);}else if(o.type==='arc'){const a1=+o.a1||0,a2=+o.a2||0,r=+o.r||0,c=o.c;if(c&&r>0){let d=(a2-a1)*Math.PI/180;while(d<0)d+=Math.PI*2;const steps=Math.max(8,Math.min(64,Math.ceil(Math.abs(d)*r/0.6)));for(let k=0;k<=steps;k++){const a=(a1*Math.PI/180)+d*k/steps;pushMachinePoint({x:c.x+r*Math.sin(a),y:c.y+r*Math.cos(a)});}}}});
+  return {schema:'CNCVEYRA-LIVE-DRAWING',version:3,name:'CNCVEYRA Live Drawing',units:'mm',objects:rawObjects,origin:originPt?{x:originPt.x,y:originPt.y}:null,cncObjects:machineObjects,profile:machinePoints,dimensions:machinePoints.flatMap((q,i,a)=>i?[Math.abs(q.x-a[i-1].x),Math.abs(q.z-a[i-1].z)]:[]).filter(v=>Number.isFinite(v)&&v>1e-7),coordinateSystem:'X/Z diameter mode; cncObjects/profile are machine coordinates',savedAt:new Date().toISOString()};
 }
 function downloadBlob(filename,data,type){const b=new Blob([data],{type}),url=URL.createObjectURL(b),a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),500);}
 function syncCncProfileToHome(showStatus){
@@ -141,16 +147,17 @@ function syncCncProfileToHome(showStatus){
     localStorage.setItem('cncveyraLiveProfile',raw);
     // URL bridge as a fallback when Live Drawing and CNC LAB are hosted on
     // different origins/domains. This keeps the actual profile data intact.
-    // IMPORTANT: build this relative to the CURRENT page location instead of
-    // a hardcoded domain, so it always opens the cnclab.html that is actually
-    // hosted alongside this file (works on any domain/subdomain/staging URL).
     const bytes=new TextEncoder().encode(raw);let bin='';
     for(let i=0;i<bytes.length;i+=0x8000)bin+=String.fromCharCode(...bytes.subarray(i,i+0x8000));
     const transfer=btoa(bin).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
-    const target=new URL('cnclab.html',location.href);
+    const target=new URL('https://cncveyra.in/cnclab.html',location.href);
     target.hash='live='+transfer;
+    // Keep a same-origin copy as well. This makes the hand-off reliable on
+    // custom-domain hosting and also gives CNC LAB a fallback if a hash is
+    // stripped by a host redirect.
+    try{sessionStorage.setItem('cncveyraLiveProfile',raw);}catch(e){}
     if(showStatus)setStatus('Live profile sent to CNC Program ✓ Opening CNC LAB…');
-    window.location.href=target.toString();
+    window.location.assign(target.toString());
     return true;
   }catch(e){if(showStatus)setStatus('Could not send Live profile: '+e.message);return false;}
 }
@@ -163,50 +170,20 @@ function loadDrawingData(data){
   originPt=payload.origin&&Number.isFinite(+payload.origin.x)&&Number.isFinite(+payload.origin.y)?{x:+payload.origin.x,y:+payload.origin.y}:null;
   selected.clear();history=[];future=[];updateOriginInfo();draw();setStatus('Live Drawing loaded successfully.');
 }
-function bulgeToArcEntity(p1,p2,bulge){
-  // Standard DXF "bulge" → arc conversion (bulge = tan(includedAngle/4)).
-  const dx=p2.x-p1.x,dy=p2.y-p1.y,L=Math.hypot(dx,dy);
-  if(L<1e-9)return null;
-  const angle=4*Math.atan(bulge);
-  if(Math.abs(Math.sin(angle/2))<1e-9)return null;
-  const radius=L/Math.abs(2*Math.sin(angle/2));
-  const chordAngle=Math.atan2(dy,dx);
-  const cx=p1.x+radius*Math.cos(chordAngle+(Math.PI/2-angle/2));
-  const cy=p1.y+radius*Math.sin(chordAngle+(Math.PI/2-angle/2));
-  const startAngle=Math.atan2(p1.y-cy,p1.x-cx);
-  return{type:'ARC',cx,cy,r:radius,a1:startAngle*180/Math.PI,a2:(startAngle+angle)*180/Math.PI};
-}
 function parseSimpleDXF(src){
   // ASCII DXF reader for the common 2D entities used by CNC turning drawings.
   // It accepts files with or without an explicit ENTITIES section and ignores
   // unsupported entities instead of failing the complete import.
-  // LWPOLYLINE is included because most CAD software (AutoCAD etc.) exports a
-  // closed 2D turning profile as ONE LWPOLYLINE, not separate LINE/ARC
-  // entities — without this, "Import DWG/DXF" silently found 0 entities.
   const lines=String(src||'').replace(/\r/g,'').split('\n').map(x=>x.trim());
   const out=[]; let ent=false,cur=null;
-  function finish(){
-    if(!cur)return;
-    if(cur.type==='LWPOLYLINE'){
-      if(cur.pendingVert)cur.verts.push(cur.pendingVert);
-      const vs=cur.verts.filter(v=>Number.isFinite(v.x)&&Number.isFinite(v.y));
-      const n=vs.length,segCount=cur.closed?n:n-1;
-      for(let i=0;i<segCount;i++){
-        const p1=vs[i],p2=vs[(i+1)%n],b=p1.bulge||0;
-        if(Math.abs(b)<1e-9)out.push({type:'LINE',x1:p1.x,y1:p1.y,x2:p2.x,y2:p2.y});
-        else out.push(bulgeToArcEntity(p1,p2,b)||{type:'LINE',x1:p1.x,y1:p1.y,x2:p2.x,y2:p2.y});
-      }
-    }else out.push(cur);
-    cur=null;
-  }
+  function finish(){if(cur){out.push(cur);cur=null;}}
   for(let i=0;i+1<lines.length;i+=2){
     const code=lines[i],val=lines[i+1];
     if(code==='0'){
       if(val==='ENTITIES'){ent=true;finish();continue;}
       if(val==='ENDSEC'){finish();ent=false;continue;}
-      if(!ent && !['LINE','ARC','CIRCLE','LWPOLYLINE'].includes(val))continue;
+      if(!ent && !['LINE','ARC','CIRCLE'].includes(val))continue;
       if(['LINE','ARC','CIRCLE'].includes(val)){finish();cur={type:val};ent=true;continue;}
-      if(val==='LWPOLYLINE'){finish();cur={type:'LWPOLYLINE',verts:[],pendingVert:null,closed:false};ent=true;continue;}
       finish();continue;
     }
     if(!cur)continue;
@@ -214,12 +191,6 @@ function parseSimpleDXF(src){
     if(cur.type==='LINE'){if(c===10)cur.x1=v;else if(c===20)cur.y1=v;else if(c===11)cur.x2=v;else if(c===21)cur.y2=v;}
     else if(cur.type==='ARC'){if(c===10)cur.cx=v;else if(c===20)cur.cy=v;else if(c===40)cur.r=v;else if(c===50)cur.a1=v;else if(c===51)cur.a2=v;}
     else if(cur.type==='CIRCLE'){if(c===10)cur.cx=v;else if(c===20)cur.cy=v;else if(c===40)cur.r=v;}
-    else if(cur.type==='LWPOLYLINE'){
-      if(c===70)cur.closed=(v&1)===1;
-      else if(c===10){if(cur.pendingVert)cur.verts.push(cur.pendingVert);cur.pendingVert={x:v,y:undefined,bulge:0};}
-      else if(c===20){if(cur.pendingVert)cur.pendingVert.y=v;}
-      else if(c===42){if(cur.pendingVert)cur.pendingVert.bulge=v;}
-    }
   }
   finish();
   return out.filter(g=>g.type==='LINE' ? [g.x1,g.y1,g.x2,g.y2].every(Number.isFinite) :

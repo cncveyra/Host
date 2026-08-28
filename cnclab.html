@@ -1048,9 +1048,9 @@ M30
         const c=P(o.c||o.center||{x:o.cx,y:o.cy}),r=finite(o.r??o.radius);if(c&&r>0)gs.push({type:'CIRCLE',cx:c.x,cy:c.y,r});
       }
     });
-    if(!gs.length&&arr(payload.profile).length>=2){
-      const pts=arr(payload.profile).map(v=>Array.isArray(v)?{x:+v[0],y:+v[1]}:{x:+v.x,y:+(v.y??v.z)}).filter(v=>Number.isFinite(v.x)&&Number.isFinite(v.y));
-      for(let i=1;i<pts.length;i++)gs.push({type:'LINE',x1:pts[i-1].x,y1:pts[i-1].y,x2:pts[i].x,y2:pts[i].y});
+    const suppliedProfile=arr(payload.profile).map(v=>Array.isArray(v)?{x:+v[0],z:+v[1]}:{x:+v.x,z:+(v.z??v.y)}).filter(v=>Number.isFinite(v.x)&&Number.isFinite(v.z));
+    if(!gs.length&&suppliedProfile.length>=2){
+      for(let i=1;i<suppliedProfile.length;i++)gs.push({type:'LINE',x1:suppliedProfile[i-1].x,y1:suppliedProfile[i-1].z,x2:suppliedProfile[i].x,y2:suppliedProfile[i].z});
     }
     if(!gs.length)return false;
     const endpoints=g=>g.type==='LINE'?[{x:g.x1,y:g.y1},{x:g.x2,y:g.y2}]:g.type==='ARC'?[{x:g.cx+g.r*Math.sin(g.a1*Math.PI/180),y:g.cy+g.r*Math.cos(g.a1*Math.PI/180)},{x:g.cx+g.r*Math.sin(g.a2*Math.PI/180),y:g.cy+g.r*Math.cos(g.a2*Math.PI/180)}]:[];
@@ -1069,7 +1069,13 @@ M30
     }
     chains.sort((a,b)=>b.length-a.length);const chain=chains[0]||[];const profile=[];
     const push=q=>{if(q&&Number.isFinite(q.x)&&Number.isFinite(q.y)&&(!profile.length||dist(profile[profile.length-1],q)>1e-7))profile.push({x:q.x,z:q.y});};
-    chain.forEach((g,i)=>{if(g.type==='LINE'){if(i===0)push({x:g.x1,y:g.y1});push({x:g.x2,y:g.y2});}else{const a1=g.a1*Math.PI/180,a2=g.a2*Math.PI/180;let d=a2-a1;while(d<0)d+=Math.PI*2;const steps=Math.max(8,Math.min(64,Math.ceil(d*g.r/0.6)));for(let k=0;k<=steps;k++)push({x:g.cx+g.r*Math.sin(a1+d*k/steps),y:g.cy+g.r*Math.cos(a1+d*k/steps)});}});
+    if(suppliedProfile.length>=2){
+      // CNCVEYRA Live already supplied the machine-coordinate profile. Preserve
+      // its exact point order and coordinates; do not re-zero or reverse it.
+      suppliedProfile.forEach(q=>push({x:q.x,y:q.z}));
+    }else{
+      chain.forEach((g,i)=>{if(g.type==='LINE'){if(i===0)push({x:g.x1,y:g.y1});push({x:g.x2,y:g.y2});}else{const a1=g.a1*Math.PI/180,a2=g.a2*Math.PI/180;let d=a2-a1;while(d<0)d+=Math.PI*2;const steps=Math.max(8,Math.min(64,Math.ceil(d*g.r/0.6)));for(let k=0;k<=steps;k++)push({x:g.cx+g.r*Math.sin(a1+d*k/steps),y:g.cy+g.r*Math.cos(a1+d*k/steps)});}});
+    }
     if(profile.length<2)return false;
     // IMPORTANT: preserve the Live DWG's actual Z coordinates exactly.
     // The user's machine program is the reference: a positive approach Z can
@@ -1109,13 +1115,26 @@ M30
   function showConfidence(text,kind){const el=$('turnDrawingConfidence');el.textContent=text;el.className='drawing-confidence '+(kind||'');}
   function renderDetectedDimensions(items){
     const box=$('turnDetectedDimensions');
+    // Live DWG sends structured X/Z values. Uploaded DXF/image scanning still
+    // sends a plain numeric array. Support both without changing the existing UI.
+    const structured=items&&typeof items==='object'&&!Array.isArray(items)&&items.__structured;
+    if(structured){
+      const ds=(items.diameters||[]).map(Number).filter(v=>Number.isFinite(v)&&v>0&&v<=100);
+      const zs=(items.zValues||[]).map(Number).filter(v=>Number.isFinite(v));
+      const ls=(items.lengths||[]).map(Number).filter(v=>Number.isFinite(v)&&v>0);
+      const vals=[];
+      const add=(label,value)=>{if(value==null||!Number.isFinite(Number(value)))return;const n=Number(value);if(!vals.some(x=>x.label===label&&Math.abs(x.value-n)<1e-9))vals.push({label,value:n});};
+      ds.forEach((v,i)=>add('X / Diameter '+(i+1),v));
+      zs.forEach((v,i)=>add('Z Coordinate '+(i+1),v));
+      ls.forEach((v,i)=>add('Segment Length '+(i+1),v));
+      box.innerHTML=vals.length?vals.map(v=>`<div class="detected-item"><label>${esc(v.label)}</label><input class="detected-value live-value" value="${v.value}" readonly></div>`).join(''):'<div class="cnc-mini">No numeric values found in the Live DWG profile.</div>';
+      $('turnDetectedPanel').hidden=false;
+      return;
+    }
     const all=uniqueSortedNums(items).filter(v=>v<=100);
     const recognized=all.some(v=>Math.abs(v-15)<=1)&&all.some(v=>Math.abs(v-2)<=.5);
     if(recognized){
-      const vals=[
-        ['Overall length',27],['Left straight length',15],['Taper length',9],['End length (Z0)',2],
-        ['Chamfer',1.4],['OD 1',8.5],['OD 2',6.5],['OD 3',5.7],['OD 4',5.2]
-      ];
+      const vals=[['Overall length',27],['Left straight length',15],['Taper length',9],['End length (Z0)',2],['Chamfer',1.4],['OD 1',8.5],['OD 2',6.5],['OD 3',5.7],['OD 4',5.2]];
       box.innerHTML=vals.map((a,i)=>`<div class="detected-item"><label>${a[0]}</label><input class="detected-value param-dim" data-role="${i}" value="${a[1]}"></div>`).join('');
     }else{
       box.innerHTML=items.length?items.map((v,i)=>`<div class="detected-item"><label>Detected ${i+1}</label><input class="detected-value" data-index="${i}" value="${String(v).replace(/"/g,'&quot;')}"></div>`).join(''):'<div class="cnc-mini">No numeric dimensions detected.</div>';
