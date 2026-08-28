@@ -141,10 +141,13 @@ function syncCncProfileToHome(showStatus){
     localStorage.setItem('cncveyraLiveProfile',raw);
     // URL bridge as a fallback when Live Drawing and CNC LAB are hosted on
     // different origins/domains. This keeps the actual profile data intact.
+    // IMPORTANT: build this relative to the CURRENT page location instead of
+    // a hardcoded domain, so it always opens the cnclab.html that is actually
+    // hosted alongside this file (works on any domain/subdomain/staging URL).
     const bytes=new TextEncoder().encode(raw);let bin='';
     for(let i=0;i<bytes.length;i+=0x8000)bin+=String.fromCharCode(...bytes.subarray(i,i+0x8000));
     const transfer=btoa(bin).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
-    const target=new URL('https://cncveyra.in/cnclab.html',location.href);
+    const target=new URL('cnclab.html',location.href);
     target.hash='live='+transfer;
     if(showStatus)setStatus('Live profile sent to CNC Program ✓ Opening CNC LAB…');
     window.location.href=target.toString();
@@ -160,20 +163,50 @@ function loadDrawingData(data){
   originPt=payload.origin&&Number.isFinite(+payload.origin.x)&&Number.isFinite(+payload.origin.y)?{x:+payload.origin.x,y:+payload.origin.y}:null;
   selected.clear();history=[];future=[];updateOriginInfo();draw();setStatus('Live Drawing loaded successfully.');
 }
+function bulgeToArcEntity(p1,p2,bulge){
+  // Standard DXF "bulge" → arc conversion (bulge = tan(includedAngle/4)).
+  const dx=p2.x-p1.x,dy=p2.y-p1.y,L=Math.hypot(dx,dy);
+  if(L<1e-9)return null;
+  const angle=4*Math.atan(bulge);
+  if(Math.abs(Math.sin(angle/2))<1e-9)return null;
+  const radius=L/Math.abs(2*Math.sin(angle/2));
+  const chordAngle=Math.atan2(dy,dx);
+  const cx=p1.x+radius*Math.cos(chordAngle+(Math.PI/2-angle/2));
+  const cy=p1.y+radius*Math.sin(chordAngle+(Math.PI/2-angle/2));
+  const startAngle=Math.atan2(p1.y-cy,p1.x-cx);
+  return{type:'ARC',cx,cy,r:radius,a1:startAngle*180/Math.PI,a2:(startAngle+angle)*180/Math.PI};
+}
 function parseSimpleDXF(src){
   // ASCII DXF reader for the common 2D entities used by CNC turning drawings.
   // It accepts files with or without an explicit ENTITIES section and ignores
   // unsupported entities instead of failing the complete import.
+  // LWPOLYLINE is included because most CAD software (AutoCAD etc.) exports a
+  // closed 2D turning profile as ONE LWPOLYLINE, not separate LINE/ARC
+  // entities — without this, "Import DWG/DXF" silently found 0 entities.
   const lines=String(src||'').replace(/\r/g,'').split('\n').map(x=>x.trim());
   const out=[]; let ent=false,cur=null;
-  function finish(){if(cur){out.push(cur);cur=null;}}
+  function finish(){
+    if(!cur)return;
+    if(cur.type==='LWPOLYLINE'){
+      if(cur.pendingVert)cur.verts.push(cur.pendingVert);
+      const vs=cur.verts.filter(v=>Number.isFinite(v.x)&&Number.isFinite(v.y));
+      const n=vs.length,segCount=cur.closed?n:n-1;
+      for(let i=0;i<segCount;i++){
+        const p1=vs[i],p2=vs[(i+1)%n],b=p1.bulge||0;
+        if(Math.abs(b)<1e-9)out.push({type:'LINE',x1:p1.x,y1:p1.y,x2:p2.x,y2:p2.y});
+        else out.push(bulgeToArcEntity(p1,p2,b)||{type:'LINE',x1:p1.x,y1:p1.y,x2:p2.x,y2:p2.y});
+      }
+    }else out.push(cur);
+    cur=null;
+  }
   for(let i=0;i+1<lines.length;i+=2){
     const code=lines[i],val=lines[i+1];
     if(code==='0'){
       if(val==='ENTITIES'){ent=true;finish();continue;}
       if(val==='ENDSEC'){finish();ent=false;continue;}
-      if(!ent && !['LINE','ARC','CIRCLE'].includes(val))continue;
+      if(!ent && !['LINE','ARC','CIRCLE','LWPOLYLINE'].includes(val))continue;
       if(['LINE','ARC','CIRCLE'].includes(val)){finish();cur={type:val};ent=true;continue;}
+      if(val==='LWPOLYLINE'){finish();cur={type:'LWPOLYLINE',verts:[],pendingVert:null,closed:false};ent=true;continue;}
       finish();continue;
     }
     if(!cur)continue;
@@ -181,6 +214,12 @@ function parseSimpleDXF(src){
     if(cur.type==='LINE'){if(c===10)cur.x1=v;else if(c===20)cur.y1=v;else if(c===11)cur.x2=v;else if(c===21)cur.y2=v;}
     else if(cur.type==='ARC'){if(c===10)cur.cx=v;else if(c===20)cur.cy=v;else if(c===40)cur.r=v;else if(c===50)cur.a1=v;else if(c===51)cur.a2=v;}
     else if(cur.type==='CIRCLE'){if(c===10)cur.cx=v;else if(c===20)cur.cy=v;else if(c===40)cur.r=v;}
+    else if(cur.type==='LWPOLYLINE'){
+      if(c===70)cur.closed=(v&1)===1;
+      else if(c===10){if(cur.pendingVert)cur.verts.push(cur.pendingVert);cur.pendingVert={x:v,y:undefined,bulge:0};}
+      else if(c===20){if(cur.pendingVert)cur.pendingVert.y=v;}
+      else if(c===42){if(cur.pendingVert)cur.pendingVert.bulge=v;}
+    }
   }
   finish();
   return out.filter(g=>g.type==='LINE' ? [g.x1,g.y1,g.x2,g.y2].every(Number.isFinite) :
