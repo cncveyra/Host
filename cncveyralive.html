@@ -144,10 +144,25 @@ function syncCncProfileToHome(showStatus){
     const bytes=new TextEncoder().encode(raw);let bin='';
     for(let i=0;i<bytes.length;i+=0x8000)bin+=String.fromCharCode(...bytes.subarray(i,i+0x8000));
     const transfer=btoa(bin).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
-    const target=new URL('https://cncveyra.in/index.html',location.href);
-    target.hash='live='+transfer;
-    if(showStatus)setStatus('Live profile sent to CNC Program ✓ Opening CNC LAB…');
-    window.location.href=target.toString();
+    // CNCVEYRA Live Drawing and CNC Lab are on the same site/origin.
+    // Store the complete payload in localStorage and open the actual CNC Lab
+    // page. The previous version incorrectly routed to index.html, which
+    // returned the user to the home page. The short #live-dwg hash also avoids
+    // putting a very large drawing payload into the browser URL.
+    try{
+      localStorage.setItem('cncveyraLiveProfile',raw);
+      const target=new URL('cnclab.html',location.href);
+      target.hash='live-dwg';
+      if(showStatus)setStatus('Live profile sent to CNC Program ✓ Opening CNC LAB…');
+      window.location.href=target.toString();
+      return true;
+    }catch(storageErr){
+      // If storage is unavailable, retain the encoded URL bridge as fallback.
+      const target=new URL('cnclab.html',location.href);
+      target.hash='live='+transfer;
+      if(showStatus)setStatus('Live profile sent to CNC Program ✓ Opening CNC LAB…');
+      window.location.href=target.toString();
+    }
     return true;
   }catch(e){if(showStatus)setStatus('Could not send Live profile: '+e.message);return false;}
 }

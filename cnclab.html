@@ -1287,8 +1287,19 @@ M30
     }).filter(p=>Number.isFinite(p.x)&&Number.isFinite(p.z));
   }
   function getProfile(){
-    if(drawingScanState && drawingScanState.profileSource==='live-dwg' && Array.isArray(drawingScanState.liveProfile) && drawingScanState.liveProfile.length>=2){
-      return drawingScanState.liveProfile.map(q=>({x:q.x,z:q.z}));
+    // LIVE DWG is the master source. Keep every received X/Z point in order;
+    // do not reduce the profile to the first/last point or to a single move.
+    if(drawingScanState && drawingScanState.profileSource==='live-dwg' &&
+       Array.isArray(drawingScanState.liveProfile)){
+      const lp=drawingScanState.liveProfile
+        .map(q=>({x:Number(q.x),z:Number(q.z)}))
+        .filter(q=>Number.isFinite(q.x)&&Number.isFinite(q.z));
+      const clean=[];
+      for(const q of lp){
+        const prev=clean[clean.length-1];
+        if(!prev || Math.abs(prev.x-q.x)>1e-9 || Math.abs(prev.z-q.z)>1e-9) clean.push(q);
+      }
+      if(clean.length>=2)return clean;
     }
     let p=profileFromGeometry();
     if(!p.length)p=manualProfile();
@@ -1356,7 +1367,9 @@ M30
   // FINISH: repeated profile passes; each pass is offset in X by the configured
   // finish-pass step, matching the supplied multi-pass finish style.
   function buildCode(){
-    const p=getProfile().slice().sort((a,b)=>b.z-a.z);
+    const sourceProfile=getProfile();
+    if(sourceProfile.length<2)throw new Error('The drawing contains no usable X/Z profile.');
+    const p=sourceProfile.slice().sort((a,b)=>b.z-a.z);
     const Frough=n('turnRoughFeed',n('turnFeed',.3));
     const Ffinish=n('turnFinishFeed',n('turnFeed',.1));
     const S=n('turnRPM',800), C=n('turnClear',2);
@@ -1560,7 +1573,7 @@ M30
     $('turnEditor').value=generatedCode;
     $('turnManualStatus').textContent='Generated turning code loaded into the manual editor.';
     if(opn==='od-rough'){
-      $('turnStatus').textContent=`ROUGH LOGIC: Radius DOC ${fmt(docR)} → diameter step ${fmt(diaStep)}; feed ${fmt(Frough)} mm/rev; tool T${String(roughTool).padStart(2,'0')}${String(roughTool).padStart(2,'0')}. ${Math.max(1,Math.ceil((stock-minX)/diaStep))} rough passes generated from the recovered profile.`;
+      $('turnStatus').textContent=`ROUGH LOGIC: Radius DOC ${fmt(docR)} → diameter step ${fmt(diaStep)}; feed ${fmt(Frough)} mm/rev; tool T${String(roughTool).padStart(2,'0')}${String(roughTool).padStart(2,'0')}. ${Math.max(1,Math.ceil((stock-minX)/diaStep))} rough passes generated from the complete ${p.length}-point X/Z profile.`;
     }else if(opn==='od-finish'){
       $('turnStatus').textContent=`FINISH LOGIC: ${finishPasses} profile passes, X step ${fmt(finishStep)} mm/pass, feed ${fmt(Ffinish)} mm/rev; tool T${String(finishTool).padStart(2,'0')}${String(finishTool).padStart(2,'0')}.`;
     }else{
