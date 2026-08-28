@@ -134,7 +134,12 @@ function drawingPayload(){
   const machinePoints=[];
   const pushMachinePoint=p=>{if(!p||!Number.isFinite(+p.x)||!Number.isFinite(+p.y))return;const q={x:+p.x,z:+p.y};const last=machinePoints[machinePoints.length-1];if(!last||Math.hypot(last.x-q.x,last.z-q.z)>1e-7)machinePoints.push(q);};
   machineObjects.forEach(o=>{if(!o||o.reference)return;if(o.type==='line'){pushMachinePoint(o.a);pushMachinePoint(o.b);}else if(o.type==='arc'){const a1=+o.a1||0,a2=+o.a2||0,r=+o.r||0,c=o.c;if(c&&r>0){let d=(a2-a1)*Math.PI/180;while(d<0)d+=Math.PI*2;const steps=Math.max(8,Math.min(64,Math.ceil(Math.abs(d)*r/0.6)));for(let k=0;k<=steps;k++){const a=(a1*Math.PI/180)+d*k/steps;pushMachinePoint({x:c.x+r*Math.sin(a),y:c.y+r*Math.cos(a)});}}}});
-  return {schema:'CNCVEYRA-LIVE-DRAWING',version:3,name:'CNCVEYRA Live Drawing',units:'mm',objects:rawObjects,origin:originPt?{x:originPt.x,y:originPt.y}:null,cncObjects:machineObjects,profile:machinePoints,dimensions:machinePoints.flatMap((q,i,a)=>i?[Math.abs(q.x-a[i-1].x),Math.abs(q.z-a[i-1].z)]:[]).filter(v=>Number.isFinite(v)&&v>1e-7),coordinateSystem:'X/Z diameter mode; cncObjects/profile are machine coordinates',savedAt:new Date().toISOString()};
+  return {schema:'CNCVEYRA-LIVE-DRAWING',version:3,name:'CNCVEYRA Live Drawing',units:'mm',objects:rawObjects,origin:originPt?{x:originPt.x,y:originPt.y}:null,cncObjects:machineObjects,profile:machinePoints,dimensions:(()=>{
+    const vals=[];
+    const add=v=>{v=Number(v);if(Number.isFinite(v)&&v>1e-7&&!vals.some(x=>Math.abs(x-v)<1e-7))vals.push(v);};
+    machinePoints.forEach((q,i)=>{add(Math.abs(q.x));add(Math.abs(q.z));if(i){add(Math.abs(q.x-machinePoints[i-1].x));add(Math.abs(q.z-machinePoints[i-1].z));}});
+    return vals.slice(0,120);
+  })(),coordinateSystem:'X/Z diameter mode; cncObjects/profile are machine coordinates',savedAt:new Date().toISOString()};
 }
 function downloadBlob(filename,data,type){const b=new Blob([data],{type}),url=URL.createObjectURL(b),a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),500);}
 function syncCncProfileToHome(showStatus){
@@ -145,12 +150,22 @@ function syncCncProfileToHome(showStatus){
     const raw=JSON.stringify(payload);
     // Same-origin bridge for normal hosting.
     localStorage.setItem('cncveyraLiveProfile',raw);
+    // Also expose the payload through a same-page event for embedded/iframe
+    // use. CNC LAB's bridge listens for this event when both pages coexist.
+    try{window.dispatchEvent(new CustomEvent('cncveyra-live-dwg-payload',{detail:payload}));}catch(e){}
     // URL bridge as a fallback when Live Drawing and CNC LAB are hosted on
     // different origins/domains. This keeps the actual profile data intact.
     const bytes=new TextEncoder().encode(raw);let bin='';
     for(let i=0;i<bytes.length;i+=0x8000)bin+=String.fromCharCode(...bytes.subarray(i,i+0x8000));
     const transfer=btoa(bin).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
-    const target=new URL('https://cncveyra.in/cnclab.html',location.href);
+    // Open CNC LAB on the same host family when possible. This avoids a
+    // GitHub-Pages -> custom-domain redirect stripping the URL hash/payload.
+    let target;
+    if(location.hostname.endsWith('github.io')){
+      target=new URL('/Host/cnclab.html',location.origin);
+    }else{
+      target=new URL('/cnclab.html',location.origin);
+    }
     target.hash='live='+transfer;
     // Keep a same-origin copy as well. This makes the hand-off reliable on
     // custom-domain hosting and also gives CNC LAB a fallback if a hash is
