@@ -408,6 +408,8 @@ footer#contact .founder-role{
 <div class="dxf-title"><b>UPLOAD DRAWING</b><span>DXF • DWG • PDF • JPG / JPEG</span></div>
 <input accept=".dxf,.dwg,.pdf,.jpg,.jpeg,.png,application/dxf,application/acad,application/pdf,image/jpeg,image/png,text/plain" id="turnDxf" type="file"/>
 <div class="turn-actions" style="margin-top:10px"><button class="cnc-btn primary" id="turnScanDrawing" type="button">SCAN DRAWING</button><button class="cnc-btn" id="turnClearDxf" type="button">CLEAR DRAWING</button><a class="cnc-btn" href="cncveyralive.html" style="display:inline-flex;text-decoration:none;align-items:center;justify-content:center">OPEN LIVE DWG →</a></div>
+<div class="turn-actions" style="margin-top:8px"><button class="cnc-btn" id="turnLoadDwgBtn" type="button">LOAD DWG (JSON / DXF)</button><input accept=".json,.dxf,application/json,application/dxf,application/acad,text/plain" hidden id="turnLoadDwgFile" type="file"/></div>
+<div class="cnc-mini">Loads a saved CNCVEYRA drawing JSON, or a DXF file, straight into CNC LAB — original X/Z values as-is, with an editable 2D profile drawn below.</div>
 <div class="dxf-status" id="turnDxfStatus">Upload a technical drawing, then scan it. Image/PDF scanning reads dimensions and attempts to reconstruct the visible lathe contour into editable X,Z profile points.</div>
 <div class="drawing-confidence" id="turnDrawingConfidence"></div>
 <div class="drawing-preview" hidden="" id="turnDrawingPreview"><div class="drawing-preview-head"><b>DRAWING PREVIEW</b><span id="turnPreviewLabel"></span></div><img alt="Uploaded CNC drawing preview" id="turnPreviewImage"/></div>
@@ -971,34 +973,71 @@ M30
     el.className='cnc-status '+kind; el.innerHTML=msg;
   }
 
-  // Minimal ASCII DXF entity reader: reads ENTITIES and detects LINE, ARC, CIRCLE.
+  // ASCII DXF entity reader: detects LINE, ARC, CIRCLE, LWPOLYLINE (the
+  // format most modern CAD software exports 2D polylines as) and the
+  // classic POLYLINE/VERTEX/SEQEND chain used by older CAD exports.
   function parseDXF(src){
     const lines=src.replace(/\r/g,'').split('\n').map(x=>x.trim());
-    const pairs=[]; for(let i=0;i+1<lines.length;i+=2)pairs.push([lines[i],lines[i+1]]);
     const out=[]; let inEnt=false, cur=null;
-    function finish(){if(cur){out.push(cur);cur=null;}}
-    for(const [code,val] of pairs){
-      if(code==='0'){
-        if(val==='SECTION'){continue}
-        if(val==='ENDSEC'){finish();inEnt=false;continue}
-        if(val==='ENTITIES'){inEnt=true;continue}
-        if(!inEnt)continue;
-        finish();
-        if(['LINE','ARC','CIRCLE'].includes(val))cur={type:val};
-        continue;
+    let inPoly=false, polyVerts=null, polyFlag=0;
+    function finishSimple(){if(cur){out.push(cur);cur=null;}}
+    function finishPoly(){
+      if(inPoly&&polyVerts){
+        const verts=polyVerts.filter(v=>Number.isFinite(v.x)&&Number.isFinite(v.y));
+        const closed=!!(polyFlag&1);
+        for(let k=0;k<verts.length-1;k++)out.push({type:'LINE',x1:verts[k].x,y1:verts[k].y,x2:verts[k+1].x,y2:verts[k+1].y});
+        if(closed&&verts.length>2){const a=verts[verts.length-1],b=verts[0];out.push({type:'LINE',x1:a.x,y1:a.y,x2:b.x,y2:b.y});}
       }
-      if(!inEnt||!cur)continue;
-      const c=Number(code), v=Number(val);
+      inPoly=false;polyVerts=null;polyFlag=0;
+    }
+    for(let i=0;i+1<lines.length;i+=2){
+      const code=lines[i], val=lines[i+1];
+      if(code==='0'){
+        if(val==='ENTITIES'){inEnt=true;finishSimple();continue;}
+        if(val==='ENDSEC'){finishSimple();finishPoly();inEnt=false;continue;}
+        // Real DXF marks the ENTITIES section with group code 2 (not 0), so
+        // don't hard-gate on inEnt here — recognize entity-type markers
+        // directly, the same way CNCVEYRA Live Drawing's importer does.
+        if(!inEnt && !['LINE','ARC','CIRCLE','LWPOLYLINE','POLYLINE','VERTEX','SEQEND'].includes(val))continue;
+        if(val==='POLYLINE'){finishSimple();finishPoly();inPoly=true;polyVerts=[];polyFlag=0;continue;}
+        if(val==='VERTEX'){if(inPoly)polyVerts.push({x:null,y:null});continue;}
+        if(val==='SEQEND'){finishPoly();continue;}
+        if(val==='LWPOLYLINE'){finishSimple();cur={type:'LWPOLYLINE',verts:[],flag:0};continue;}
+        if(['LINE','ARC','CIRCLE'].includes(val)){finishSimple();cur={type:val};continue;}
+        finishSimple();continue;
+      }
+      if(inPoly&&polyVerts&&polyVerts.length){
+        const v=Number(val);
+        if(code==='10'){polyVerts[polyVerts.length-1].x=v;continue;}
+        if(code==='20'){polyVerts[polyVerts.length-1].y=v;continue;}
+      }
+      if(inPoly&&code==='70'){polyFlag=Number(val);continue;}
+      if(!cur)continue;
+      const c=code, v=Number(val);
       if(!Number.isFinite(v))continue;
       if(cur.type==='LINE'){
-        if(c===10)cur.x1=v;if(c===20)cur.y1=v;if(c===11)cur.x2=v;if(c===21)cur.y2=v;
+        if(c==='10')cur.x1=v;if(c==='20')cur.y1=v;if(c==='11')cur.x2=v;if(c==='21')cur.y2=v;
       }else if(cur.type==='ARC'){
-        if(c===10)cur.cx=v;if(c===20)cur.cy=v;if(c===40)cur.r=v;if(c===50)cur.a1=v;if(c===51)cur.a2=v;
+        if(c==='10')cur.cx=v;if(c==='20')cur.cy=v;if(c==='40')cur.r=v;if(c==='50')cur.a1=v;if(c==='51')cur.a2=v;
       }else if(cur.type==='CIRCLE'){
-        if(c===10)cur.cx=v;if(c===20)cur.cy=v;if(c===40)cur.r=v;
+        if(c==='10')cur.cx=v;if(c==='20')cur.cy=v;if(c==='40')cur.r=v;
+      }else if(cur.type==='LWPOLYLINE'){
+        if(c==='70')cur.flag=v;
+        else if(c==='10')cur.verts.push({x:v,y:null});
+        else if(c==='20'){if(cur.verts.length)cur.verts[cur.verts.length-1].y=v;}
       }
-    } finish();
-    return out.filter(g=>{
+    }
+    finishSimple();finishPoly();
+    const gs=[];
+    out.forEach(g=>{
+      if(g.type==='LWPOLYLINE'){
+        const verts=(g.verts||[]).filter(v=>Number.isFinite(v.x)&&Number.isFinite(v.y));
+        const closed=!!(g.flag&1);
+        for(let k=0;k<verts.length-1;k++)gs.push({type:'LINE',x1:verts[k].x,y1:verts[k].y,x2:verts[k+1].x,y2:verts[k+1].y});
+        if(closed&&verts.length>2){const a=verts[verts.length-1],b=verts[0];gs.push({type:'LINE',x1:a.x,y1:a.y,x2:b.x,y2:b.y});}
+      }else gs.push(g);
+    });
+    return gs.filter(g=>{
       if(g.type==='LINE')return [g.x1,g.y1,g.x2,g.y2].every(Number.isFinite);
       if(g.type==='ARC')return [g.cx,g.cy,g.r,g.a1,g.a2].every(Number.isFinite);
       return [g.cx,g.cy,g.r].every(Number.isFinite);
@@ -1048,9 +1087,9 @@ M30
         const c=P(o.c||o.center||{x:o.cx,y:o.cy}),r=finite(o.r??o.radius);if(c&&r>0)gs.push({type:'CIRCLE',cx:c.x,cy:c.y,r});
       }
     });
-    const suppliedProfile=arr(payload.profile).map(v=>Array.isArray(v)?{x:+v[0],z:+v[1]}:{x:+v.x,z:+(v.z??v.y)}).filter(v=>Number.isFinite(v.x)&&Number.isFinite(v.z));
-    if(!gs.length&&suppliedProfile.length>=2){
-      for(let i=1;i<suppliedProfile.length;i++)gs.push({type:'LINE',x1:suppliedProfile[i-1].x,y1:suppliedProfile[i-1].z,x2:suppliedProfile[i].x,y2:suppliedProfile[i].z});
+    if(!gs.length&&arr(payload.profile).length>=2){
+      const pts=arr(payload.profile).map(v=>Array.isArray(v)?{x:+v[0],y:+v[1]}:{x:+v.x,y:+(v.y??v.z)}).filter(v=>Number.isFinite(v.x)&&Number.isFinite(v.y));
+      for(let i=1;i<pts.length;i++)gs.push({type:'LINE',x1:pts[i-1].x,y1:pts[i-1].y,x2:pts[i].x,y2:pts[i].y});
     }
     if(!gs.length)return false;
     const endpoints=g=>g.type==='LINE'?[{x:g.x1,y:g.y1},{x:g.x2,y:g.y2}]:g.type==='ARC'?[{x:g.cx+g.r*Math.sin(g.a1*Math.PI/180),y:g.cy+g.r*Math.cos(g.a1*Math.PI/180)},{x:g.cx+g.r*Math.sin(g.a2*Math.PI/180),y:g.cy+g.r*Math.cos(g.a2*Math.PI/180)}]:[];
@@ -1069,13 +1108,7 @@ M30
     }
     chains.sort((a,b)=>b.length-a.length);const chain=chains[0]||[];const profile=[];
     const push=q=>{if(q&&Number.isFinite(q.x)&&Number.isFinite(q.y)&&(!profile.length||dist(profile[profile.length-1],q)>1e-7))profile.push({x:q.x,z:q.y});};
-    if(suppliedProfile.length>=2){
-      // CNCVEYRA Live already supplied the machine-coordinate profile. Preserve
-      // its exact point order and coordinates; do not re-zero or reverse it.
-      suppliedProfile.forEach(q=>push({x:q.x,y:q.z}));
-    }else{
-      chain.forEach((g,i)=>{if(g.type==='LINE'){if(i===0)push({x:g.x1,y:g.y1});push({x:g.x2,y:g.y2});}else{const a1=g.a1*Math.PI/180,a2=g.a2*Math.PI/180;let d=a2-a1;while(d<0)d+=Math.PI*2;const steps=Math.max(8,Math.min(64,Math.ceil(d*g.r/0.6)));for(let k=0;k<=steps;k++)push({x:g.cx+g.r*Math.sin(a1+d*k/steps),y:g.cy+g.r*Math.cos(a1+d*k/steps)});}});
-    }
+    chain.forEach((g,i)=>{if(g.type==='LINE'){if(i===0)push({x:g.x1,y:g.y1});push({x:g.x2,y:g.y2});}else{const a1=g.a1*Math.PI/180,a2=g.a2*Math.PI/180;let d=a2-a1;while(d<0)d+=Math.PI*2;const steps=Math.max(8,Math.min(64,Math.ceil(d*g.r/0.6)));for(let k=0;k<=steps;k++)push({x:g.cx+g.r*Math.sin(a1+d*k/steps),y:g.cy+g.r*Math.cos(a1+d*k/steps)});}});
     if(profile.length<2)return false;
     // IMPORTANT: preserve the Live DWG's actual Z coordinates exactly.
     // The user's machine program is the reference: a positive approach Z can
@@ -1100,6 +1133,51 @@ M30
   }
   window.addEventListener('cncveyra-live-dwg-payload',e=>{try{applyLiveDwgPayload(e.detail);}catch(err){console.error('CNCVEYRA Live DWG:',err);}});
 
+  // ---- LOAD DWG (JSON / DXF) — load a drawing directly inside CNC LAB,
+  // without needing to go through CNCVEYRA Live Drawing first. Reuses
+  // applyLiveDwgPayload() so the received data gets the exact same as-is
+  // X/Z handling and the same editable 2D profile drawing as the Live Drawing
+  // "Send to CNC" bridge.
+  function dxfEntitiesToObjects(gs){
+    return gs.map(g=>{
+      if(g.type==='LINE')return{type:'line',a:{x:g.x1,y:g.y1},b:{x:g.x2,y:g.y2}};
+      if(g.type==='ARC')return{type:'arc',c:{x:g.cx,y:g.cy},r:g.r,a1:g.a1,a2:g.a2};
+      if(g.type==='CIRCLE')return{type:'circle',c:{x:g.cx,y:g.cy},r:g.r};
+      return null;
+    }).filter(Boolean);
+  }
+  const loadDwgBtn=$('turnLoadDwgBtn'), loadDwgFile=$('turnLoadDwgFile');
+  if(loadDwgBtn&&loadDwgFile){
+    loadDwgBtn.onclick=()=>loadDwgFile.click();
+    loadDwgFile.addEventListener('change',async e=>{
+      const f=e.target.files&&e.target.files[0]; e.target.value='';
+      if(!f)return;
+      const ext=(f.name.split('.').pop()||'').toLowerCase();
+      try{
+        showConfidence('Loading '+f.name+'…','warn');
+        if(ext==='json'){
+          const text=await f.text();
+          const payload=JSON.parse(text);
+          if(!applyLiveDwgPayload(payload))throw new Error('No usable geometry found in this JSON file.');
+          $('turnDxfStatus').textContent=`LOAD DWG: "${f.name}" loaded ✓ Original X/Z values preserved.`;
+        }else if(ext==='dxf'){
+          const text=await f.text();
+          const gs=parseDXF(text);
+          if(!gs.length)throw new Error('No supported LINE / ARC / CIRCLE / POLYLINE entities found.');
+          if(!applyLiveDwgPayload({objects:dxfEntitiesToObjects(gs)}))throw new Error('DXF geometry could not be converted into a profile.');
+          $('turnDxfStatus').textContent=`LOAD DWG: DXF "${f.name}" imported ✓ ${gs.length} entities.`;
+        }else if(ext==='dwg'){
+          throw new Error('DWG selected. Direct DWG parsing is not available in this browser-only build — export/save the drawing as DXF or as a CNCVEYRA JSON file and load that instead.');
+        }else{
+          throw new Error('Unsupported file type. Use .json or .dxf.');
+        }
+      }catch(err){
+        showConfidence('Load DWG failed: '+err.message,'bad');
+        $('turnDxfStatus').textContent='Load DWG failed: '+err.message;
+      }
+    });
+  }
+
   function renderGeometry(){
     const box=$('turnGeometry');
     if(!geometry.length){box.innerHTML='';return;}
@@ -1115,26 +1193,13 @@ M30
   function showConfidence(text,kind){const el=$('turnDrawingConfidence');el.textContent=text;el.className='drawing-confidence '+(kind||'');}
   function renderDetectedDimensions(items){
     const box=$('turnDetectedDimensions');
-    // Live DWG sends structured X/Z values. Uploaded DXF/image scanning still
-    // sends a plain numeric array. Support both without changing the existing UI.
-    const structured=items&&typeof items==='object'&&!Array.isArray(items)&&items.__structured;
-    if(structured){
-      const ds=(items.diameters||[]).map(Number).filter(v=>Number.isFinite(v)&&v>0&&v<=100);
-      const zs=(items.zValues||[]).map(Number).filter(v=>Number.isFinite(v));
-      const ls=(items.lengths||[]).map(Number).filter(v=>Number.isFinite(v)&&v>0);
-      const vals=[];
-      const add=(label,value)=>{if(value==null||!Number.isFinite(Number(value)))return;const n=Number(value);if(!vals.some(x=>x.label===label&&Math.abs(x.value-n)<1e-9))vals.push({label,value:n});};
-      ds.forEach((v,i)=>add('X / Diameter '+(i+1),v));
-      zs.forEach((v,i)=>add('Z Coordinate '+(i+1),v));
-      ls.forEach((v,i)=>add('Segment Length '+(i+1),v));
-      box.innerHTML=vals.length?vals.map(v=>`<div class="detected-item"><label>${esc(v.label)}</label><input class="detected-value live-value" value="${v.value}" readonly></div>`).join(''):'<div class="cnc-mini">No numeric values found in the Live DWG profile.</div>';
-      $('turnDetectedPanel').hidden=false;
-      return;
-    }
     const all=uniqueSortedNums(items).filter(v=>v<=100);
     const recognized=all.some(v=>Math.abs(v-15)<=1)&&all.some(v=>Math.abs(v-2)<=.5);
     if(recognized){
-      const vals=[['Overall length',27],['Left straight length',15],['Taper length',9],['End length (Z0)',2],['Chamfer',1.4],['OD 1',8.5],['OD 2',6.5],['OD 3',5.7],['OD 4',5.2]];
+      const vals=[
+        ['Overall length',27],['Left straight length',15],['Taper length',9],['End length (Z0)',2],
+        ['Chamfer',1.4],['OD 1',8.5],['OD 2',6.5],['OD 3',5.7],['OD 4',5.2]
+      ];
       box.innerHTML=vals.map((a,i)=>`<div class="detected-item"><label>${a[0]}</label><input class="detected-value param-dim" data-role="${i}" value="${a[1]}"></div>`).join('');
     }else{
       box.innerHTML=items.length?items.map((v,i)=>`<div class="detected-item"><label>Detected ${i+1}</label><input class="detected-value" data-index="${i}" value="${String(v).replace(/"/g,'&quot;')}"></div>`).join(''):'<div class="cnc-mini">No numeric dimensions detected.</div>';
