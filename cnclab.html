@@ -1060,7 +1060,7 @@ M30
       <text x="14" y="32" fill="#aaa" font-size="11">X</text>`;
   }
 
-  function applyLiveDwgPayload(payload){
+  function applyLiveDwgPayloadLegacy(payload){
     if(!payload)return false;
     const finite=v=>Number.isFinite(+v)?+v:null;
     const point=p=>p&&finite(p.x)!=null&&finite(p.y)!=null?{x:+p.x,y:+p.y}:null;
@@ -1131,6 +1131,67 @@ M30
     if(typeof showConfidence==='function')showConfidence('Live DWG profile loaded ✓ Original X/Z coordinates preserved; negative Z follows the supplied program direction','good');
     return true;
   }
+  // Compatibility layer for CNC/DXF JSON exported by CAD converters.
+  // Accepts X/Y or X/Z point names and common wrappers, then feeds the existing
+  // Live-DWG profile engine. CNCVEYRA cncObjects remain machine-relative.
+  function applyLiveDwgPayload(payload){
+    if(!payload)return false;
+    const num=v=>Number.isFinite(Number(v))?Number(v):null;
+    const point=p=>{
+      if(Array.isArray(p)&&p.length>=2){const x=num(p[0]),y=num(p[1]);return x!=null&&y!=null?{x,y}:null;}
+      if(!p||typeof p!=='object')return null;
+      const x=num(p.x??p.X), y=num(p.y??p.Y??p.z??p.Z);
+      return x!=null&&y!=null?{x,y}:null;
+    };
+    const unwrap=q=>{
+      for(let i=0;i<6&&q&&typeof q==='object'&&!Array.isArray(q);i++){
+        if(['objects','cncObjects','geometry','entities','elements','dxfEntities','items','shapes','segments','profile','dxf'].some(k=>Array.isArray(q[k])))return q;
+        const n=q.payload??q.data??q.dwg??q.drawing??q.result;
+        if(!n||n===q)break;q=n;
+      }
+      return q;
+    };
+    let q=unwrap(payload); if(Array.isArray(q))q={objects:q};
+    if(!q||typeof q!=='object')return false;
+    const machine=Array.isArray(q.cncObjects)&&q.cncObjects.length>0;
+    const origin=q.origin&&point(q.origin);
+    const rel=p=>{const a=point(p);if(!a)return null;return machine||!origin?a:{x:a.x-origin.x,y:a.y-origin.y};};
+    const lists=['cncObjects','objects','geometry','entities','elements','dxfEntities','items','shapes','segments','dxf'];
+    let src=[]; for(const k of lists){if(Array.isArray(q[k])&&q[k].length){src=q[k];break;}}
+    const out=[];
+    const add=o=>{
+      if(!o||o.reference)return;
+      const t=String(o.type??o.kind??o.entityType??o.entity??'').toLowerCase();
+      if(t==='line'||t==='segment'||t==='linesegment'){
+        const a=rel(o.a??o.p1??o.start??o.startPoint??{x:o.x1??o.X1,y:o.y1??o.Y1??o.z1??o.Z1});
+        const b=rel(o.b??o.p2??o.end??o.endPoint??{x:o.x2??o.X2,y:o.y2??o.Y2??o.z2??o.Z2});
+        if(a&&b)out.push({type:'line',a,b}); return;
+      }
+      if(t==='arc'){
+        const c=rel(o.c??o.center??o.centre??{x:o.cx??o.centerX,y:o.cy??o.centerY??o.cz});
+        const r=num(o.r??o.radius??o.R),a1=num(o.a1??o.startAngle??o.start??o.angleStart),a2=num(o.a2??o.endAngle??o.end??o.angleEnd);
+        if(c&&r>0&&a1!=null&&a2!=null)out.push({type:'arc',c,r,a1,a2}); return;
+      }
+      if(t==='circle'){
+        const c=rel(o.c??o.center??o.centre??{x:o.cx??o.centerX,y:o.cy??o.centerY??o.cz}),r=num(o.r??o.radius??o.R);
+        if(c&&r>0)out.push({type:'circle',c,r}); return;
+      }
+      if(t==='polyline'||t==='lwpolyline'||t==='polygon'||t==='path'){
+        const vv=Array.isArray(o.vertices)?o.vertices:(Array.isArray(o.verts)?o.verts:(Array.isArray(o.points)?o.points:[]));
+        for(let i=1;i<vv.length;i++){const a=rel(vv[i-1]),b=rel(vv[i]);if(a&&b)out.push({type:'line',a,b});}
+        if(o.closed&&vv.length>2){const a=rel(vv[vv.length-1]),b=rel(vv[0]);if(a&&b)out.push({type:'line',a,b});}
+      }
+    };
+    src.forEach(add);
+    if(!out.length){
+      const pp=Array.isArray(q.profile)?q.profile:(q.profile&&Array.isArray(q.profile.points)?q.profile.points:[]);
+      const pts=pp.map(point).filter(Boolean);
+      for(let i=1;i<pts.length;i++)out.push({type:'line',a:pts[i-1],b:pts[i]});
+    }
+    if(!out.length)return false;
+    return applyLiveDwgPayloadLegacy({objects:machine?[]:out,cncObjects:machine?out:[],origin:machine?null:q.origin});
+  }
+
   window.addEventListener('cncveyra-live-dwg-payload',e=>{try{applyLiveDwgPayload(e.detail);}catch(err){console.error('CNCVEYRA Live DWG:',err);}});
 
   // ---- LOAD DWG (JSON / DXF) — load a drawing directly inside CNC LAB,
@@ -1158,7 +1219,7 @@ M30
         if(ext==='json'){
           const text=await f.text();
           const payload=JSON.parse(text);
-          if(!applyLiveDwgPayload(payload))throw new Error('No usable geometry found in this JSON file.');
+          if(!applyLiveDwgPayload(payload))throw new Error('No usable LINE / ARC / CIRCLE / POLYLINE geometry found in this JSON file.');
           $('turnDxfStatus').textContent=`LOAD DWG: "${f.name}" loaded ✓ Original X/Z values preserved.`;
         }else if(ext==='dxf'){
           const text=await f.text();
@@ -1482,116 +1543,46 @@ M30
 
     if(opn==='od-rough'){
       lines=header(roughTool);
-      // ROUGHING REFERENCE LOGIC — cumulative X-band roughing.
-      // The first rough pass opens the full remaining profile. Every next pass
-      // only travels through the Z region that is still between the current
-      // X level and the previous rough level. This is what makes Z travel
-      // progressively shorter as the upper OD/step/chamfer is already formed.
+      // PROFILE-AWARE ROUGHING
+      // Every rough pass follows the actual X/Z profile. Where the final
+      // profile is deeper than the current pass, the tool stays at passX;
+      // where the profile is shallower, the tool follows the profile. This
+      // prevents the old behaviour where only the first full-length line was
+      // generated and all intermediate passes were skipped.
       const prof=p.map(q=>({x:q.x+finR,z:q.z}));
       const maxPX=Math.max(...prof.map(q=>q.x));
       const minPX=Math.min(...prof.map(q=>q.x));
       const stockAllowanceX=Math.max(0,n('turnStockX',1));
-      const stockTop=maxPX+stockAllowanceX;
-      const firstPass=Math.max(minPX,stockTop-diaStep);
+      const stockTop=Math.max(maxPX+stockAllowanceX,n('turnStockX',52));
       const passes=[];
-      for(let x=firstPass;x>=minPX-1e-9;x-=diaStep){
-        passes.push(Number(Math.max(minPX,x).toFixed(6)));
-        if(passes.length>1000)break;
+      let passX=stockTop-diaStep;
+      while(passX>minPX+1e-9 && passes.length<1000){
+        passes.push(Number(passX.toFixed(6)));
+        passX-=diaStep;
       }
-      if(!passes.length)passes.push(minPX);
-
-      const eps=1e-9;
-      const clean=(arr)=>arr.filter((q,i)=>i===0||Math.abs(q.x-arr[i-1].x)>eps||Math.abs(q.z-arr[i-1].z)>eps);
-
-      // Interpolate every Z crossing where the profile enters/leaves the
-      // current X-band. The resulting path is intentionally compact so the
-      // generated code follows the same learning/reference style as the
-      // verified roughing program supplied by the user.
-      function bandSegments(lowX,highX){
-        const segs=[];
-        for(let i=0;i<prof.length-1;i++){
-          const a=prof[i],b=prof[i+1];
-          const dx=b.x-a.x, dz=b.z-a.z;
-          const cuts=[0,1];
-          if(Math.abs(dx)>eps){
-            for(const x of [lowX,highX]){
-              const t=(x-a.x)/dx;
-              if(t>eps&&t<1-eps)cuts.push(t);
-            }
-          }
-          cuts.sort((u,v)=>u-v);
-          for(let j=0;j<cuts.length-1;j++){
-            const t1=cuts[j],t2=cuts[j+1];
-            const tm=(t1+t2)/2;
-            const xm=a.x+dx*tm;
-            if(xm>=lowX-eps && xm<=highX+eps){
-              segs.push({z1:a.z+dz*t1,z2:a.z+dz*t2,x1:a.x+dx*t1,x2:a.x+dx*t2});
-            }
-          }
-        }
-        return segs;
+      // Always finish the roughing sequence at the minimum profile X.
+      if(!passes.length || Math.abs(passes[passes.length-1]-minPX)>1e-9){
+        passes.push(Number(minPX.toFixed(6)));
       }
 
-      for(let passIndex=0;passIndex<passes.length;passIndex++){
-        const passX=passes[passIndex];
-        const prevX=passIndex===0?stockTop:passes[passIndex-1];
-        const low=Math.min(passX,prevX), high=Math.max(passX,prevX);
-        const path=[];
-
-        if(passIndex===0){
-          // Initial pass: full length, matching the verified reference style.
-          path.push({x:passX,z:frontZ},{x:passX,z:backZ});
-          path.push({x:Math.max(passX+C*.7,minPX+C*.7),z:backZ+Math.max(.001,C*.4)});
-        }else{
-          const segs=bandSegments(low,high);
-          if(segs.length){
-            // Merge contiguous/overlapping band segments in Z order.
-            segs.sort((a,b)=>b.z1-a.z1);
-            let groups=[];
-            for(const sg of segs){
-              const zHi=Math.max(sg.z1,sg.z2), zLo=Math.min(sg.z1,sg.z2);
-              const last=groups[groups.length-1];
-              if(last && zLo>=last.zLo-eps){
-                last.zLo=Math.min(last.zLo,zLo);
-                last.zHi=Math.max(last.zHi,zHi);
-              }else groups.push({zHi,zLo});
-            }
-            for(const g of groups){
-              // Entry at the front of each remaining material pocket.
-              path.push({x:passX,z:g.zHi});
-              path.push({x:passX,z:g.zLo});
-            }
-            const last=path[path.length-1];
-            path.push({x:Math.max(passX+C*.7,minPX+C*.7),z:last.z+Math.max(.001,C*.4)});
-          }
+      for(const px of passes){
+        const path=roughPassPath(prof,px,stockTop,0);
+        if(path.length<2)continue;
+        const first=path[0];
+        lines.push(`G0 Z${fmt(entryZ)}`);
+        lines.push(`X${fmt(first.x)}`);
+        lines.push(`G1 Z${fmt(first.z)} F${fmt(Frough)}`);
+        for(let i=1;i<path.length;i++){
+          const q=path[i],prev=path[i-1];
+          if(Math.abs(q.x-prev.x)<1e-9) lines.push(`Z${fmt(q.z)}`);
+          else lines.push(`X${fmt(q.x)} Z${fmt(q.z)}`);
         }
-
-        const finalPath=clean(path);
-        if(finalPath.length>=2){
-          const first=finalPath[0];
-          lines.push(`G0 Z${fmt(entryZ)}`,`X${fmt(passX)}`,`G1 Z${fmt(frontZ)} F${fmt(Frough)}`);
-          // For subsequent passes, move to the actual remaining Z pocket before
-          // cutting; this avoids the old unconditional Z-27 travel.
-          if(passIndex===0){
-            lines.push(`Z${fmt(backZ)}`);
-          }else{
-            for(let i=0;i<finalPath.length;i++){
-              const q=finalPath[i];
-              if(i===0)lines.push(`Z${fmt(q.z)}`);
-              else if(Math.abs(q.x-passX)<eps)lines.push(`Z${fmt(q.z)}`);
-              else lines.push(`X${fmt(q.x)} Z${fmt(q.z)}`);
-            }
-          }
-          lines.push(`G0 Z${fmt(safeZ)}`);
-        }else{
-          // No material remains in this X-band; skip the pass rather than
-          // forcing a full-length Z move.
-          continue;
-        }
+        lines.push(`G0 Z${fmt(safeZ)}`);
       }
       lines.push(...footer);
       generatedCode=lines.join('\n');
     } else if(opn==='od-finish'){
+
 
       lines=header(finishTool);
       // Supplied finish reference uses five repeated passes. Pass 1 follows the

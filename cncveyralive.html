@@ -128,7 +128,9 @@ function drawingPayload(){
   // ALWAYS translated from the pink X0/Z0 origin before it is sent to CNC LAB.
   const rawObjects=JSON.parse(JSON.stringify(objects));
   const machineObjects=objects.filter(o=>!o.reference).map(transformForCnc);
-  return {schema:'CNCVEYRA-LIVE-DRAWING',version:2,name:'CNCVEYRA Live Drawing',units:'mm',objects:rawObjects,origin:originPt?{x:originPt.x,y:originPt.y}:null,cncObjects:machineObjects,coordinateSystem:'X/Z diameter mode; origin is pink X0/Z0',savedAt:new Date().toISOString()};
+  const profile=[];
+  machineObjects.forEach(o=>{if(o&&o.type==='line'&&o.a&&o.b){if(!profile.length)profile.push({x:o.a.x,z:o.a.y});profile.push({x:o.b.x,z:o.b.y});}});
+  return {schema:'CNCVEYRA-LIVE-DRAWING',version:3,name:'CNCVEYRA Live Drawing',units:'mm',objects:rawObjects,origin:originPt?{x:originPt.x,y:originPt.y}:null,cncObjects:machineObjects,profile:profile,coordinateSystem:'X/Z diameter mode; origin is pink X0/Z0',savedAt:new Date().toISOString()};
 }
 function downloadBlob(filename,data,type){const b=new Blob([data],{type}),url=URL.createObjectURL(b),a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),500);}
 function syncCncProfileToHome(showStatus){
