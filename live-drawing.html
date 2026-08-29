@@ -123,14 +123,49 @@ key('toolsToggle').onclick=()=>{document.querySelector('.left').classList.toggle
 key('propsToggle').onclick=()=>{document.querySelector('.right').classList.toggle('open');document.querySelector('.left').classList.remove('open');};
 key('helpBtn').onclick=()=>{setStatus('LINE/CIRCLE/ARC: click points • ESC cancels • Ctrl+Z/Y undo/redo • Double-click a line/circle/arc to edit its dimension • Snap requires a real geometry point.');};
 function drawingPayload(){
-  // `objects` stays in the drawing's original world coordinates so the drawing
-  // can be reopened exactly. `cncObjects` is the machine/profile copy and is
-  // ALWAYS translated from the pink X0/Z0 origin before it is sent to CNC LAB.
+  // Keep the complete drawing, including an unfinished polyline.  The old
+  // bridge only read `objects`, so while a polyline was still being drawn it
+  // could send only the last committed line to CNC LAB.
   const rawObjects=JSON.parse(JSON.stringify(objects));
   const machineObjects=objects.filter(o=>!o.reference).map(transformForCnc);
+
+  // If the user is currently drawing a polyline, include its live points too.
+  const activePts=(drawing && drawing.kind==='polyline' && Array.isArray(drawing.pts))
+    ? drawing.pts.map(p=>({x:+p.x,y:+p.y})).filter(p=>Number.isFinite(p.x)&&Number.isFinite(p.y))
+    : [];
+  const bridgeObjects=machineObjects.slice();
+  if(activePts.length>=2){
+    for(let i=1;i<activePts.length;i++){
+      bridgeObjects.push({type:'line',a:{x:activePts[i-1].x,y:activePts[i-1].y},b:{x:activePts[i].x,y:activePts[i].y}});
+    }
+  }
+
+  // Build an ordered X/Z profile from every connected line instead of simply
+  // taking the first line.  This preserves the actual turning contour.
+  const lines=bridgeObjects.filter(o=>o&&o.type==='line'&&o.a&&o.b);
+  const tol=.05;
+  const d=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+  const remaining=lines.map(o=>({a:{x:+o.a.x,y:+o.a.y},b:{x:+o.b.x,y:+o.b.y}}));
   const profile=[];
-  machineObjects.forEach(o=>{if(o&&o.type==='line'&&o.a&&o.b){if(!profile.length)profile.push({x:o.a.x,z:o.a.y});profile.push({x:o.b.x,z:o.b.y});}});
-  return {schema:'CNCVEYRA-LIVE-DRAWING',version:3,name:'CNCVEYRA Live Drawing',units:'mm',objects:rawObjects,origin:originPt?{x:originPt.x,y:originPt.y}:null,cncObjects:machineObjects,profile:profile,coordinateSystem:'X/Z diameter mode; origin is pink X0/Z0',savedAt:new Date().toISOString()};
+  if(remaining.length){
+    let g=remaining.shift();
+    profile.push({x:g.a.x,z:g.a.y},{x:g.b.x,z:g.b.y});
+    while(remaining.length){
+      const tail=profile[profile.length-1];
+      let best=-1,rev=false,bestD=Infinity;
+      remaining.forEach((q,i)=>{
+        const da=d(tail,q.a),db=d(tail,q.b);
+        if(da<bestD){bestD=da;best=i;rev=false;}
+        if(db<bestD){bestD=db;best=i;rev=true;}
+      });
+      if(best<0||bestD>tol)break;
+      const q=remaining.splice(best,1)[0];
+      if(rev)profile.push({x:q.a.x,z:q.a.y});
+      else profile.push({x:q.b.x,z:q.b.y});
+    }
+  }
+
+  return {schema:'CNCVEYRA-LIVE-DRAWING',version:4,name:'CNCVEYRA Live Drawing',units:'mm',objects:rawObjects,origin:originPt?{x:originPt.x,y:originPt.y}:null,cncObjects:bridgeObjects,profile:profile,coordinateSystem:'X/Z diameter mode; origin is pink X0/Z0',savedAt:new Date().toISOString()};
 }
 function downloadBlob(filename,data,type){const b=new Blob([data],{type}),url=URL.createObjectURL(b),a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),500);}
 function syncCncProfileToHome(showStatus){
