@@ -1068,11 +1068,45 @@ M30
     // cncObjects are ALREADY converted to the Live Drawing's CNC X/Z zero.
     // Only raw objects need the origin subtraction.
     const arr=v=>Array.isArray(v)?v:[];
+    /*
+      CNCVEYRA LIVE BRIDGE FIX:
+      The sender already provides an ordered X/Z `profile`.  Use that profile
+      as the primary source so CNC LAB receives the exact points/order instead
+      of trying to rebuild the chain from cncObjects first.
+    */
     const machineSource=arr(payload.cncObjects);
     const sourceIsMachine=machineSource.length>0;
     const rel=p=>{const q=point(p);return q?(sourceIsMachine||!origin?q:{x:q.x-origin.x,y:q.y-origin.y}):null;};
     const gs=[];
-    const src=machineSource.length?machineSource:arr(payload.objects).length?arr(payload.objects):arr(payload.geometry).length?arr(payload.geometry):arr(payload.entities).length?arr(payload.entities):arr(payload.elements);
+
+    const directProfile=arr(payload.profile).map(v=>{
+      if(Array.isArray(v)&&v.length>=2){
+        const x=finite(v[0]), z=finite(v[1]);
+        return x!=null&&z!=null?{x,z}:null;
+      }
+      if(v&&typeof v==='object'){
+        const x=finite(v.x??v.X), z=finite(v.z??v.Z??v.y??v.Y);
+        return x!=null&&z!=null?{x,z}:null;
+      }
+      return null;
+    }).filter(Boolean);
+
+    // Profile coordinates are already machine-relative in CNCVEYRA Live.
+    // Do not subtract origin, re-zero, reverse, or sort these points.
+    if(directProfile.length>=2){
+      for(let i=1;i<directProfile.length;i++){
+        gs.push({
+          type:'LINE',
+          x1:directProfile[i-1].x, y1:directProfile[i-1].z,
+          x2:directProfile[i].x,   y2:directProfile[i].z
+        });
+      }
+    }
+
+    const src=gs.length?[]:(machineSource.length?machineSource:
+      arr(payload.objects).length?arr(payload.objects):
+      arr(payload.geometry).length?arr(payload.geometry):
+      arr(payload.entities).length?arr(payload.entities):arr(payload.elements));
     src.forEach(o=>{
       if(!o||o.reference)return;
       const t=String(o.type||'').toLowerCase();
@@ -1087,10 +1121,6 @@ M30
         const c=P(o.c||o.center||{x:o.cx,y:o.cy}),r=finite(o.r??o.radius);if(c&&r>0)gs.push({type:'CIRCLE',cx:c.x,cy:c.y,r});
       }
     });
-    if(!gs.length&&arr(payload.profile).length>=2){
-      const pts=arr(payload.profile).map(v=>Array.isArray(v)?{x:+v[0],y:+v[1]}:{x:+v.x,y:+(v.y??v.z)}).filter(v=>Number.isFinite(v.x)&&Number.isFinite(v.y));
-      for(let i=1;i<pts.length;i++)gs.push({type:'LINE',x1:pts[i-1].x,y1:pts[i-1].y,x2:pts[i].x,y2:pts[i].y});
-    }
     if(!gs.length)return false;
     const endpoints=g=>g.type==='LINE'?[{x:g.x1,y:g.y1},{x:g.x2,y:g.y2}]:g.type==='ARC'?[{x:g.cx+g.r*Math.sin(g.a1*Math.PI/180),y:g.cy+g.r*Math.cos(g.a1*Math.PI/180)},{x:g.cx+g.r*Math.sin(g.a2*Math.PI/180),y:g.cy+g.r*Math.cos(g.a2*Math.PI/180)}]:[];
     const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
@@ -1127,7 +1157,7 @@ M30
     const lengths=[];for(let i=1;i<profile.length;i++){const d=Math.abs(profile[i].z-profile[i-1].z);if(d>1e-7&&!lengths.some(v=>Math.abs(v-d)<1e-6))lengths.push(d);}
     renderGeometry();renderDetectedDimensions({__structured:true,diameters:xs,lengths:lengths,tapers:[],radii:[],chamfers:[],zValues:zs});
     const check=$('turnConfirmGeometry');if(check)check.checked=true;setDrawingGate(true);
-    $('turnDxfStatus').textContent=`LIVE DWG RECEIVED ✓ ${gs.length} geometry entities • ${profile.length} X/Z profile points • ${xs.length} X values • ${zs.length} Z values`;
+    $('turnDxfStatus').textContent=`LIVE DWG RECEIVED ✓ ${gs.length} geometry entities • ${profile.length} X/Z profile points • ${xs.length} X values • ${zs.length} Z values • DATA LOADED`;
     if(typeof showConfidence==='function')showConfidence('Live DWG profile loaded ✓ Original X/Z coordinates preserved; negative Z follows the supplied program direction','good');
     return true;
   }
@@ -1868,7 +1898,7 @@ M30
   window.addEventListener('message',e=>{const d=e&&e.data;if(!d)return;const p=d.payload||d;if(d.type==='cncveyra-dwg'||d.type==='cncveyra-live-dwg'||p.cncObjects||p.objects||p.profile||p.geometry)apply(p);});
   window.addEventListener('storage',e=>{if((e.key==='cncveyraLiveProfile'||e.key==='cncveyra_live_dwg')&&e.newValue){try{apply(JSON.parse(e.newValue));}catch(err){}}});
   function decodeHash(){try{const h=location.hash||'';if(!h.startsWith('#live='))return null;let b=h.slice(6).replace(/-/g,'+').replace(/_/g,'/');while(b.length%4)b+='=';const bin=atob(b),bytes=Uint8Array.from(bin,c=>c.charCodeAt(0));return JSON.parse(new TextDecoder().decode(bytes));}catch(e){return null;}}
-  const hp=decodeHash();if(hp)setTimeout(()=>apply(hp),80);
+  const hp=decodeHash();if(hp)setTimeout(()=>apply(hp),0);
   const stored=readStored();if(stored)setTimeout(()=>apply(stored),100);
   if(location.hash==='#live-dwg'){
     let tries=0;const poll=setInterval(()=>{const p=readStored();if(p)apply(p);if(++tries>=120)clearInterval(poll);},250);
