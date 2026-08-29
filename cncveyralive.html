@@ -165,7 +165,14 @@ function drawingPayload(){
     }
   }
 
-  return {schema:'CNCVEYRA-LIVE-DRAWING',version:4,name:'CNCVEYRA Live Drawing',units:'mm',objects:rawObjects,origin:originPt?{x:originPt.x,y:originPt.y}:null,cncObjects:bridgeObjects,profile:profile,coordinateSystem:'X/Z diameter mode; origin is pink X0/Z0',savedAt:new Date().toISOString()};
+  // Safety fallback: if a connected contour could not be chained, still send
+  // every CNC line as an ordered profile. CNC LAB can then rebuild the chain.
+  const finalProfile = profile.length>=2 ? profile : bridgeObjects
+    .filter(o=>o&&String(o.type).toLowerCase()==='line'&&o.a&&o.b)
+    .map(o=>({a:{x:+o.a.x,y:+o.a.y},b:{x:+o.b.x,y:+o.b.y}}))
+    .reduce((acc,o)=>{ if(!acc.length) acc.push({x:o.a.x,z:o.a.y},{x:o.b.x,z:o.b.y}); else { const t=acc[acc.length-1]; const da=Math.hypot(t.x-o.a.x,t.z-o.a.y), db=Math.hypot(t.x-o.b.x,t.z-o.b.y); acc.push(db<da?{x:o.a.x,z:o.a.y}:{x:o.b.x,z:o.b.y}); } return acc; },[]);
+
+  return {schema:'CNCVEYRA-LIVE-DRAWING',version:5,name:'CNCVEYRA Live Drawing',units:'mm',objects:rawObjects,origin:originPt?{x:originPt.x,y:originPt.y}:null,cncObjects:bridgeObjects,profile:finalProfile,profilePointCount:finalProfile.length,cncObjectCount:bridgeObjects.length,coordinateSystem:'X/Z diameter mode; origin is pink X0/Z0',savedAt:new Date().toISOString()};
 }
 function downloadBlob(filename,data,type){const b=new Blob([data],{type}),url=URL.createObjectURL(b),a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),500);}
 function syncCncProfileToHome(showStatus){
@@ -173,6 +180,15 @@ function syncCncProfileToHome(showStatus){
     const payload=drawingPayload();
     payload.source='CNCVEYRA Live Drawing';
     payload.syncedAt=new Date().toISOString();
+    // Final pre-send validation. Never send a 2-point profile when multiple
+    // CNC line segments are present.
+    if(Array.isArray(payload.cncObjects) && payload.cncObjects.length>1 && Array.isArray(payload.profile) && payload.profile.length<3){
+      const ls=payload.cncObjects.filter(o=>o&&String(o.type).toLowerCase()==='line'&&o.a&&o.b);
+      const pts=[];
+      ls.forEach((o,i)=>{ if(i===0) pts.push({x:+o.a.x,z:+o.a.y}); pts.push({x:+o.b.x,z:+o.b.y}); });
+      if(pts.length>=3) payload.profile=pts;
+      payload.profilePointCount=payload.profile.length;
+    }
     const raw=JSON.stringify(payload);
     // Same-origin bridge for normal hosting.
     localStorage.setItem('cncveyraLiveProfile',raw);
